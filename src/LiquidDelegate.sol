@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.19;
 
 import {ERC721} from "solmate/tokens/ERC721.sol";
 import {ERC2981} from "openzeppelin-contracts/contracts/token/common/ERC2981.sol";
@@ -13,6 +13,8 @@ import {INFTFlashLender} from "./interfaces/INFTFlashLender.sol";
 /**
  * Built with <3 by 0xfoobar
  */
+
+// TODO: let people modify the date if they are the creator
 
 contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
     using Strings for uint256;

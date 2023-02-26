@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.19;
 
 import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
 import {IERC2981} from "openzeppelin-contracts/contracts/interfaces/IERC2981.sol";
 
+
 /**
  * Built with <3 by 0xfoobar
+
+ TODO: 
+ gasless listings, LD creation upon sale
  */
 
 contract LiquidDelegateMarket {

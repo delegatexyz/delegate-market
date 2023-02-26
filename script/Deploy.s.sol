@@ -37,9 +37,10 @@ contract Deploy is Script {
 
         vm.startBroadcast();
 
-        string memory baseURI = string.concat("https://metadata.delegate.cash/liquid/", block.chainid.toString(), "/", address(rights).toHexString(), "/");
-        rights.setBaseURI(baseURI);
-        uint256 creationFee = 0.01 ether;
+        // string memory baseURI = string.concat("https://metadata.delegate.cash/liquid/", block.chainid.toString(), "/", address(rights).toHexString(), "/");
+        // rights.setBaseURI(baseURI);
+        // uint256 creationFee = 0.01 ether;
+        uint256 creationFee = 0 ether;
         rights.setCreationFee(creationFee);
 
         vm.stopBroadcast();
