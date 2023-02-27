@@ -1,0 +1,88 @@
+No files changed, compilation skipped
+
+Running 3 tests for test/LiquidDelegateMarket.t.sol:LiquidDelegateMarketTest
+[32m[PASS][0m testBidAndCancel(address,uint256) (runs: 256, μ: 469999, ~: 471088)
+[32m[PASS][0m testBidAndSell(address,address,uint256) (runs: 256, μ: 8937393460516489313, ~: 8937393460516488724)
+[32m[PASS][0m testListAndBuy(address,address,uint256) (runs: 256, μ: 8937393460516489425, ~: 8937393460516488648)
+Test result: [32mok[0m. 3 passed; 0 failed; finished in 97.62ms
+
+Running 8 tests for test/LiquidDelegate.t.sol:LiquidDelegateTest
+[32m[PASS][0m testCreateAndClaimFees(address,address,uint256) (runs: 256, μ: 504588, ~: 506454)
+[32m[PASS][0m testCreateAndExpire(address,address,uint256) (runs: 256, μ: 629989, ~: 632213)
+[32m[PASS][0m testCreateAndFlashloan(address,uint256) (runs: 256, μ: 670335, ~: 672695)
+[32m[PASS][0m testCreateAndPayReferrer(address,address,uint256) (runs: 256, μ: 501419, ~: 503449)
+[32m[PASS][0m testCreateAndRedeem(address,address,uint256) (runs: 256, μ: 422052, ~: 423404)
+[32m[PASS][0m testCreateAndTransfer(address,address,uint256) (runs: 256, μ: 596794, ~: 598838)
+[32m[PASS][0m testCreateOnly(address,uint256) (runs: 256, μ: 440881, ~: 441659)
+[32m[PASS][0m testMetadata() (gas: 516416)
+Test result: [32mok[0m. 8 passed; 0 failed; finished in 123.83ms
+| lib/solmate/src/test/utils/mocks/MockERC721.sol:MockERC721 contract |                 |       |        |       |         |
+|---------------------------------------------------------------------|-----------------|-------|--------|-------|---------|
+| Deployment Cost                                                     | Deployment Size |       |        |       |         |
+| 901430                                                              | 5224            |       |        |       |         |
+| Function Name                                                       | min             | avg   | median | max   | # calls |
+| approve                                                             | 22785           | 24618 | 24785  | 24785 | 12      |
+| mint                                                                | 46960           | 46960 | 46960  | 46960 | 11      |
+| ownerOf                                                             | 534             | 534   | 534    | 534   | 1       |
+| transferFrom                                                        | 19007           | 21863 | 22577  | 22577 | 15      |
+
+
+| src/DelegationRegistry.sol:DelegationRegistry contract |                 |        |        |        |         |
+|--------------------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                                        | Deployment Size |        |        |        |         |
+| 1247295                                                | 6262            |        |        |        |         |
+| Function Name                                          | min             | avg    | median | max    | # calls |
+| checkDelegateForToken                                  | 1978            | 5702   | 8186   | 8186   | 5       |
+| delegateForToken                                       | 5940            | 165421 | 230841 | 230841 | 21      |
+
+
+| src/LiquidDelegate.sol:LiquidDelegate contract |                 |        |        |        |         |
+|------------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                                | Deployment Size |        |        |        |         |
+| 2528597                                        | 13219           |        |        |        |         |
+| Function Name                                  | min             | avg    | median | max    | # calls |
+| burn                                           | 1303            | 17168  | 16768  | 33834  | 4       |
+| claimFunds                                     | 32522           | 32522  | 32522  | 32522  | 1       |
+| create                                         | 345171          | 348085 | 345171 | 377228 | 11      |
+| creationFee                                    | 361             | 1646   | 2361   | 2361   | 14      |
+| flashLoan                                      | 64016           | 64016  | 64016  | 64016  | 1       |
+| nextRightsId                                   | 407             | 407    | 407    | 407    | 11      |
+| ownerOf                                        | 579             | 588    | 579    | 606    | 6       |
+| royaltyInfo                                    | 5193            | 5193   | 5193   | 5193   | 2       |
+| setApprovalForAll                              | 24524           | 24524  | 24524  | 24524  | 5       |
+| setCreationFee                                 | 24553           | 24553  | 24553  | 24553  | 2       |
+| tokenURI                                       | 74134           | 74134  | 74134  | 74134  | 1       |
+| transferFrom                                   | 209272          | 209380 | 209380 | 209488 | 4       |
+
+
+| src/LiquidDelegateMarket.sol:LiquidDelegateMarket contract |                     |                     |                     |                     |         |
+|------------------------------------------------------------|---------------------|---------------------|---------------------|---------------------|---------|
+| Deployment Cost                                            | Deployment Size     |                     |                     |                     |         |
+| 758671                                                     | 3789                |                     |                     |                     |         |
+| Function Name                                              | min                 | avg                 | median              | max                 | # calls |
+| bid                                                        | 50134               | 50134               | 50134               | 50134               | 2       |
+| buy                                                        | 8937393460515961118 | 8937393460515961118 | 8937393460515961118 | 8937393460515961118 | 1       |
+| cancelBid                                                  | 8155                | 8155                | 8155                | 8155                | 1       |
+| list                                                       | 50198               | 50198               | 50198               | 50198               | 1       |
+| nextBidId                                                  | 2361                | 2361                | 2361                | 2361                | 2       |
+| nextListingId                                              | 2317                | 2317                | 2317                | 2317                | 1       |
+| sell                                                       | 8937393460515961435 | 8937393460515961435 | 8937393460515961435 | 8937393460515961435 | 1       |
+
+
+| src/NFTFlashBorrower.sol:NFTFlashBorrower contract |                 |       |        |       |         |
+|----------------------------------------------------|-----------------|-------|--------|-------|---------|
+| Deployment Cost                                    | Deployment Size |       |        |       |         |
+| 183078                                             | 1096            |       |        |       |         |
+| Function Name                                      | min             | avg   | median | max   | # calls |
+| onFlashLoan                                        | 24879           | 24879 | 24879  | 24879 | 1       |
+
+
+| test/LiquidDelegateMarket.t.sol:LiquidDelegateMarketTest contract |                 |     |        |     |         |
+|-------------------------------------------------------------------|-----------------|-----|--------|-----|---------|
+| Deployment Cost                                                   | Deployment Size |     |        |     |         |
+| 6929912                                                           | 34540           |     |        |     |         |
+| Function Name                                                     | min             | avg | median | max | # calls |
+| receive                                                           | 55              | 55  | 55     | 55  | 1       |
+
+
+
