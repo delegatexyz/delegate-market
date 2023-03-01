@@ -21,17 +21,14 @@ contract MockERC721 is ERC721 {
         _safeMint(to, tokenId);
     }
 
-    function safeMint(
-        address to,
-        uint256 tokenId,
-        bytes memory data
-    ) public virtual {
+    function safeMint(address to, uint256 tokenId, bytes memory data) public virtual {
         _safeMint(to, tokenId, data);
     }
 }
 
 contract MockERC721Metadata is MockERC721 {
     using Strings for uint256;
+
     string baseURI;
 
     constructor(string memory _name, string memory _symbol, string memory _baseURI) MockERC721(_name, _symbol) {
@@ -42,4 +39,3 @@ contract MockERC721Metadata is MockERC721 {
         return string.concat(baseURI, tokenId.toString());
     }
 }
-

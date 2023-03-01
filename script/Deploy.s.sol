@@ -10,10 +10,10 @@ import {MockERC721Metadata} from "../src/MockERC721Metadata.sol";
 import {Strings} from "openzeppelin-contracts/contracts/utils/Strings.sol";
 import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
 
-
 contract Deploy is Script {
     using Strings for uint256;
     using Strings for address;
+
     address payable constant ZERO = payable(address(0x0));
     DelegationRegistry registry = DelegationRegistry(0x00000000000076A84feF008CDAbe6409d2FE638B);
     address constant deployer = 0x65e5e55A221886B22cf2e3dE4c2b9126a16514F5;
@@ -21,7 +21,7 @@ contract Deploy is Script {
 
     function deploy() external {
         require(msg.sender == deployer, "wrong deployer addy");
-        
+
         vm.startBroadcast();
 
         LiquidDelegate rights = new LiquidDelegate(address(registry), owner, "");

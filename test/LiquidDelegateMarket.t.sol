@@ -10,10 +10,10 @@ import {LiquidDelegate} from "../src/LiquidDelegate.sol";
 import {LiquidDelegateMarket} from "../src/LiquidDelegateMarket.sol";
 
 contract LiquidDelegateMarketTest is Test {
-    string constant public baseURI = "test";
-    uint96 constant public interval = 60;
-    address payable constant public ZERO = payable(address(0x0));
-    address payable constant public liquidDelegateOwner = payable(address(0x9));
+    string public constant baseURI = "test";
+    uint96 public constant interval = 60;
+    address payable public constant ZERO = payable(address(0x0));
+    address payable public constant liquidDelegateOwner = payable(address(0x9));
     MockERC721 public nft;
     DelegationRegistry public registry;
     LiquidDelegate public rights;
@@ -34,7 +34,10 @@ contract LiquidDelegateMarketTest is Test {
 
     receive() external payable {}
 
-    function _create(address creator, uint256 tokenId, uint96 expiration, address payable referrer) internal returns (uint256 rightsId) {
+    function _create(address creator, uint256 tokenId, uint96 expiration, address payable referrer)
+        internal
+        returns (uint256 rightsId)
+    {
         vm.startPrank(creator);
         nft.mint(creator, tokenId);
         nft.approve(address(rights), tokenId);

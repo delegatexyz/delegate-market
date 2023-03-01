@@ -9,10 +9,10 @@ import {DelegationRegistry} from "../src/DelegationRegistry.sol";
 import {LiquidDelegate} from "../src/LiquidDelegate.sol";
 
 contract LiquidDelegateTest is Test {
-    string constant public baseURI = "test";
-    uint96 constant public interval = 60;
-    address payable constant public ZERO = payable(address(0x0));
-    address payable constant public liquidDelegateOwner = payable(address(0x9));
+    string public constant baseURI = "test";
+    uint96 public constant interval = 60;
+    address payable public constant ZERO = payable(address(0x0));
+    address payable public constant liquidDelegateOwner = payable(address(0x9));
     MockERC721 public nft;
     DelegationRegistry public registry;
     LiquidDelegate public rights;
@@ -29,7 +29,10 @@ contract LiquidDelegateTest is Test {
 
     receive() external payable {}
 
-    function _create(address creator, uint256 tokenId, uint96 expiration, address payable referrer) internal returns (uint256 rightsId) {
+    function _create(address creator, uint256 tokenId, uint96 expiration, address payable referrer)
+        internal
+        returns (uint256 rightsId)
+    {
         vm.startPrank(creator);
         nft.mint(creator, tokenId);
         nft.approve(address(rights), tokenId);
@@ -76,7 +79,7 @@ contract LiquidDelegateTest is Test {
         vm.assume(creator != rightsOwner);
         uint256 rightsId = _create(creator, tokenId, uint96(block.timestamp) + interval, ZERO);
         // Fail to redeem if you don't own it
-        vm.expectRevert("INVALID_BURN");
+        vm.expectRevert(LiquidDelegate.InvalidBurn.selector);
         vm.prank(address(rightsOwner));
         rights.burn(rightsId);
         // Succeed at redeeming if you do
@@ -97,12 +100,41 @@ contract LiquidDelegateTest is Test {
         // Fail to expire before expiration
         vm.startPrank(creator);
         rights.transferFrom(creator, rightsOwner, rightsId);
-        vm.expectRevert("INVALID_BURN");
+        vm.expectRevert(LiquidDelegate.InvalidBurn.selector);
         rights.burn(rightsId);
         vm.stopPrank();
         // Succeed at expiring after expiration, let anyone expire
         vm.warp(uint96(block.timestamp) + interval);
         vm.prank(rightsOwner);
+        rights.burn(rightsId);
+        // Check that token burned
+        vm.expectRevert("NOT_MINTED");
+        rights.ownerOf(rightsId);
+        // Check that delegation reset
+        assertFalse(registry.checkDelegateForToken(creator, address(rights), address(nft), tokenId));
+    }
+
+    function testCreateAndExtend(address creator, address rightsOwner, uint256 tokenId) public {
+        vm.assume(creator != ZERO);
+        vm.assume(rightsOwner != ZERO);
+        vm.assume(creator != rightsOwner);
+        uint256 rightsId = _create(creator, tokenId, uint96(block.timestamp) + interval, ZERO);
+        // Transfer to buyer
+        vm.startPrank(creator);
+        rights.transferFrom(creator, rightsOwner, rightsId);
+        vm.stopPrank();
+        // Pass expiration, then extend
+        vm.warp(uint96(block.timestamp) + interval);
+        vm.prank(creator);
+        rights.extend(rightsId, uint96(block.timestamp) + interval);
+        // Fail to burn before extended expiration
+        vm.startPrank(creator);
+        vm.expectRevert(LiquidDelegate.InvalidBurn.selector);
+        rights.burn(rightsId);
+        vm.stopPrank();
+        // Now warp and burn successfully
+        vm.warp(uint96(block.timestamp) + interval);
+        vm.startPrank(creator);
         rights.burn(rightsId);
         // Check that token burned
         vm.expectRevert("NOT_MINTED");
@@ -138,7 +170,7 @@ contract LiquidDelegateTest is Test {
     }
 
     function testMetadata() public {
-        uint tokenId = 5;
+        uint256 tokenId = 5;
         uint256 rightsId = _create(address(0x1), tokenId, uint96(block.timestamp) + interval, ZERO);
         string memory metadata = rights.tokenURI(rightsId);
         console2.log(metadata);

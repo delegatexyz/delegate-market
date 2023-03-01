@@ -11,27 +11,27 @@ import {INFTFlashBorrower} from "./interfaces/INFTFlashBorrower.sol";
 import {INFTFlashLender} from "./interfaces/INFTFlashLender.sol";
 
 /**
- * Built with <3 by 0xfoobar
- */
-
-/**
- * DONE
+ * DONE:
  * let people modify the date to later if they are the creator
  * custom errors instead of require strings
- * TODO
- * easier royalty sharing for third parties
+ * TODO:
+ * easier royalty sharing for third parties, ERC2981 specifies a single receiver
  * batch creation
  * remove creation fee altogether?
  * let pople silo licensing rights and sell two different rights to two different accounts
  */
 
-
 /**
-Escrow should be pushed out as long as possible, because that's expensive. Want deep seller liquidity.
-Should also let people list onchain, combine them.
-
+ * Escrow should be pushed out as long as possible, because that's expensive. Want deep seller liquidity.
+ * Should also let people list onchain, combine them.
  */
 
+/**
+ * @title LiquidDelegate
+ * @custom:version 1.1
+ * @custom:author foobar (0xfoobar)
+ * @notice An ERC721 that lets users tokenize their delegation rights so they're composable & transferrable
+ */
 contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
     using Strings for uint256;
     using Strings for address;
@@ -47,6 +47,7 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
         uint96 expiration;
         address contract_;
         uint256 tokenId;
+        address referrer;
     }
 
     /// @notice A mapping pointing NFT ids to Rights structs
@@ -68,10 +69,22 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
     string internal baseURI;
 
     /// @notice Emitted on each deposit creation
-    event RightsCreated(uint256 indexed rightsId, address indexed depositor, address indexed contract_, uint256 tokenId, uint256 expiration);
+    event RightsCreated(
+        uint256 indexed rightsId,
+        address indexed depositor,
+        address indexed contract_,
+        uint256 tokenId,
+        uint256 expiration
+    );
 
     /// @notice Emitted on each deposit burning
-    event RightsBurned(uint256 indexed rightsId, address indexed depositor, address indexed contract_, uint256 tokenId, uint256 expiration);
+    event RightsBurned(
+        uint256 indexed rightsId,
+        address indexed depositor,
+        address indexed contract_,
+        uint256 tokenId,
+        uint256 expiration
+    );
 
     error AccessControl();
     error InvalidBurn();
@@ -79,8 +92,11 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
     error InvalidFlashLoan();
     error LiquidDelegateExpired();
     error SendEtherFailed();
+    error WrongFee();
 
-    constructor(address _DELEGATION_REGISTRY, address owner, string memory _baseURI) ERC721("LiquidDelegate", "RIGHTS") {
+    constructor(address _DELEGATION_REGISTRY, address owner, string memory _baseURI)
+        ERC721("LiquidDelegate", "RIGHTS")
+    {
         DELEGATION_REGISTRY = _DELEGATION_REGISTRY;
         baseURI = _baseURI;
         metadataOwner = owner;
@@ -90,12 +106,10 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
 
     /// @dev See {IERC165-supportsInterface}.
     function supportsInterface(bytes4 interfaceId) public pure override(ERC721, ERC2981) returns (bool) {
-        return
-            interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
-            interfaceId == 0x80ac58cd || // ERC165 Interface ID for ERC721
-            interfaceId == 0x5b5e139f || // ERC165 Interface ID for ERC721Metadata
-            interfaceId == 0x2a55205a;   // ERC165 Interface ID for ERC2981
-
+        return interfaceId == 0x01ffc9a7 // ERC165 Interface ID for ERC165
+            || interfaceId == 0x80ac58cd // ERC165 Interface ID for ERC721
+            || interfaceId == 0x5b5e139f // ERC165 Interface ID for ERC721Metadata
+            || interfaceId == 0x2a55205a; // ERC165 Interface ID for ERC2981
     }
 
     /**
@@ -108,7 +122,9 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
     /// @param expiration The timestamp that the liquid delegate will expire and return the escrowed NFT
     /// @param referrer Set to the zero address by default, alternate frontends can populate this to receive half the creation fee
     function create(address contract_, uint256 tokenId, uint96 expiration, address payable referrer) external payable {
-        require(msg.value == creationFee, "WRONG_FEE");
+        if (msg.value != creationFee) {
+            revert WrongFee();
+        }
         // If referrer exists, pay half of creation fee
         if (referrer != address(0x0) && msg.value != 0) {
             // Fail silently if invalid referrer
@@ -119,7 +135,8 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
             depositor: msg.sender,
             contract_: contract_,
             tokenId: tokenId,
-            expiration: expiration
+            expiration: expiration,
+            referrer: referrer
         });
         _mint(msg.sender, nextRightsId);
         emit RightsCreated(nextRightsId++, msg.sender, contract_, tokenId, expiration);
@@ -139,24 +156,20 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
         delete idsToRights[rightsId];
     }
 
-    function extend(uint256 rightsId, uint256 newExpiration) external {
+    function extend(uint256 rightsId, uint96 newExpiration) external {
         Rights memory rights = idsToRights[rightsId];
-        if(!(ownerOf(rightsId) == msg.sender || newExpiration > rights.expiration)) {
+        if (!(ownerOf(rightsId) == msg.sender || newExpiration > rights.expiration)) {
             revert InvalidExtension();
         }
         idsToRights[rightsId].expiration = newExpiration;
     }
 
-    /// @notice Flashloan a delegated asset to its liquid owner. 
+    /// @notice Flashloan a delegated asset to its liquid owner.
     /// @dev Backup functionality if the underlying utility doesn't support delegate.cash yet
     /// @param rightsId The id of the liquid delegate to flashloan the escrowed NFT for
     /// @param receiver The address of the receiver implementing the INFTFlashBorrower interface
     /// @param data Unused here
-    function flashLoan(
-        uint256 rightsId,
-        INFTFlashBorrower receiver,
-        bytes calldata data
-    ) external {
+    function flashLoan(uint256 rightsId, INFTFlashBorrower receiver, bytes calldata data) external {
         Rights memory rights = idsToRights[rightsId];
         if (ownerOf(rightsId) != msg.sender) {
             revert InvalidFlashLoan();
@@ -179,7 +192,7 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
     /// @param id The token id to transfer
     function transferFrom(address from, address to, uint256 id) public override {
         Rights memory rights = idsToRights[id];
-        if (block.timestamp > rights.expiration) {
+        if (block.timestamp >= rights.expiration) {
             revert LiquidDelegateExpired();
         }
         // Reassign delegation powers
@@ -210,40 +223,48 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
 
     /// @notice Set the base URI for image generation
     /// @param _baseURI The new base URI for image generation
-     function setBaseURI(string memory _baseURI) external onlyMetadataOwner {
+    function setBaseURI(string memory _baseURI) external onlyMetadataOwner {
         baseURI = _baseURI;
-     }
+    }
 
     /// @notice Return metadata for a token
     /// @dev The attributes are immutably generated onchain, the image is fetched externally
     /// @param tokenId The tokenId to fetch metadata for
-    function tokenURI(uint256 tokenId) override public view returns (string memory) {
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
         Rights memory rights = idsToRights[tokenId];
 
         string memory attributes = string.concat(
             '"attributes":[',
-            '{"trait_type": "Collection Address", "value": "', rights.contract_.toHexString(), '"', 
-            '}, {"trait_type": "Token ID", "value": "', rights.tokenId.toString(), '"',
-            '}, {"trait_type": "Expiration", "display_type": "date", "value": ', uint256(rights.expiration).toString(),
-            '}, {"trait_type": "Depositor Address", "value": "', rights.depositor.toHexString(), '"'
-            '}]'
+            '{"trait_type": "Collection Address", "value": "',
+            rights.contract_.toHexString(),
+            '"',
+            '}, {"trait_type": "Token ID", "value": "',
+            rights.tokenId.toString(),
+            '"',
+            '}, {"trait_type": "Expiration", "display_type": "date", "value": ',
+            uint256(rights.expiration).toString(),
+            '}, {"trait_type": "Depositor Address", "value": "',
+            rights.depositor.toHexString(),
+            '"' "}]"
         );
 
         string memory imageUrl = string.concat(baseURI, tokenId.toString());
 
         string memory metadataString = string.concat(
-            '{"name": "Liquid Delegate #', tokenId.toString(), 
-            '", "description": "LiquidDelegate lets you escrow your token for a chosen timeperiod and receive a liquid NFT representing the associated delegation rights.", ', 
-            attributes, 
-            ', "image": "', imageUrl,
+            '{"name": "Liquid Delegate #',
+            tokenId.toString(),
+            '", "description": "LiquidDelegate lets you escrow your token for a chosen timeperiod and receive a liquid NFT representing the associated delegation rights.", ',
+            attributes,
+            ', "image": "',
+            imageUrl,
             '"}'
         );
-        string memory output = string.concat('data:application/json;base64,', Base64.encode(bytes(metadataString)));
+        string memory output = string.concat("data:application/json;base64,", Base64.encode(bytes(metadataString)));
 
         return output;
     }
 
-    /** 
+    /**
      * ----------- ROYALTIES -----------
      */
 
