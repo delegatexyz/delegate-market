@@ -14,7 +14,23 @@ import {INFTFlashLender} from "./interfaces/INFTFlashLender.sol";
  * Built with <3 by 0xfoobar
  */
 
-// TODO: let people modify the date if they are the creator
+/**
+ * DONE
+ * let people modify the date to later if they are the creator
+ * custom errors instead of require strings
+ * TODO
+ * easier royalty sharing for third parties
+ * batch creation
+ * remove creation fee altogether?
+ * let pople silo licensing rights and sell two different rights to two different accounts
+ */
+
+
+/**
+Escrow should be pushed out as long as possible, because that's expensive. Want deep seller liquidity.
+Should also let people list onchain, combine them.
+
+ */
 
 contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
     using Strings for uint256;
@@ -56,6 +72,13 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
 
     /// @notice Emitted on each deposit burning
     event RightsBurned(uint256 indexed rightsId, address indexed depositor, address indexed contract_, uint256 tokenId, uint256 expiration);
+
+    error AccessControl();
+    error InvalidBurn();
+    error InvalidExtension();
+    error InvalidFlashLoan();
+    error LiquidDelegateExpired();
+    error SendEtherFailed();
 
     constructor(address _DELEGATION_REGISTRY, address owner, string memory _baseURI) ERC721("LiquidDelegate", "RIGHTS") {
         DELEGATION_REGISTRY = _DELEGATION_REGISTRY;
@@ -107,11 +130,21 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
     /// @param rightsId The id of the liquid delegate to burn
     function burn(uint256 rightsId) external {
         Rights memory rights = idsToRights[rightsId];
-        require(ownerOf(rightsId) == msg.sender || block.timestamp >= rights.expiration, "INVALID_BURN");
+        if (!(ownerOf(rightsId) == msg.sender || block.timestamp >= rights.expiration)) {
+            revert InvalidBurn();
+        }
         _burn(rightsId);
         ERC721(rights.contract_).transferFrom(address(this), rights.depositor, rights.tokenId);
         emit RightsBurned(rightsId, rights.depositor, rights.contract_, rights.tokenId, rights.expiration);
         delete idsToRights[rightsId];
+    }
+
+    function extend(uint256 rightsId, uint256 newExpiration) external {
+        Rights memory rights = idsToRights[rightsId];
+        if(!(ownerOf(rightsId) == msg.sender || newExpiration > rights.expiration)) {
+            revert InvalidExtension();
+        }
+        idsToRights[rightsId].expiration = newExpiration;
     }
 
     /// @notice Flashloan a delegated asset to its liquid owner. 
@@ -125,12 +158,13 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
         bytes calldata data
     ) external {
         Rights memory rights = idsToRights[rightsId];
-        require(ownerOf(rightsId) == msg.sender, "can only flashloan your own tickets");
+        if (ownerOf(rightsId) != msg.sender) {
+            revert InvalidFlashLoan();
+        }
         ERC721(rights.contract_).transferFrom(address(this), address(receiver), rights.tokenId);
-        require(
-            receiver.onFlashLoan(msg.sender, rights.contract_, rights.tokenId, data) == CALLBACK_SUCCESS,
-            "FlashLender: Callback failed"
-        );
+        if (receiver.onFlashLoan(msg.sender, rights.contract_, rights.tokenId, data) != CALLBACK_SUCCESS) {
+            revert InvalidFlashLoan();
+        }
         ERC721(rights.contract_).transferFrom(address(receiver), address(this), rights.tokenId);
     }
 
@@ -145,7 +179,9 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
     /// @param id The token id to transfer
     function transferFrom(address from, address to, uint256 id) public override {
         Rights memory rights = idsToRights[id];
-        require(block.timestamp < rights.expiration, "deposit expired and cannot be transferred");
+        if (block.timestamp > rights.expiration) {
+            revert LiquidDelegateExpired();
+        }
         // Reassign delegation powers
         IDelegationRegistry(DELEGATION_REGISTRY).delegateForToken(from, rights.contract_, rights.tokenId, false);
         IDelegationRegistry(DELEGATION_REGISTRY).delegateForToken(to, rights.contract_, rights.tokenId, true);
@@ -213,15 +249,13 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
 
     /// @notice Set fee for creating a new liquid delegate
     /// @param _creationFee The new fee for creating a liquid delegate
-    function setCreationFee(uint256 _creationFee) external {
-        require(msg.sender == royaltyOwner, "ACCESS_CONTROL");
+    function setCreationFee(uint256 _creationFee) external onlyRoyaltyOwner {
         creationFee = _creationFee;
     }
 
     /// @notice Claim funds
     /// @param recipient The address to send funds to
-    function claimFunds(address payable recipient) external {
-        require(msg.sender == royaltyOwner, "ACCESS_CONTROL");
+    function claimFunds(address payable recipient) external onlyRoyaltyOwner {
         _pay(recipient, address(this).balance, true);
     }
 
@@ -240,12 +274,16 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
      */
 
     modifier onlyRoyaltyOwner() {
-        require(msg.sender == royaltyOwner, "ACCESS_CONTROL");
+        if (msg.sender != royaltyOwner) {
+            revert AccessControl();
+        }
         _;
     }
 
     modifier onlyMetadataOwner() {
-        require(msg.sender == metadataOwner, "ACCESS_CONTROL");
+        if (msg.sender != metadataOwner) {
+            revert AccessControl();
+        }
         _;
     }
 
@@ -271,6 +309,8 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
     /// @dev Send ether
     function _pay(address payable recipient, uint256 amount, bool errorOnFail) internal {
         (bool sent,) = recipient.call{value: amount}("");
-        require(sent || errorOnFail, "SEND_ETHER_FAILED");
+        if (!(sent || errorOnFail)) {
+            revert SendEtherFailed();
+        }
     }
 }
