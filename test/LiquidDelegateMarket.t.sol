@@ -41,7 +41,8 @@ contract LiquidDelegateMarketTest is Test {
         vm.startPrank(creator);
         nft.mint(creator, tokenId);
         nft.approve(address(rights), tokenId);
-        rights.create{value: rights.creationFee()}(address(nft), tokenId, expiration, referrer);
+        // rights.create{value: rights.creationFee()}(address(nft), tokenId, expiration, referrer);
+        rights.create(address(nft), tokenId, expiration, referrer);
         vm.stopPrank();
         return rights.nextRightsId() - 1;
     }

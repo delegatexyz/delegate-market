@@ -14,10 +14,10 @@ import {INFTFlashLender} from "./interfaces/INFTFlashLender.sol";
  * DONE:
  * let people modify the date to later if they are the creator
  * custom errors instead of require strings
+ * remove creation fee altogether
  * TODO:
  * easier royalty sharing for third parties, ERC2981 specifies a single receiver
  * batch creation
- * remove creation fee altogether?
  * let pople silo licensing rights and sell two different rights to two different accounts
  */
 
@@ -55,9 +55,6 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
 
     /// @notice An incrementing counter to create unique ids for each escrow deposit created
     uint256 public nextRightsId = 1;
-
-    /// @notice The fee to create a new liquid delegation
-    uint256 public creationFee = 0 ether;
 
     /// @notice The address which can modify royalties
     address internal royaltyOwner;
@@ -122,14 +119,6 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
     /// @param expiration The timestamp that the liquid delegate will expire and return the escrowed NFT
     /// @param referrer Set to the zero address by default, alternate frontends can populate this to receive half the creation fee
     function create(address contract_, uint256 tokenId, uint96 expiration, address payable referrer) external payable {
-        if (msg.value != creationFee) {
-            revert WrongFee();
-        }
-        // If referrer exists, pay half of creation fee
-        if (referrer != address(0x0) && msg.value != 0) {
-            // Fail silently if invalid referrer
-            _pay(referrer, msg.value / 2, false);
-        }
         ERC721(contract_).transferFrom(msg.sender, address(this), tokenId);
         idsToRights[nextRightsId] = Rights({
             depositor: msg.sender,
@@ -267,12 +256,6 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
     /**
      * ----------- ROYALTIES -----------
      */
-
-    /// @notice Set fee for creating a new liquid delegate
-    /// @param _creationFee The new fee for creating a liquid delegate
-    function setCreationFee(uint256 _creationFee) external onlyRoyaltyOwner {
-        creationFee = _creationFee;
-    }
 
     /// @notice Claim funds
     /// @param recipient The address to send funds to

@@ -36,7 +36,8 @@ contract LiquidDelegateTest is Test {
         vm.startPrank(creator);
         nft.mint(creator, tokenId);
         nft.approve(address(rights), tokenId);
-        rights.create{value: rights.creationFee()}(address(nft), tokenId, expiration, referrer);
+        // rights.create{value: rights.creationFee()}(address(nft), tokenId, expiration, referrer);
+        rights.create(address(nft), tokenId, expiration, referrer);
         vm.stopPrank();
         return rights.nextRightsId() - 1;
     }
@@ -48,18 +49,18 @@ contract LiquidDelegateTest is Test {
         assertTrue(registry.checkDelegateForToken(creator, address(rights), address(nft), tokenId));
     }
 
-    function testCreateAndPayReferrer(address creator, address payable referrer, uint256 tokenId) public {
-        vm.assume(creator != ZERO);
-        vm.assume(referrer != ZERO);
-        vm.assume(creator != referrer);
-        assumePayable(referrer);
-        vm.prank(liquidDelegateOwner);
-        rights.setCreationFee(0.1 ether);
-        vm.deal(creator, 100 ether);
-        uint256 startBalance = referrer.balance;
-        uint256 rightsId = _create(creator, tokenId, uint96(block.timestamp) + 60, referrer);
-        assertEq(referrer.balance - startBalance, rights.creationFee() / 2);
-    }
+    // function testCreateAndPayReferrer(address creator, address payable referrer, uint256 tokenId) public {
+    //     vm.assume(creator != ZERO);
+    //     vm.assume(referrer != ZERO);
+    //     vm.assume(creator != referrer);
+    //     assumePayable(referrer);
+    //     vm.prank(liquidDelegateOwner);
+    //     rights.setCreationFee(0.1 ether);
+    //     vm.deal(creator, 100 ether);
+    //     uint256 startBalance = referrer.balance;
+    //     uint256 rightsId = _create(creator, tokenId, uint96(block.timestamp) + 60, referrer);
+    //     assertEq(referrer.balance - startBalance, rights.creationFee() / 2);
+    // }
 
     function testCreateAndTransfer(address creator, address rightsOwner, uint256 tokenId) public {
         vm.assume(creator != ZERO);
@@ -151,23 +152,23 @@ contract LiquidDelegateTest is Test {
         rights.flashLoan(rightsId, borrower, bytes(""));
     }
 
-    function testCreateAndClaimFees(address creator, address fundsClaimer, uint256 tokenId) public {
-        vm.assume(creator != ZERO);
-        vm.assume(fundsClaimer != ZERO);
-        vm.assume(creator != fundsClaimer);
-        vm.assume(fundsClaimer != liquidDelegateOwner);
-        assumePayable(fundsClaimer);
-        uint256 startBalance = fundsClaimer.balance;
-        vm.prank(liquidDelegateOwner);
-        rights.setCreationFee(0.3 ether);
-        vm.deal(creator, 100 ether);
-        uint256 rightsId = _create(creator, tokenId, uint96(block.timestamp) + interval, ZERO);
-        assertEq(address(rights).balance, rights.creationFee());
-        vm.prank(liquidDelegateOwner);
-        rights.claimFunds(payable(fundsClaimer));
-        assertEq(address(rights).balance, 0);
-        assertEq(fundsClaimer.balance - startBalance, rights.creationFee());
-    }
+    // function testCreateAndClaimFees(address creator, address fundsClaimer, uint256 tokenId) public {
+    //     vm.assume(creator != ZERO);
+    //     vm.assume(fundsClaimer != ZERO);
+    //     vm.assume(creator != fundsClaimer);
+    //     vm.assume(fundsClaimer != liquidDelegateOwner);
+    //     assumePayable(fundsClaimer);
+    //     uint256 startBalance = fundsClaimer.balance;
+    //     vm.prank(liquidDelegateOwner);
+    //     rights.setCreationFee(0.3 ether);
+    //     vm.deal(creator, 100 ether);
+    //     uint256 rightsId = _create(creator, tokenId, uint96(block.timestamp) + interval, ZERO);
+    //     assertEq(address(rights).balance, rights.creationFee());
+    //     vm.prank(liquidDelegateOwner);
+    //     rights.claimFunds(payable(fundsClaimer));
+    //     assertEq(address(rights).balance, 0);
+    //     assertEq(fundsClaimer.balance - startBalance, rights.creationFee());
+    // }
 
     function testMetadata() public {
         uint256 tokenId = 5;
