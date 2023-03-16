@@ -17,8 +17,12 @@ import {INFTFlashLender} from "./interfaces/INFTFlashLender.sol";
  * remove creation fee altogether
  * TODO:
  * easier royalty sharing for third parties, ERC2981 specifies a single receiver
- * batch creation
+ * batch creation, be careful to avoid people paying themselves in things that should be gated. create, extend, burn, transfer
  * let pople silo licensing rights and sell two different rights to two different accounts
+ * add creation time for easy staking composability (and liquid staking extensions)
+ * make flashloan payable to pass along msg.value?
+ * enumerate all the LDs owned by a specific individual?
+ * deterministic IDs based on keccak(contractAddress, tokenId)?
  */
 
 /**
@@ -54,7 +58,7 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
     mapping(uint256 => Rights) public idsToRights;
 
     /// @notice An incrementing counter to create unique ids for each escrow deposit created
-    uint256 public nextRightsId = 1;
+    uint256 public nextliquidDelegateId = 1;
 
     /// @notice The address which can modify royalties
     address internal royaltyOwner;
@@ -67,7 +71,7 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
 
     /// @notice Emitted on each deposit creation
     event RightsCreated(
-        uint256 indexed rightsId,
+        uint256 indexed liquidDelegateId,
         address indexed depositor,
         address indexed contract_,
         uint256 tokenId,
@@ -76,7 +80,7 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
 
     /// @notice Emitted on each deposit burning
     event RightsBurned(
-        uint256 indexed rightsId,
+        uint256 indexed liquidDelegateId,
         address indexed depositor,
         address indexed contract_,
         uint256 tokenId,
@@ -114,53 +118,54 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
      */
 
     /// @notice Use this to deposit a timelocked escrow and create a liquid claim on its delegation rights
+    /// @dev Creation fee is not enforced to save gas, however the main frontend can add a small fee to the payable function
     /// @param contract_ The collection contract to deposit from
     /// @param tokenId The tokenId from the collection to deposit
     /// @param expiration The timestamp that the liquid delegate will expire and return the escrowed NFT
     /// @param referrer Set to the zero address by default, alternate frontends can populate this to receive half the creation fee
     function create(address contract_, uint256 tokenId, uint96 expiration, address payable referrer) external payable {
         ERC721(contract_).transferFrom(msg.sender, address(this), tokenId);
-        idsToRights[nextRightsId] = Rights({
+        idsToRights[nextliquidDelegateId] = Rights({
             depositor: msg.sender,
             contract_: contract_,
             tokenId: tokenId,
             expiration: expiration,
             referrer: referrer
         });
-        _mint(msg.sender, nextRightsId);
-        emit RightsCreated(nextRightsId++, msg.sender, contract_, tokenId, expiration);
+        _mint(msg.sender, nextliquidDelegateId);
+        emit RightsCreated(nextliquidDelegateId++, msg.sender, contract_, tokenId, expiration);
     }
 
     /// @notice Burn delegation rights and return escrowed NFT to owner
     /// @dev Can be triggered by the owner at any time, or anyone after deposit expiry
-    /// @param rightsId The id of the liquid delegate to burn
-    function burn(uint256 rightsId) external {
-        Rights memory rights = idsToRights[rightsId];
-        if (!(ownerOf(rightsId) == msg.sender || block.timestamp >= rights.expiration)) {
+    /// @param liquidDelegateId The id of the liquid delegate to burn
+    function burn(uint256 liquidDelegateId) external {
+        Rights memory rights = idsToRights[liquidDelegateId];
+        if (!(ownerOf(liquidDelegateId) == msg.sender || block.timestamp >= rights.expiration)) {
             revert InvalidBurn();
         }
-        _burn(rightsId);
+        _burn(liquidDelegateId);
         ERC721(rights.contract_).transferFrom(address(this), rights.depositor, rights.tokenId);
-        emit RightsBurned(rightsId, rights.depositor, rights.contract_, rights.tokenId, rights.expiration);
-        delete idsToRights[rightsId];
+        emit RightsBurned(liquidDelegateId, rights.depositor, rights.contract_, rights.tokenId, rights.expiration);
+        delete idsToRights[liquidDelegateId];
     }
 
-    function extend(uint256 rightsId, uint96 newExpiration) external {
-        Rights memory rights = idsToRights[rightsId];
-        if (!(ownerOf(rightsId) == msg.sender || newExpiration > rights.expiration)) {
+    function extend(uint256 liquidDelegateId, uint96 newExpiration) external {
+        Rights memory rights = idsToRights[liquidDelegateId];
+        if (!(ownerOf(liquidDelegateId) == msg.sender || newExpiration > rights.expiration)) {
             revert InvalidExtension();
         }
-        idsToRights[rightsId].expiration = newExpiration;
+        idsToRights[liquidDelegateId].expiration = newExpiration;
     }
 
     /// @notice Flashloan a delegated asset to its liquid owner.
     /// @dev Backup functionality if the underlying utility doesn't support delegate.cash yet
-    /// @param rightsId The id of the liquid delegate to flashloan the escrowed NFT for
+    /// @param liquidDelegateId The id of the liquid delegate to flashloan the escrowed NFT for
     /// @param receiver The address of the receiver implementing the INFTFlashBorrower interface
     /// @param data Unused here
-    function flashLoan(uint256 rightsId, INFTFlashBorrower receiver, bytes calldata data) external {
-        Rights memory rights = idsToRights[rightsId];
-        if (ownerOf(rightsId) != msg.sender) {
+    function flashLoan(uint256 liquidDelegateId, INFTFlashBorrower receiver, bytes calldata data) external {
+        Rights memory rights = idsToRights[liquidDelegateId];
+        if (ownerOf(liquidDelegateId) != msg.sender) {
             revert InvalidFlashLoan();
         }
         ERC721(rights.contract_).transferFrom(address(this), address(receiver), rights.tokenId);
