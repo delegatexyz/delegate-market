@@ -58,7 +58,7 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
     mapping(uint256 => Rights) public idsToRights;
 
     /// @notice An incrementing counter to create unique ids for each escrow deposit created
-    uint256 public nextliquidDelegateId = 1;
+    uint256 public nextLiquidDelegateId = 1;
 
     /// @notice The address which can modify royalties
     address internal royaltyOwner;
@@ -125,15 +125,15 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
     /// @param referrer Set to the zero address by default, alternate frontends can populate this to receive half the creation fee
     function create(address contract_, uint256 tokenId, uint96 expiration, address payable referrer) external payable {
         ERC721(contract_).transferFrom(msg.sender, address(this), tokenId);
-        idsToRights[nextliquidDelegateId] = Rights({
+        idsToRights[nextLiquidDelegateId] = Rights({
             depositor: msg.sender,
             contract_: contract_,
             tokenId: tokenId,
             expiration: expiration,
             referrer: referrer
         });
-        _mint(msg.sender, nextliquidDelegateId);
-        emit RightsCreated(nextliquidDelegateId++, msg.sender, contract_, tokenId, expiration);
+        _mint(msg.sender, nextLiquidDelegateId);
+        emit RightsCreated(nextLiquidDelegateId++, msg.sender, contract_, tokenId, expiration);
     }
 
     /// @notice Burn delegation rights and return escrowed NFT to owner
@@ -152,7 +152,7 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
 
     function extend(uint256 liquidDelegateId, uint96 newExpiration) external {
         Rights memory rights = idsToRights[liquidDelegateId];
-        if (!(ownerOf(liquidDelegateId) == msg.sender || newExpiration > rights.expiration)) {
+        if (!(rights.depositor == msg.sender && newExpiration > rights.expiration)) {
             revert InvalidExtension();
         }
         idsToRights[liquidDelegateId].expiration = newExpiration;

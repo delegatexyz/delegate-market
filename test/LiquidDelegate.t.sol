@@ -39,7 +39,7 @@ contract LiquidDelegateTest is Test {
         // rights.create{value: rights.creationFee()}(address(nft), tokenId, expiration, referrer);
         rights.create(address(nft), tokenId, expiration, referrer);
         vm.stopPrank();
-        return rights.nextRightsId() - 1;
+        return rights.nextLiquidDelegateId() - 1;
     }
 
     function testCreateOnly(address creator, uint256 tokenId) public {
