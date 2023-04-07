@@ -43,9 +43,9 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
 
     mapping(address => LibBitmap.Bitmap) internal usedNonces;
 
-    constructor(address _SEAPORT, address _LQUID_DELEGATE) {
+    constructor(address _SEAPORT, address _LIQUID_DELEGATE) {
         SEAPORT = _SEAPORT;
-        LIQUID_DELEGATE = _LQUID_DELEGATE;
+        LIQUID_DELEGATE = _LIQUID_DELEGATE;
     }
 
     modifier onlySeaport(address caller) {

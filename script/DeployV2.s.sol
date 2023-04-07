@@ -19,8 +19,8 @@ contract DeployV2 is Script {
     address seaport14 = 0x00000000000001ad428e4906aE43D8F9852d0dD6;
     address deployer = 0xe5ee2B9d5320f2D1492e16567F36b578372B3d9F;
 
-    address ptAddress = address(0xE98b24636746704f53625ed4300d84181819E512); // populate via simulation
-    address ldAddress = address(0x70Ee311907291129a959b5Bf6AE1d4a3Ed869CDE); // populate via simulation
+    address ptAddress = address(0xcA2430C1Ac3f9bfd558481Fcf5cce5dC1d3454bC); // populate via simulation
+    address ldAddress = address(0x8525572bCC80c7c558Bbd7f387948fCb1144e2df); // populate via simulation
 
     string baseURI = "https://metadata.delegate.cash/liquid/";
 
@@ -42,8 +42,8 @@ contract DeployV2 is Script {
 
     function postDeployConfig() external {
         // require(msg.sender == owner, "wrong owner addy");
-        PrincipalToken pt = PrincipalToken(0xE98b24636746704f53625ed4300d84181819E512);
-        LiquidDelegateV2 ld = LiquidDelegateV2(0x70Ee311907291129a959b5Bf6AE1d4a3Ed869CDE);
+        PrincipalToken pt = PrincipalToken(0xCE85C211cE2Dd24A98AA37Cc23Ac1A6cdc3133fB);
+        LiquidDelegateV2 ld = LiquidDelegateV2(0xCE85C211cE2Dd24A98AA37Cc23Ac1A6cdc3133fB);
         WrapOfferer wo = WrapOfferer(0x74A2Dc882b41DD2dB3DB88857dDc0f28F257473f);
 
         vm.startBroadcast();
