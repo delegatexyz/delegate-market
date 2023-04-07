@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.19;
 
 import {BaseERC721} from "./lib/BaseERC721.sol";
@@ -15,8 +15,6 @@ import {IDelegationRegistry} from "./interfaces/IDelegationRegistry.sol";
 import {PrincipalToken} from "./PrincipalToken.sol";
 import {INFTFlashBorrower} from "./interfaces/INFTFlashBorrower.sol";
 
-/// @author philogy <https://github.com/philogy>
-/// @dev V2 of Liquid Delegate
 contract LiquidDelegateV2 is ILiquidDelegateV2Base, BaseERC721, EIP712, Multicallable, LDMetadataManager {
     using SafeCastLib for uint256;
 

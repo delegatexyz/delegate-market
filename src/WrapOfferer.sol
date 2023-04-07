@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+// SPDX-License-Identifier: CC0-1.0
+pragma solidity ^0.8.19;
 
 import {EIP712} from "solady/utils/EIP712.sol";
 import {IWrapOfferer, ReceiptFillerType} from "./interfaces/IWrapOfferer.sol";
@@ -11,7 +11,6 @@ import {ItemType} from "seaport/lib/ConsiderationEnums.sol";
 
 import {ILiquidDelegateV2, ExpiryType} from "./interfaces/ILiquidDelegateV2.sol";
 
-/// @author philogy <https://github.com/philogy>
 contract WrapOfferer is IWrapOfferer, EIP712 {
     using LibBitmap for LibBitmap.Bitmap;
 
@@ -245,7 +244,7 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
 
     function _receiptFromContext(address token, uint256 id, bytes calldata context)
         internal
-        view
+        pure
         returns (address, bytes32, uint40, bytes memory)
     {
         (

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.19;
 
 import {BaseERC721} from "./lib/BaseERC721.sol";
@@ -8,7 +8,6 @@ import {ILiquidDelegateV2, Rights} from "./interfaces/ILiquidDelegateV2.sol";
 import {LibString} from "solady/utils/LibString.sol";
 import {Base64} from "solady/utils/Base64.sol";
 
-/// @author philogy <https://github.com/philogy>
 contract PrincipalToken is BaseERC721("Principal (LiquidDelegate V2)", "LDP") {
     using LibString for uint256;
     using LibString for address;

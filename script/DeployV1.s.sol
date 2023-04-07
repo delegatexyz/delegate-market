@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.17;
 
 import {Script} from "forge-std/Script.sol";
@@ -10,7 +10,7 @@ import {MockERC721Metadata} from "../src/MockERC721Metadata.sol";
 import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
 import {IERC721} from "openzeppelin-contracts/token/ERC721/IERC721.sol";
 
-contract Deploy is Script {
+contract DeployV1 is Script {
     using Strings for uint256;
     using Strings for address;
 
