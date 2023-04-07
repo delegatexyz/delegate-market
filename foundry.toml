@@ -3,9 +3,18 @@ src = 'src'
 out = 'out'
 libs = ['lib']
 solc_version = "0.8.19"
-optimizer_runs = 10000
+optimizer_runs = 0xffffffff
+viaIR = true
 
 [fuzz]
 # runs = 250000
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
+
+[invariant]
+runs = 1000
+depth = 25
+fail_on_revert = true
+dictionary_weight = 80
+include_storage = true
+include_push_bytes = true
