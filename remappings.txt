@@ -1,1 +1,2 @@
-openzeppelin-contracts/=lib/openzeppelin-contracts/
+openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/
+seaport/=lib/seaport/contracts/
