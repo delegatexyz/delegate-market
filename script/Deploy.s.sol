@@ -7,8 +7,8 @@ import {DelegationRegistry} from "../src/DelegationRegistry.sol";
 import {LiquidDelegate} from "../src/LiquidDelegate.sol";
 import {LiquidDelegateMarket} from "../src/LiquidDelegateMarket.sol";
 import {MockERC721Metadata} from "../src/MockERC721Metadata.sol";
-import {Strings} from "openzeppelin-contracts/contracts/utils/Strings.sol";
-import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
+import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
+import {IERC721} from "openzeppelin-contracts/token/ERC721/IERC721.sol";
 
 contract Deploy is Script {
     using Strings for uint256;

@@ -2,8 +2,8 @@
 pragma solidity ^0.8.17;
 
 import {IDelegationRegistry} from "./interfaces/IDelegationRegistry.sol";
-import {EnumerableSet} from "openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
-import {ERC165} from "openzeppelin-contracts/contracts/utils/introspection/ERC165.sol";
+import {EnumerableSet} from "openzeppelin-contracts/utils/structs/EnumerableSet.sol";
+import {ERC165} from "openzeppelin-contracts/utils/introspection/ERC165.sol";
 
 /**
  * @title DelegationRegistry
