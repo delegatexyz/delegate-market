@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.17;
 
 import {Test} from "forge-std/Test.sol";
@@ -6,7 +6,6 @@ import {ConduitController} from "seaport/conduit/ConduitController.sol";
 import {SeaportInterface} from "seaport/interfaces/SeaportInterface.sol";
 import {Conduit} from "seaport/conduit/Conduit.sol";
 
-/// @author philogy <https://github.com/philogy>
 contract BaseSeaportTest is Test {
     ConduitController internal conduitController;
     Conduit internal conduit;

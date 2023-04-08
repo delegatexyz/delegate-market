@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.19;
 
 import {ERC2981} from "openzeppelin-contracts/token/common/ERC2981.sol";
@@ -8,7 +8,6 @@ import {Owned} from "solmate/auth/Owned.sol";
 import {LibString} from "solady/utils/LibString.sol";
 import {Base64} from "solady/utils/Base64.sol";
 
-/// @author philogy <https://github.com/philogy>
 abstract contract LDMetadataManager is ERC2981, Owned {
     using LibString for address;
     using LibString for uint256;

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
@@ -10,7 +10,6 @@ struct User {
     uint256 key;
 }
 
-/// @author philogy <https://github.com/philogy>
 abstract contract SeaportHelpers is Test {
     using SeaportHashLib for OrderParameters;
     using SeaportHashLib for bytes32;

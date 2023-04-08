@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
@@ -6,7 +6,7 @@ import {BaseSeaportTest} from "./base/BaseSeaportTest.sol";
 import {BaseLiquidDelegateTest} from "./base/BaseLiquidDelegateTest.sol";
 import {SeaportHelpers, User} from "./utils/SeaportHelpers.sol";
 
-import {ExpiryType} from "src/interfaces/ILiquidDelegateV2.sol";
+import {ExpiryType} from "src/interfaces/IDelegateToken.sol";
 import {
     AdvancedOrder,
     OrderParameters,
@@ -17,13 +17,12 @@ import {
     FulfillmentComponent
 } from "seaport/lib/ConsiderationStructs.sol";
 import {ItemType, OrderType} from "seaport/lib/ConsiderationEnums.sol";
-import {Rights} from "src/interfaces/ILiquidDelegateV2.sol";
+import {Rights} from "src/interfaces/IDelegateToken.sol";
 
 import {WrapOfferer, ReceiptFillerType} from "src/WrapOfferer.sol";
 import {MockERC721} from "./mock/MockERC721.sol";
 import {WETH} from "./mock/WETH.sol";
 
-/// @author philogy <https://github.com/philogy>
 contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, SeaportHelpers {
     WrapOfferer wofferer;
     MockERC721 token;

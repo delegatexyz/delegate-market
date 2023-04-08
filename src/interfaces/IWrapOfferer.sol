@@ -1,8 +1,8 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.19;
 
 import {ContractOffererInterface} from "seaport/interfaces/ContractOffererInterface.sol";
-import {ExpiryType} from "./ILiquidDelegateV2.sol";
+import {ExpiryType} from "./IDelegateToken.sol";
 
 enum ReceiptFillerType {
     DelegateOpen,
@@ -11,7 +11,6 @@ enum ReceiptFillerType {
     PrincipalClosed
 }
 
-/// @author philogy <https://github.com/philogy>
 interface IWrapOfferer is ContractOffererInterface {
     function transferFrom(address from, address to, uint256 receiptId) external;
 

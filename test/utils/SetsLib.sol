@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.19;
 
 struct UintSet {
@@ -21,7 +21,6 @@ struct TokenSet {
     Token[] tokens;
 }
 
-/// @author philogy <https://github.com/philogy>
 /// @author Adapted from horsefact's [AddressSet](https://github.com/horsefacts/weth-invariant-testing/blob/main/test/helpers/AddressSet.sol)
 library SetsLib {
     function add(TokenSet storage s, address addr, uint256 id) internal returns (bool) {

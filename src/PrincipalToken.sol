@@ -3,12 +3,12 @@ pragma solidity ^0.8.19;
 
 import {BaseERC721} from "./lib/BaseERC721.sol";
 
-import {ILiquidDelegateV2, Rights} from "./interfaces/ILiquidDelegateV2.sol";
+import {IDelegateToken, Rights} from "./interfaces/IDelegateToken.sol";
 
 import {LibString} from "solady/utils/LibString.sol";
 import {Base64} from "solady/utils/Base64.sol";
 
-contract PrincipalToken is BaseERC721("Principal (LiquidDelegate V2)", "LDP") {
+contract PrincipalToken is BaseERC721("Principal Token", "PT") {
     using LibString for uint256;
     using LibString for address;
 
@@ -43,7 +43,7 @@ contract PrincipalToken is BaseERC721("Principal (LiquidDelegate V2)", "LDP") {
     function tokenURI(uint256 id) public view override returns (string memory) {
         if (_ownerOf[id] == address(0)) revert NotMinted();
 
-        ILiquidDelegateV2 ld = ILiquidDelegateV2(LIQUID_DELEGATE);
+        IDelegateToken ld = IDelegateToken(LIQUID_DELEGATE);
 
         (,, Rights memory rights) = ld.getRights(id);
 

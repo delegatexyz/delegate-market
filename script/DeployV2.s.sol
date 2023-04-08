@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import {Script} from "forge-std/Script.sol";
 import {console2} from "forge-std/console2.sol";
 import {DelegationRegistry} from "../src/DelegationRegistry.sol";
-import {LiquidDelegateV2} from "../src/LiquidDelegateV2.sol";
+import {DelegateToken} from "../src/DelegateToken.sol";
 import {PrincipalToken} from "../src/PrincipalToken.sol";
 import {WrapOfferer} from "../src/WrapOfferer.sol";
 import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
@@ -20,7 +20,7 @@ contract DeployV2 is Script {
     address deployer = 0xe5ee2B9d5320f2D1492e16567F36b578372B3d9F;
 
     address ptAddress = address(0xcA2430C1Ac3f9bfd558481Fcf5cce5dC1d3454bC); // populate via simulation
-    address ldAddress = address(0x8525572bCC80c7c558Bbd7f387948fCb1144e2df); // populate via simulation
+    address dtAddress = address(0x8525572bCC80c7c558Bbd7f387948fCb1144e2df); // populate via simulation
 
     string baseURI = "https://metadata.delegate.cash/liquid/";
 
@@ -30,24 +30,20 @@ contract DeployV2 is Script {
 
         vm.startBroadcast();
 
-        PrincipalToken pt = new PrincipalToken(ldAddress);
-        LiquidDelegateV2 ld = new LiquidDelegateV2(address(registry), ptAddress, baseURI, deployer);
-        WrapOfferer market = new WrapOfferer(seaport14, ldAddress);
+        PrincipalToken pt = new PrincipalToken(dtAddress);
+        DelegateToken dt = new DelegateToken(address(registry), ptAddress, baseURI, deployer);
+        WrapOfferer market = new WrapOfferer(seaport14, dtAddress);
 
         require(address(pt) == ptAddress, "wrong sim");
-        require(address(ld) == ldAddress, "wrong sim");
+        require(address(dt) == dtAddress, "wrong sim");
 
         vm.stopBroadcast();
     }
 
     function postDeployConfig() external {
         // require(msg.sender == owner, "wrong owner addy");
-        PrincipalToken pt = PrincipalToken(0xCE85C211cE2Dd24A98AA37Cc23Ac1A6cdc3133fB);
-        LiquidDelegateV2 ld = LiquidDelegateV2(0xCE85C211cE2Dd24A98AA37Cc23Ac1A6cdc3133fB);
-        WrapOfferer wo = WrapOfferer(0x74A2Dc882b41DD2dB3DB88857dDc0f28F257473f);
 
         vm.startBroadcast();
-
 
         // string memory baseURI = string.concat("https://metadata.delegate.cash/liquid/", block.chainid.toString(), "/", address(rights).toHexString(), "/");
         // rights.setBaseURI(baseURI);

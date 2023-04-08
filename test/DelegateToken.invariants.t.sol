@@ -1,28 +1,27 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
 import {InvariantTest} from "forge-std/InvariantTest.sol";
 import {BaseLiquidDelegateTest} from "./base/BaseLiquidDelegateTest.sol";
 
-import {LiquidDelegateHandler} from "./handlers/LiquidDelegateHandler.sol";
-import {Rights} from "src/LiquidDelegateV2.sol";
+import {DelegateTokenHandler} from "./handlers/DelegateTokenHandler.sol";
+import {Rights} from "src/DelegateToken.sol";
 
 import {IERC721} from "openzeppelin-contracts/token/ERC721/IERC721.sol";
 
-/// @author philogy <https://github.com/philogy>
-contract LiquidDelegateV2Invariants is Test, InvariantTest, BaseLiquidDelegateTest {
-    LiquidDelegateHandler internal handler;
+contract DelegateTokenInvariants is Test, InvariantTest, BaseLiquidDelegateTest {
+    DelegateTokenHandler internal handler;
 
     bytes4[] internal selectors;
 
     function setUp() public {
-        handler = new LiquidDelegateHandler(address(ld));
+        handler = new DelegateTokenHandler(address(ld));
 
         // Add target selectors.
-        selectors.push(handler.createLdToken.selector);
-        selectors.push(handler.transferLdToken.selector);
-        selectors.push(handler.burnLdToken.selector);
+        selectors.push(handler.createLDToken.selector);
+        selectors.push(handler.transferLDToken.selector);
+        selectors.push(handler.burnLDToken.selector);
         selectors.push(handler.withdrawExpired.selector);
         selectors.push(handler.withdrawBurned.selector);
         selectors.push(handler.extend.selector);

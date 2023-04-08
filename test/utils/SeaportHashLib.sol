@@ -1,9 +1,8 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.19;
 
 import {OrderParameters, ConsiderationItem, OfferItem} from "seaport/lib/ConsiderationStructs.sol";
 
-/// @author philogy <https://github.com/philogy>
 library SeaportHashLib {
     bytes32 internal constant OFFER_ITEM_TYPEHASH = keccak256(
         "OfferItem(uint8 itemType,address token,uint256 identifierOrCriteria,uint256 startAmount,uint256 endAmount)"

@@ -1,20 +1,20 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
 import {LibRLP} from "solady/utils/LibRLP.sol";
 import {LibString} from "solady/utils/LibString.sol";
-import {LiquidDelegateV2, ExpiryType, Rights} from "src/LiquidDelegateV2.sol";
+import {DelegateToken, ExpiryType, Rights} from "src/DelegateToken.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 import {DelegationRegistry} from "src/DelegationRegistry.sol";
 import {MockERC721} from "./mock/MockERC721.sol";
 
-contract LiquidDelegateV2Test is Test {
+contract DelegateTokenTest is Test {
     using LibString for uint256;
 
     // Environment contracts.
     DelegationRegistry registry;
-    LiquidDelegateV2 ld;
+    DelegateToken ld;
     PrincipalToken principal;
     MockERC721 token;
 
@@ -29,7 +29,7 @@ contract LiquidDelegateV2Test is Test {
         registry = new DelegationRegistry();
 
         vm.startPrank(coreDeployer);
-        ld = new LiquidDelegateV2(
+        ld = new DelegateToken(
             address(registry),
             LibRLP.computeAddress(coreDeployer, vm.getNonce(coreDeployer) + 1),
             "",
@@ -101,7 +101,7 @@ contract LiquidDelegateV2Test is Test {
         token.mint(address(ld), underlyingTokenId);
 
         vm.prank(from);
-        uint256 rightsId = ld.mint(from, from, address(token), underlyingTokenId, expiryType, expiryValue);
+        uint256 rightsId = ld.createUnprotected(from, from, address(token), underlyingTokenId, expiryType, expiryValue);
 
         vm.prank(from);
         ld.transferFrom(from, to, rightsId);
@@ -148,7 +148,7 @@ contract LiquidDelegateV2Test is Test {
         vm.startPrank(tokenOwner);
         token.transferFrom(tokenOwner, address(ld), tokenId);
 
-        uint256 rightsId = ld.mint(ldTo, principalTo, address(token), tokenId, expiryType, expiryValue);
+        uint256 rightsId = ld.createUnprotected(ldTo, principalTo, address(token), tokenId, expiryType, expiryValue);
 
         vm.stopPrank();
 
@@ -179,7 +179,7 @@ contract LiquidDelegateV2Test is Test {
         address attacker = makeAddr("attacker");
         vm.prank(attacker);
         vm.expectRevert();
-        ld.mint(attacker, attacker, address(token), tokenId, ExpiryType.Relative, 5 days);
+        ld.createUnprotected(attacker, attacker, address(token), tokenId, ExpiryType.Relative, 5 days);
     }
 
     function test_fuzzingCannotCreateWithNonexistentContract(
@@ -223,7 +223,7 @@ contract LiquidDelegateV2Test is Test {
         address user = makeAddr("user");
         token.mint(address(ld), id);
         vm.prank(user);
-        uint256 rightsId = ld.mint(user, user, address(token), id, ExpiryType.Relative, 10 seconds);
+        uint256 rightsId = ld.createUnprotected(user, user, address(token), id, ExpiryType.Relative, 10 seconds);
 
         vm.prank(ldOwner);
         ld.setBaseURI("https://test-uri.com/");

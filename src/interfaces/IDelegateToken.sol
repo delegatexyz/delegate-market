@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.19;
 
 import {IERC721} from "openzeppelin-contracts/token/ERC721/IERC721.sol";
@@ -15,8 +15,7 @@ struct Rights {
     uint256 tokenId;
 }
 
-/// @author philogy <https://github.com/philogy>
-interface ILiquidDelegateV2Base {
+interface IDelegateTokenBase {
     /*//////////////////////////////////////////////////////////////
                              ERRORS
     //////////////////////////////////////////////////////////////*/
@@ -65,7 +64,7 @@ interface ILiquidDelegateV2Base {
                          CREATE METHODS
     //////////////////////////////////////////////////////////////*/
 
-    function mint(
+    function createUnprotected(
         address ldRecipient,
         address principalRecipient,
         address tokenContract,
@@ -92,7 +91,6 @@ interface ILiquidDelegateV2Base {
     function burn(uint256 rightsId) external;
     function burnWithPermit(address from, uint256 rightsId, bytes calldata sig) external;
 
-    function withdraw(uint56 nonce, address tokenContract, uint256 tokenId) external;
     function withdrawTo(address to, uint56 nonce, address tokenContract, uint256 tokenId) external;
 
     /*//////////////////////////////////////////////////////////////
@@ -103,4 +101,4 @@ interface ILiquidDelegateV2Base {
         external;
 }
 
-interface ILiquidDelegateV2 is IERC721, ILiquidDelegateV2Base {}
+interface IDelegateToken is IERC721, IDelegateTokenBase {}

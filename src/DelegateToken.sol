@@ -5,7 +5,7 @@ import {BaseERC721} from "./lib/BaseERC721.sol";
 import {EIP712} from "solady/utils/EIP712.sol";
 import {Multicallable} from "solady/utils/Multicallable.sol";
 import {LDMetadataManager} from "./LDMetadataManager.sol";
-import {ILiquidDelegateV2Base, ExpiryType, Rights} from "./interfaces/ILiquidDelegateV2.sol";
+import {IDelegateTokenBase, ExpiryType, Rights} from "./interfaces/IDelegateToken.sol";
 
 import {SignatureCheckerLib} from "solady/utils/SignatureCheckerLib.sol";
 import {SafeCastLib} from "solady/utils/SafeCastLib.sol";
@@ -15,7 +15,7 @@ import {IDelegationRegistry} from "./interfaces/IDelegationRegistry.sol";
 import {PrincipalToken} from "./PrincipalToken.sol";
 import {INFTFlashBorrower} from "./interfaces/INFTFlashBorrower.sol";
 
-contract LiquidDelegateV2 is ILiquidDelegateV2Base, BaseERC721, EIP712, Multicallable, LDMetadataManager {
+contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable, LDMetadataManager {
     using SafeCastLib for uint256;
 
     /// @notice The value flash borrowers need to return from `onFlashLoan` for the call to be successful.
@@ -62,7 +62,7 @@ contract LiquidDelegateV2 is ILiquidDelegateV2Base, BaseERC721, EIP712, Multical
     }
 
     /**
-     * @notice Allows principal rights owner or approved operator to borrow their underlying token for the
+     * @notice Allows principal token owner or approved operator to borrow their underlying token for the
      * duration of a single atomic transaction.
      * @param to Recipient of borrowed token, must implement the `INFTFlashBorrower`  interface.
      * @param rightsId ID of the rights the underlying token is being borrowed from.
@@ -98,7 +98,7 @@ contract LiquidDelegateV2 is ILiquidDelegateV2Base, BaseERC721, EIP712, Multical
      * @return New rights ID that is also the token ID of both the newly created principal and
      * delegate tokens.
      */
-    function mint(
+    function createUnprotected(
         address delegateRecipient,
         address principalRecipient,
         address tokenContract,
@@ -186,20 +186,6 @@ contract LiquidDelegateV2 is ILiquidDelegateV2Base, BaseERC721, EIP712, Multical
     /**
      * @notice Allows principal rights owner or approved operator to withdraw the underlying token
      * once the delegation rights have either met their expiration or been rescinded via one of the
-     * `burn`/`burnWithPermit` methods. The underlying token is sent to the `msg.sender`.
-     * @dev Forcefully burns the associated delegate token if still in circulation.
-     * @param nonce The nonce of the associated rights, found as the last 56-bits of the rights ID
-     * or by calling `getRights(uint256)`.
-     * @param tokenContract Address of underlying token contract.
-     * @param tokenId Token ID of underlying token to be withdrawn.
-     */
-    function withdraw(uint56 nonce, address tokenContract, uint256 tokenId) external {
-        withdrawTo(msg.sender, nonce, tokenContract, tokenId);
-    }
-
-    /**
-     * @notice Allows principal rights owner or approved operator to withdraw the underlying token
-     * once the delegation rights have either met their expiration or been rescinded via one of the
      * `burn`/`burnWithPermit` methods. The underlying token is sent to the address specified `to`
      * address.
      * @dev Forcefully burns the associated delegate token if still in circulation.
@@ -209,7 +195,7 @@ contract LiquidDelegateV2 is ILiquidDelegateV2Base, BaseERC721, EIP712, Multical
      * @param tokenContract Address of underlying token contract.
      * @param tokenId Token ID of underlying token to be withdrawn.
      */
-    function withdrawTo(address to, uint56 nonce, address tokenContract, uint256 tokenId) public {
+    function withdrawTo(address to, uint56 nonce, address tokenContract, uint256 tokenId) external {
         uint256 baseRightsId = getBaseRightsId(tokenContract, tokenId);
         uint256 rightsId = baseRightsId | nonce;
         PrincipalToken(PRINCIPAL_TOKEN).burnIfAuthorized(msg.sender, rightsId);
@@ -236,7 +222,7 @@ contract LiquidDelegateV2 is ILiquidDelegateV2Base, BaseERC721, EIP712, Multical
         return "1";
     }
 
-    function baseURI() public view override(ILiquidDelegateV2Base, LDMetadataManager) returns (string memory) {
+    function baseURI() public view override(IDelegateTokenBase, LDMetadataManager) returns (string memory) {
         return LDMetadataManager.baseURI();
     }
 

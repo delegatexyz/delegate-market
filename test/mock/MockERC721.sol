@@ -1,9 +1,8 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.19;
 
 import {ERC721} from "solmate/tokens/ERC721.sol";
 
-/// @author philogy <https://github.com/philogy>
 contract MockERC721 is ERC721("Mock ERC721", "MOCK") {
     uint256 public nextId;
 

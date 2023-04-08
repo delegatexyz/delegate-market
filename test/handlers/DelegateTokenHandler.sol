@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.19;
 
 import {CommonBase} from "forge-std/Base.sol";
@@ -11,11 +11,10 @@ import {MockERC721} from "../mock/MockERC721.sol";
 import {LibString} from "solady/utils/LibString.sol";
 import {SafeCastLib} from "solady/utils/SafeCastLib.sol";
 
-import {ILiquidDelegateV2, ExpiryType, Rights} from "src/interfaces/ILiquidDelegateV2.sol";
+import {IDelegateToken, ExpiryType, Rights} from "src/interfaces/IDelegateToken.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 
-/// @author philogy <https://github.com/philogy>
-contract LiquidDelegateHandler is CommonBase, StdCheats, StdUtils {
+contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
     using LibString for address;
     using LibString for uint256;
 
@@ -25,7 +24,7 @@ contract LiquidDelegateHandler is CommonBase, StdCheats, StdUtils {
 
     using SafeCastLib for uint256;
 
-    ILiquidDelegateV2 public immutable liquidDelegate;
+    IDelegateToken public immutable liquidDelegate;
     PrincipalToken public immutable principal;
     uint256 internal constant TOTAL_TOKENS = 10;
 
@@ -39,7 +38,7 @@ contract LiquidDelegateHandler is CommonBase, StdCheats, StdUtils {
 
     TokenSet internal allTokens;
     TokenSet internal depositedTokens;
-    mapping(address => UintSet) internal ownedLdTokens;
+    mapping(address => UintSet) internal ownedLDTokens;
     mapping(address => UintSet) internal ownedPrTokens;
 
     UintSet internal allDelegateTokens;
@@ -65,14 +64,14 @@ contract LiquidDelegateHandler is CommonBase, StdCheats, StdUtils {
     }
 
     constructor(address ld) {
-        liquidDelegate = ILiquidDelegateV2(ld);
-        principal = PrincipalToken(ILiquidDelegateV2(ld).PRINCIPAL_TOKEN());
+        liquidDelegate = IDelegateToken(ld);
+        principal = PrincipalToken(IDelegateToken(ld).PRINCIPAL_TOKEN());
         for (uint256 i; i < TOTAL_TOKENS; i++) {
             tokenContracts.add(address(new MockERC721(uint(keccak256(abi.encode("start_id", i))))));
         }
     }
 
-    function createLdToken(uint256 tokenSeed) public createActor countCall("create_ld") {
+    function createLDToken(uint256 tokenSeed) public createActor countCall("create_ld") {
         (address token, uint256 id) = _mintToken(tokenSeed, currentActor);
 
         vm.startPrank(currentActor);
@@ -85,13 +84,13 @@ contract LiquidDelegateHandler is CommonBase, StdCheats, StdUtils {
         allPrincipalTokens.add(rightsId);
         existingDelegateTokens.add(rightsId);
         existingPrincipalTokens.add(rightsId);
-        ownedLdTokens[currentActor].add(rightsId);
+        ownedLDTokens[currentActor].add(rightsId);
         ownedPrTokens[currentActor].add(rightsId);
 
         vm.stopPrank();
     }
 
-    function transferLdToken(uint256 fromSeed, uint256 toSeed, uint256 rightsSeed, uint256 backupTokenSeed)
+    function transferLDToken(uint256 fromSeed, uint256 toSeed, uint256 rightsSeed, uint256 backupTokenSeed)
         public
         useActor(fromSeed)
         countCall("ld_transfer")
@@ -100,7 +99,7 @@ contract LiquidDelegateHandler is CommonBase, StdCheats, StdUtils {
         if (to == address(0)) to = currentActor;
 
         // Select random token from actor owns.
-        uint256 rightsId = ownedLdTokens[currentActor].get(rightsSeed);
+        uint256 rightsId = ownedLDTokens[currentActor].get(rightsSeed);
         // If they don't have tokens create new one.
         vm.startPrank(currentActor);
         if (rightsId == 0) {
@@ -115,22 +114,22 @@ contract LiquidDelegateHandler is CommonBase, StdCheats, StdUtils {
             existingPrincipalTokens.add(rightsId);
             ownedPrTokens[currentActor].add(rightsId);
         } else {
-            ownedLdTokens[currentActor].remove(rightsId);
+            ownedLDTokens[currentActor].remove(rightsId);
             liquidDelegate.transferFrom(currentActor, to, rightsId);
         }
 
         vm.stopPrank();
-        ownedLdTokens[to].add(rightsId);
+        ownedLDTokens[to].add(rightsId);
     }
 
-    function burnLdToken(uint256 actorSeed, uint256 rightsSeed) public useActor(actorSeed) countCall("ld_burn") {
-        uint256 rightsId = ownedLdTokens[currentActor].get(rightsSeed);
+    function burnLDToken(uint256 actorSeed, uint256 rightsSeed) public useActor(actorSeed) countCall("ld_burn") {
+        uint256 rightsId = ownedLDTokens[currentActor].get(rightsSeed);
 
         if (rightsId != 0) {
             vm.startPrank(currentActor);
 
             liquidDelegate.burn(rightsId);
-            ownedLdTokens[currentActor].remove(rightsId);
+            ownedLDTokens[currentActor].remove(rightsId);
             existingDelegateTokens.remove(rightsId);
 
             vm.stopPrank();
@@ -151,7 +150,7 @@ contract LiquidDelegateHandler is CommonBase, StdCheats, StdUtils {
         (,, Rights memory rights) = liquidDelegate.getRights(prId);
         vm.warp(rights.expiry);
         vm.startPrank(currentActor);
-        liquidDelegate.withdraw(rights.nonce, rights.tokenContract, rights.tokenId);
+        liquidDelegate.withdrawTo(currentActor, rights.nonce, rights.tokenContract, rights.tokenId);
         vm.stopPrank();
 
         existingPrincipalTokens.remove(prId);
@@ -160,7 +159,7 @@ contract LiquidDelegateHandler is CommonBase, StdCheats, StdUtils {
 
         if (ldOwner != address(0)) {
             existingDelegateTokens.remove(prId);
-            ownedLdTokens[ldOwner].remove(prId);
+            ownedLDTokens[ldOwner].remove(prId);
         }
     }
 
@@ -178,12 +177,12 @@ contract LiquidDelegateHandler is CommonBase, StdCheats, StdUtils {
             liquidDelegate.burn(prId);
 
             existingDelegateTokens.remove(prId);
-            ownedLdTokens[ldOwner].remove(prId);
+            ownedLDTokens[ldOwner].remove(prId);
         }
 
         (,, Rights memory rights) = liquidDelegate.getRights(prId);
         vm.prank(currentActor);
-        liquidDelegate.withdraw(rights.nonce, rights.tokenContract, rights.tokenId);
+        liquidDelegate.withdrawTo(currentActor, rights.nonce, rights.tokenContract, rights.tokenId);
 
         existingPrincipalTokens.remove(prId);
         ownedPrTokens[currentActor].remove(prId);

@@ -4,7 +4,7 @@ export GOERLI_CHAINID=5
 
 
 test-fast:
-	forge test --no-match-path test/LiquidDelegateV2.invariants.t.sol
+	forge test --no-match-path test/DelegateToken.invariants.t.sol
 
 deploy-simulate:
 	# For live deployment, add --broadcast --verify --delay 30 --etherscan-api-key ${ETHERSCAN_API_KEY}

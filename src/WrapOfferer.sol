@@ -9,7 +9,7 @@ import {LibBitmap} from "solady/utils/LibBitmap.sol";
 import {ReceivedItem, SpentItem, Schema} from "seaport/interfaces/ContractOffererInterface.sol";
 import {ItemType} from "seaport/lib/ConsiderationEnums.sol";
 
-import {ILiquidDelegateV2, ExpiryType} from "./interfaces/ILiquidDelegateV2.sol";
+import {IDelegateToken, ExpiryType} from "./interfaces/IDelegateToken.sol";
 
 contract WrapOfferer is IWrapOfferer, EIP712 {
     using LibBitmap for LibBitmap.Bitmap;
@@ -68,7 +68,7 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
         if (!SignatureCheckerLib.isValidSignatureNow(signer, _hashTypedData(receiptHash), sig)) {
             revert InvalidSignature();
         }
-        validatedReceiptId = uint(receiptHash);
+        validatedReceiptId = uint256(receiptHash);
         return _createReturnItems(minimumReceived.length, receiptHash, tokenContract, tokenId);
     }
 
@@ -89,8 +89,8 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
         // Remove validated receipt
         validatedReceiptId = EMPTY_RECEIPT_PLACEHOLDER;
 
-        // `LiquidDelegateV2.mint` checks whether the appropriate NFT has been deposited.
-        ILiquidDelegateV2(LIQUID_DELEGATE).mint(
+        // `DelegateToken.createUnprotected` checks whether the appropriate NFT has been deposited.
+        IDelegateToken(LIQUID_DELEGATE).createUnprotected(
             delegateRecipient,
             principalRecipient,
             consideration[0].token,
