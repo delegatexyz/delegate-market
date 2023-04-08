@@ -8,7 +8,7 @@ import {Owned} from "solmate/auth/Owned.sol";
 import {LibString} from "solady/utils/LibString.sol";
 import {Base64} from "solady/utils/Base64.sol";
 
-abstract contract LDMetadataManager is ERC2981, Owned {
+abstract contract DTMetadataManager is ERC2981, Owned {
     using LibString for address;
     using LibString for uint256;
 
@@ -19,11 +19,11 @@ abstract contract LDMetadataManager is ERC2981, Owned {
     }
 
     function _name() internal pure virtual returns (string memory) {
-        return "Liquid Delegate V2";
+        return "Delegate Token";
     }
 
     function _symbol() internal pure virtual returns (string memory) {
-        return "RIGHTSV2";
+        return "DT";
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {

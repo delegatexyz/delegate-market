@@ -12,24 +12,24 @@ contract PrincipalToken is BaseERC721("Principal Token", "PT") {
     using LibString for uint256;
     using LibString for address;
 
-    address public immutable LIQUID_DELEGATE;
+    address public immutable DELEGATE_TOKEN;
 
-    error NotLD();
+    error NotDT();
 
-    modifier onlyLD() {
-        if (msg.sender != LIQUID_DELEGATE) revert NotLD();
+    modifier onlyDT() {
+        if (msg.sender != DELEGATE_TOKEN) revert NotDT();
         _;
     }
 
-    constructor(address _LIQUID_DELEGATE) {
-        LIQUID_DELEGATE = _LIQUID_DELEGATE;
+    constructor(address _DELEGATE_TOKEN) {
+        DELEGATE_TOKEN = _DELEGATE_TOKEN;
     }
 
-    function mint(address to, uint256 id) external onlyLD {
+    function mint(address to, uint256 id) external onlyDT {
         _mint(to, id);
     }
 
-    function burnIfAuthorized(address burner, uint256 id) external onlyLD {
+    function burnIfAuthorized(address burner, uint256 id) external onlyDT {
         // Owner != 0 check done by `_burn`.
         (bool approvedOrOwner,) = _isApprovedOrOwner(burner, id);
         if (!approvedOrOwner) revert NotAuthorized();
@@ -43,15 +43,15 @@ contract PrincipalToken is BaseERC721("Principal Token", "PT") {
     function tokenURI(uint256 id) public view override returns (string memory) {
         if (_ownerOf[id] == address(0)) revert NotMinted();
 
-        IDelegateToken ld = IDelegateToken(LIQUID_DELEGATE);
+        IDelegateToken dt = IDelegateToken(DELEGATE_TOKEN);
 
-        (,, Rights memory rights) = ld.getRights(id);
+        (,, Rights memory rights) = dt.getRights(id);
 
         string memory idstr = rights.tokenId.toString();
-        string memory imageUrl = string.concat(ld.baseURI(), "principal/", idstr);
+        string memory imageUrl = string.concat(dt.baseURI(), "principal/", idstr);
 
         address rightsOwner;
-        try ld.ownerOf(id) returns (address retrievedOwner) {
+        try dt.ownerOf(id) returns (address retrievedOwner) {
             rightsOwner = retrievedOwner;
         } catch {}
 

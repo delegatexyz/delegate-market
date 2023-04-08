@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import {BaseERC721} from "./lib/BaseERC721.sol";
 import {EIP712} from "solady/utils/EIP712.sol";
 import {Multicallable} from "solady/utils/Multicallable.sol";
-import {LDMetadataManager} from "./LDMetadataManager.sol";
+import {DTMetadataManager} from "./DTMetadataManager.sol";
 import {IDelegateTokenBase, ExpiryType, Rights} from "./interfaces/IDelegateToken.sol";
 
 import {SignatureCheckerLib} from "solady/utils/SignatureCheckerLib.sol";
@@ -15,11 +15,11 @@ import {IDelegationRegistry} from "./interfaces/IDelegationRegistry.sol";
 import {PrincipalToken} from "./PrincipalToken.sol";
 import {INFTFlashBorrower} from "./interfaces/INFTFlashBorrower.sol";
 
-contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable, LDMetadataManager {
+contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable, DTMetadataManager {
     using SafeCastLib for uint256;
 
     /// @notice The value flash borrowers need to return from `onFlashLoan` for the call to be successful.
-    bytes32 public constant FLASHLOAN_CALLBACK_MAGIC = bytes32(uint256(keccak256("LiquidDelegate.v2.onFlashLoan")) - 1);
+    bytes32 public constant FLASHLOAN_CALLBACK_SUCCESS = bytes32(uint256(keccak256("INFTFlashBorrower.onFlashLoan")) - 1);
 
     uint256 internal constant BASE_RIGHTS_ID_MASK = 0xffffffffffffffffffffffffffffffffffffffffffffffffff00000000000000;
     uint256 internal constant RIGHTS_ID_NONCE_BITSIZE = 56;
@@ -37,7 +37,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
         address _PRINCIPAL_TOKEN,
         string memory _baseURI,
         address initialMetadataOwner
-    ) BaseERC721(_name(), _symbol()) LDMetadataManager(_baseURI, initialMetadataOwner) {
+    ) BaseERC721(_name(), _symbol()) DTMetadataManager(_baseURI, initialMetadataOwner) {
         DELEGATION_REGISTRY = _DELEGATION_REGISTRY;
         PRINCIPAL_TOKEN = _PRINCIPAL_TOKEN;
     }
@@ -62,22 +62,22 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
     }
 
     /**
-     * @notice Allows principal token owner or approved operator to borrow their underlying token for the
-     * duration of a single atomic transaction.
-     * @param to Recipient of borrowed token, must implement the `INFTFlashBorrower`  interface.
-     * @param rightsId ID of the rights the underlying token is being borrowed from.
-     * @param tokenContract Address of underlying token contract.
-     * @param tokenId Token ID of underlying token to be borrowed.
-     * @param data Added metadata to be relayed to borrower.
+     * @notice Allows delegate token owner or approved operator to borrow their underlying token for the
+     * duration of a single atomic transaction
+     * @param receiver Recipient of borrowed token, must implement the `INFTFlashBorrower` interface
+     * @param rightsId ID of the rights the underlying token is being borrowed from
+     * @param tokenContract Address of underlying token contract
+     * @param tokenId Token ID of underlying token to be borrowed
+     * @param data Added metadata to be relayed to borrower
      */
-    function flashLoan(address to, uint256 rightsId, address tokenContract, uint256 tokenId, bytes calldata data)
+    function flashLoan(address receiver, uint256 rightsId, address tokenContract, uint256 tokenId, bytes calldata data)
         external
     {
-        if (!PrincipalToken(PRINCIPAL_TOKEN).isApprovedOrOwner(msg.sender, rightsId)) revert NotAuthorized();
+        if (!isApprovedOrOwner(msg.sender, rightsId)) revert NotAuthorized();
         if (getBaseRightsId(tokenContract, tokenId) != rightsId & BASE_RIGHTS_ID_MASK) revert InvalidFlashloan();
-        ERC721(tokenContract).transferFrom(address(this), to, tokenId);
+        ERC721(tokenContract).transferFrom(address(this), receiver, tokenId);
 
-        if (INFTFlashBorrower(to).onFlashLoan(msg.sender, tokenContract, tokenId, data) != FLASHLOAN_CALLBACK_MAGIC) {
+        if (INFTFlashBorrower(receiver).onFlashLoan(msg.sender, tokenContract, tokenId, data) != FLASHLOAN_CALLBACK_SUCCESS) {
             revert InvalidFlashloan();
         }
 
@@ -222,24 +222,22 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
         return "1";
     }
 
-    function baseURI() public view override(IDelegateTokenBase, LDMetadataManager) returns (string memory) {
-        return LDMetadataManager.baseURI();
+    function baseURI() public view override(IDelegateTokenBase, DTMetadataManager) returns (string memory) {
+        return DTMetadataManager.baseURI();
     }
 
     function tokenURI(uint256 rightsTokenId) public view override returns (string memory) {
         if (_ownerOf[rightsTokenId] == address(0)) revert NotMinted();
         Rights memory rights = _idsToRights[rightsTokenId & BASE_RIGHTS_ID_MASK];
 
-        address principalTokenOwner;
-        try PrincipalToken(PRINCIPAL_TOKEN).ownerOf(rightsTokenId) returns (address retrievedOwner) {
-            principalTokenOwner = retrievedOwner;
-        } catch {}
+        // When the principal token is redeemed, the delegate token is burned. So we can query this with no try-catch
+        address principalTokenOwner = PrincipalToken(PRINCIPAL_TOKEN).ownerOf(rightsTokenId);
 
         return _buildTokenURI(rights.tokenContract, rights.tokenId, rights.expiry, principalTokenOwner);
     }
 
-    function supportsInterface(bytes4 interfaceId) public view override(LDMetadataManager, ERC721) returns (bool) {
-        return ERC721.supportsInterface(interfaceId) || LDMetadataManager.supportsInterface(interfaceId);
+    function supportsInterface(bytes4 interfaceId) public view override(DTMetadataManager, ERC721) returns (bool) {
+        return ERC721.supportsInterface(interfaceId) || DTMetadataManager.supportsInterface(interfaceId);
     }
 
     function getRights(address tokenContract, uint256 tokenId)

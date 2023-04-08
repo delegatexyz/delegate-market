@@ -201,8 +201,8 @@ contract DelegateTokenTest is Test {
     }
 
     function testStaticMetadata() public {
-        assertEq(ld.name(), "Liquid Delegate V2");
-        assertEq(ld.symbol(), "RIGHTSV2");
+        assertEq(ld.name(), "Delegate Token");
+        assertEq(ld.symbol(), "DT");
         assertEq(ld.version(), "1");
         assertEq(
             ld.DOMAIN_SEPARATOR(),
