@@ -8,7 +8,7 @@ import {BaseLiquidDelegateTest} from "./base/BaseLiquidDelegateTest.sol";
 import {DelegateTokenHandler} from "./handlers/DelegateTokenHandler.sol";
 import {Rights} from "src/DelegateToken.sol";
 
-import {IERC721} from "openzeppelin-contracts/token/ERC721/IERC721.sol";
+import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
 
 contract DelegateTokenInvariants is Test, InvariantTest, BaseLiquidDelegateTest {
     DelegateTokenHandler internal handler;

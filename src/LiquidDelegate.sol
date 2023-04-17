@@ -2,9 +2,9 @@
 pragma solidity ^0.8.19;
 
 import {ERC721} from "solmate/tokens/ERC721.sol";
-import {ERC2981} from "openzeppelin-contracts/token/common/ERC2981.sol";
-import {Base64} from "openzeppelin-contracts/utils/Base64.sol";
-import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
+import {ERC2981} from "openzeppelin-contracts/contracts/token/common/ERC2981.sol";
+import {Base64} from "openzeppelin-contracts/contracts/utils/Base64.sol";
+import {Strings} from "openzeppelin-contracts/contracts/utils/Strings.sol";
 
 import {IDelegationRegistry} from "./interfaces/IDelegationRegistry.sol";
 import {INFTFlashBorrower} from "./interfaces/INFTFlashBorrower.sol";

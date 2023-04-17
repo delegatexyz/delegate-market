@@ -7,8 +7,8 @@ import {DelegationRegistry} from "../src/DelegationRegistry.sol";
 import {DelegateToken} from "../src/DelegateToken.sol";
 import {PrincipalToken} from "../src/PrincipalToken.sol";
 import {WrapOfferer} from "../src/WrapOfferer.sol";
-import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
-import {IERC721} from "openzeppelin-contracts/token/ERC721/IERC721.sol";
+import {Strings} from "openzeppelin-contracts/contracts/utils/Strings.sol";
+import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
 
 contract DeployV2 is Script {
     using Strings for uint256;
