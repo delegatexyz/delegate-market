@@ -102,9 +102,9 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
 
         // =========== Verify Correct Receival ===========
         assertEq(seller.addr.balance, expectedETH);
-        (, uint256 activeRightsId, Rights memory rights) = ld.getRights(address(token), tokenId);
-        assertEq(ld.ownerOf(activeRightsId), buyer.addr);
-        assertEq(principal.ownerOf(activeRightsId), seller.addr);
+        (, uint256 activeDelegateId, Rights memory rights) = ld.getRights(address(token), tokenId);
+        assertEq(ld.ownerOf(activeDelegateId), buyer.addr);
+        assertEq(principal.ownerOf(activeDelegateId), seller.addr);
         assertEq(rights.expiry, block.timestamp + expiryValue);
     }
 
@@ -212,9 +212,9 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
 
         // =========== Verify Correct Receival ===========
         assertEq(weth.balanceOf(seller.addr), expectedETH);
-        (, uint256 activeRightsId, Rights memory rights) = ld.getRights(address(token), tokenId);
-        assertEq(ld.ownerOf(activeRightsId), buyer.addr);
-        assertEq(principal.ownerOf(activeRightsId), seller.addr);
+        (, uint256 activeDelegateId, Rights memory rights) = ld.getRights(address(token), tokenId);
+        assertEq(ld.ownerOf(activeDelegateId), buyer.addr);
+        assertEq(principal.ownerOf(activeDelegateId), seller.addr);
         assertEq(rights.expiry, expiryValue);
     }
 

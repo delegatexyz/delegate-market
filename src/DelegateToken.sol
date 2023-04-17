@@ -52,10 +52,10 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
     function transferFrom(address from, address to, uint256 id) public override {
         super.transferFrom(from, to, id);
 
-        uint256 baseRightsId = id & BASE_RIGHTS_ID_MASK;
+        uint256 baseDelegateId = id & BASE_RIGHTS_ID_MASK;
         uint56 nonce = uint56(id);
-        if (_idsToRights[baseRightsId].nonce == nonce) {
-            Rights memory rights = _idsToRights[baseRightsId];
+        if (_idsToRights[baseDelegateId].nonce == nonce) {
+            Rights memory rights = _idsToRights[baseDelegateId];
             IDelegationRegistry(DELEGATION_REGISTRY).delegateForToken(from, rights.tokenContract, rights.tokenId, false);
             IDelegationRegistry(DELEGATION_REGISTRY).delegateForToken(to, rights.tokenContract, rights.tokenId, true);
         }
@@ -65,16 +65,16 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
      * @notice Allows delegate token owner or approved operator to borrow their underlying token for the
      * duration of a single atomic transaction
      * @param receiver Recipient of borrowed token, must implement the `INFTFlashBorrower` interface
-     * @param rightsId ID of the rights the underlying token is being borrowed from
+     * @param delegateId ID of the rights the underlying token is being borrowed from
      * @param tokenContract Address of underlying token contract
      * @param tokenId Token ID of underlying token to be borrowed
      * @param data Added metadata to be relayed to borrower
      */
-    function flashLoan(address receiver, uint256 rightsId, address tokenContract, uint256 tokenId, bytes calldata data)
+    function flashLoan(address receiver, uint256 delegateId, address tokenContract, uint256 tokenId, bytes calldata data)
         external
     {
-        if (!isApprovedOrOwner(msg.sender, rightsId)) revert NotAuthorized();
-        if (getBaseRightsId(tokenContract, tokenId) != rightsId & BASE_RIGHTS_ID_MASK) revert InvalidFlashloan();
+        if (!isApprovedOrOwner(msg.sender, delegateId)) revert NotAuthorized();
+        if (getBaseDelegateId(tokenContract, tokenId) != delegateId & BASE_RIGHTS_ID_MASK) revert InvalidFlashloan();
         ERC721(tokenContract).transferFrom(address(this), receiver, tokenId);
 
         if (INFTFlashBorrower(receiver).onFlashLoan(msg.sender, tokenContract, tokenId, data) != FLASHLOAN_CALLBACK_SUCCESS) {
@@ -105,7 +105,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
         uint256 tokenId,
         ExpiryType expiryType,
         uint256 expiryValue
-    ) external returns (uint256) {
+    ) external payable returns (uint256) {
         if (ERC721(tokenContract).ownerOf(tokenId) != address(this)) revert UnderlyingMissing();
         uint40 expiry = getExpiry(expiryType, expiryValue);
         return _mint(delegateRecipient, principalRecipient, tokenContract, tokenId, expiry);
@@ -130,7 +130,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
         uint256 tokenId,
         ExpiryType expiryType,
         uint256 expiryValue
-    ) external returns (uint256) {
+    ) external payable returns (uint256) {
         ERC721(tokenContract).transferFrom(msg.sender, address(this), tokenId);
         uint40 expiry = getExpiry(expiryType, expiryValue);
         return _mint(delegateRecipient, principalRecipient, tokenContract, tokenId, expiry);
@@ -139,28 +139,28 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
     /**
      * @notice Allows the principal token owner or any approved operator to extend the expiry of the
      * delegation rights.
-     * @param rightsId The ID of the rights being extended.
+     * @param delegateId The ID of the rights being extended.
      * @param expiryType Whether the `expiryValue` indicates an absolute timestamp or the time to
      * expiry once the transaction is mined.
      * @param expiryValue The timestamp value by which to extend / set the expiry.
      */
-    function extend(uint256 rightsId, ExpiryType expiryType, uint256 expiryValue) external {
-        if (!PrincipalToken(PRINCIPAL_TOKEN).isApprovedOrOwner(msg.sender, rightsId)) revert NotAuthorized();
+    function extend(uint256 delegateId, ExpiryType expiryType, uint256 expiryValue) external {
+        if (!PrincipalToken(PRINCIPAL_TOKEN).isApprovedOrOwner(msg.sender, delegateId)) revert NotAuthorized();
         uint40 newExpiry = getExpiry(expiryType, expiryValue);
-        uint256 baseRightsId = rightsId & BASE_RIGHTS_ID_MASK;
-        uint40 currentExpiry = _idsToRights[baseRightsId].expiry;
+        uint256 baseDelegateId = delegateId & BASE_RIGHTS_ID_MASK;
+        uint40 currentExpiry = _idsToRights[baseDelegateId].expiry;
         if (newExpiry <= currentExpiry) revert NotExtending();
-        _idsToRights[baseRightsId].expiry = newExpiry;
-        emit RightsExtended(baseRightsId, uint56(rightsId), currentExpiry, newExpiry);
+        _idsToRights[baseDelegateId].expiry = newExpiry;
+        emit RightsExtended(baseDelegateId, uint56(delegateId), currentExpiry, newExpiry);
     }
 
     /**
      * @notice Allows the delegate owner or any approved operator to rescind their right early,
      * allowing the principal rights owner to redeem the underlying token early.
-     * @param rightsId ID of the delegate right to be burnt.
+     * @param delegateId ID of the delegate right to be burnt.
      */
-    function burn(uint256 rightsId) external {
-        _burnAuth(msg.sender, rightsId);
+    function burn(uint256 delegateId) external {
+        _burnAuth(msg.sender, delegateId);
     }
 
     /**
@@ -168,19 +168,19 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
      * similar to `burn`, allowing the principal rights owner to redeem the underlying token early.
      * Spender is authenticated via their signature `sig`.
      * @param spender Address of the account approving the burn.
-     * @param rightsId ID of the delegate right to be burnt.
+     * @param delegateId ID of the delegate right to be burnt.
      * @param sig Signature from `spender` approving the burn. For ECDSA signatures the expected
      * format is `abi.encodePacked(r, s, v)`. ERC-1271 signatures are also accepted.
      */
-    function burnWithPermit(address spender, uint256 rightsId, bytes calldata sig) external {
+    function burnWithPermit(address spender, uint256 delegateId, bytes calldata sig) external {
         if (
             !SignatureCheckerLib.isValidSignatureNowCalldata(
-                spender, _hashTypedData(keccak256(abi.encode(BURN_PERMIT_TYPE_HASH, rightsId))), sig
+                spender, _hashTypedData(keccak256(abi.encode(BURN_PERMIT_TYPE_HASH, delegateId))), sig
             )
         ) {
             revert InvalidSignature();
         }
-        _burnAuth(spender, rightsId);
+        _burnAuth(spender, delegateId);
     }
 
     /**
@@ -196,21 +196,21 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
      * @param tokenId Token ID of underlying token to be withdrawn.
      */
     function withdrawTo(address to, uint56 nonce, address tokenContract, uint256 tokenId) external {
-        uint256 baseRightsId = getBaseRightsId(tokenContract, tokenId);
-        uint256 rightsId = baseRightsId | nonce;
-        PrincipalToken(PRINCIPAL_TOKEN).burnIfAuthorized(msg.sender, rightsId);
+        uint256 baseDelegateId = getBaseDelegateId(tokenContract, tokenId);
+        uint256 delegateId = baseDelegateId | nonce;
+        PrincipalToken(PRINCIPAL_TOKEN).burnIfAuthorized(msg.sender, delegateId);
 
         // Check whether the delegate token still exists.
-        address owner = _ownerOf[rightsId];
+        address owner = _ownerOf[delegateId];
         if (owner != address(0)) {
             // If it still exists the only valid way to withdraw is the delegation having expired.
-            if (block.timestamp < _idsToRights[baseRightsId].expiry) {
+            if (block.timestamp < _idsToRights[baseDelegateId].expiry) {
                 revert WithdrawNotAvailable();
             }
-            _burn(owner, rightsId);
+            _burn(owner, delegateId);
         }
-        _idsToRights[baseRightsId].nonce = nonce + 1;
-        emit UnderlyingWithdrawn(baseRightsId, nonce, to);
+        _idsToRights[baseDelegateId].nonce = nonce + 1;
+        emit UnderlyingWithdrawn(baseDelegateId, nonce, to);
         ERC721(tokenContract).transferFrom(address(this), to, tokenId);
     }
 
@@ -243,26 +243,26 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
     function getRights(address tokenContract, uint256 tokenId)
         public
         view
-        returns (uint256 baseRightsId, uint256 activeRightsId, Rights memory rights)
+        returns (uint256 baseDelegateId, uint256 activeDelegateId, Rights memory rights)
     {
-        baseRightsId = getBaseRightsId(tokenContract, tokenId);
-        rights = _idsToRights[baseRightsId];
-        activeRightsId = baseRightsId | rights.nonce;
+        baseDelegateId = getBaseDelegateId(tokenContract, tokenId);
+        rights = _idsToRights[baseDelegateId];
+        activeDelegateId = baseDelegateId | rights.nonce;
         if (rights.tokenContract == address(0)) revert NoRights();
     }
 
-    function getRights(uint256 rightsId)
+    function getRights(uint256 delegateId)
         public
         view
-        returns (uint256 baseRightsId, uint256 activeRightsId, Rights memory rights)
+        returns (uint256 baseDelegateId, uint256 activeDelegateId, Rights memory rights)
     {
-        baseRightsId = rightsId & BASE_RIGHTS_ID_MASK;
-        rights = _idsToRights[baseRightsId];
-        activeRightsId = baseRightsId | rights.nonce;
+        baseDelegateId = delegateId & BASE_RIGHTS_ID_MASK;
+        rights = _idsToRights[baseDelegateId];
+        activeDelegateId = baseDelegateId | rights.nonce;
         if (rights.tokenContract == address(0)) revert NoRights();
     }
 
-    function getBaseRightsId(address tokenContract, uint256 tokenId) public pure returns (uint256) {
+    function getBaseDelegateId(address tokenContract, uint256 tokenId) public pure returns (uint256) {
         return uint256(keccak256(abi.encode(tokenContract, tokenId))) & BASE_RIGHTS_ID_MASK;
     }
 
@@ -283,46 +283,46 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
         address tokenContract,
         uint256 tokenId,
         uint40 expiry
-    ) internal returns (uint256 rightsId) {
-        uint256 baseRightsId = getBaseRightsId(tokenContract, tokenId);
-        Rights storage rights = _idsToRights[baseRightsId];
+    ) internal returns (uint256 delegateId) {
+        uint256 baseDelegateId = getBaseDelegateId(tokenContract, tokenId);
+        Rights storage rights = _idsToRights[baseDelegateId];
         uint56 nonce = rights.nonce;
-        rightsId = baseRightsId | nonce;
+        delegateId = baseDelegateId | nonce;
 
         if (nonce == 0) {
             // First time rights for this token are set up, store everything.
-            _idsToRights[baseRightsId] =
+            _idsToRights[baseDelegateId] =
                 Rights({tokenContract: tokenContract, expiry: uint40(expiry), nonce: 0, tokenId: tokenId});
         } else {
             // Rights already used once, so only need to update expiry.
             rights.expiry = uint40(expiry);
         }
 
-        _mint(delegateRecipient, rightsId);
+        _mint(delegateRecipient, delegateId);
         IDelegationRegistry(DELEGATION_REGISTRY).delegateForToken(
             delegateRecipient, rights.tokenContract, rights.tokenId, true
         );
 
-        PrincipalToken(PRINCIPAL_TOKEN).mint(principalRecipient, rightsId);
+        PrincipalToken(PRINCIPAL_TOKEN).mint(principalRecipient, delegateId);
 
-        emit RightsCreated(baseRightsId, nonce, expiry);
+        emit RightsCreated(baseDelegateId, nonce, expiry);
     }
 
-    function _burnAuth(address spender, uint256 rightsId) internal {
-        (bool approvedOrOwner, address owner) = _isApprovedOrOwner(spender, rightsId);
+    function _burnAuth(address spender, uint256 delegateId) internal {
+        (bool approvedOrOwner, address owner) = _isApprovedOrOwner(spender, delegateId);
         if (!approvedOrOwner) revert NotAuthorized();
-        _burn(owner, rightsId);
+        _burn(owner, delegateId);
     }
 
-    function _burn(address owner, uint256 rightsId) internal {
-        uint256 baseRightsId = rightsId & BASE_RIGHTS_ID_MASK;
-        uint56 nonce = uint56(rightsId);
+    function _burn(address owner, uint256 delegateId) internal {
+        uint256 baseDelegateId = delegateId & BASE_RIGHTS_ID_MASK;
+        uint56 nonce = uint56(delegateId);
 
-        Rights memory rights = _idsToRights[baseRightsId];
+        Rights memory rights = _idsToRights[baseDelegateId];
         IDelegationRegistry(DELEGATION_REGISTRY).delegateForToken(owner, rights.tokenContract, rights.tokenId, false);
 
-        _burn(rightsId);
-        emit RightsBurned(baseRightsId, nonce);
+        _burn(delegateId);
+        emit RightsBurned(baseDelegateId, nonce);
     }
 
     function _domainNameAndVersion() internal pure override returns (string memory, string memory) {

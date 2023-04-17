@@ -31,7 +31,7 @@ contract LiquidDelegateTest is Test {
 
     function _create(address creator, uint256 tokenId, uint96 expiration, address payable referrer)
         internal
-        returns (uint256 rightsId)
+        returns (uint256 delegateId)
     {
         vm.startPrank(creator);
         nft.mint(creator, tokenId);
@@ -44,8 +44,8 @@ contract LiquidDelegateTest is Test {
 
     function testCreateOnly(address creator, uint256 tokenId) public {
         vm.assume(creator != ZERO);
-        uint256 rightsId = _create(creator, tokenId, uint96(block.timestamp) + 60, ZERO);
-        assertEq(rights.ownerOf(rightsId), creator);
+        uint256 delegateId = _create(creator, tokenId, uint96(block.timestamp) + 60, ZERO);
+        assertEq(rights.ownerOf(delegateId), creator);
         assertTrue(registry.checkDelegateForToken(creator, address(rights), address(nft), tokenId));
     }
 
@@ -58,7 +58,7 @@ contract LiquidDelegateTest is Test {
     //     rights.setCreationFee(0.1 ether);
     //     vm.deal(creator, 100 ether);
     //     uint256 startBalance = referrer.balance;
-    //     uint256 rightsId = _create(creator, tokenId, uint96(block.timestamp) + 60, referrer);
+    //     uint256 delegateId = _create(creator, tokenId, uint96(block.timestamp) + 60, referrer);
     //     assertEq(referrer.balance - startBalance, rights.creationFee() / 2);
     // }
 
@@ -66,10 +66,10 @@ contract LiquidDelegateTest is Test {
         vm.assume(creator != ZERO);
         vm.assume(rightsOwner != ZERO);
         vm.assume(creator != rightsOwner);
-        uint256 rightsId = _create(creator, tokenId, uint96(block.timestamp) + 60, ZERO);
+        uint256 delegateId = _create(creator, tokenId, uint96(block.timestamp) + 60, ZERO);
         vm.prank(creator);
-        rights.transferFrom(creator, rightsOwner, rightsId);
-        assertEq(rights.ownerOf(rightsId), rightsOwner);
+        rights.transferFrom(creator, rightsOwner, delegateId);
+        assertEq(rights.ownerOf(delegateId), rightsOwner);
         assertTrue(registry.checkDelegateForToken(rightsOwner, address(rights), address(nft), tokenId));
         assertFalse(registry.checkDelegateForToken(creator, address(rights), address(nft), tokenId));
     }
@@ -78,17 +78,17 @@ contract LiquidDelegateTest is Test {
         vm.assume(creator != ZERO);
         vm.assume(rightsOwner != ZERO);
         vm.assume(creator != rightsOwner);
-        uint256 rightsId = _create(creator, tokenId, uint96(block.timestamp) + interval, ZERO);
+        uint256 delegateId = _create(creator, tokenId, uint96(block.timestamp) + interval, ZERO);
         // Fail to redeem if you don't own it
         vm.expectRevert(LiquidDelegate.InvalidBurn.selector);
         vm.prank(address(rightsOwner));
-        rights.burn(rightsId);
+        rights.burn(delegateId);
         // Succeed at redeeming if you do
         vm.prank(creator);
-        rights.burn(rightsId);
+        rights.burn(delegateId);
         // Check that token burned
         vm.expectRevert("NOT_MINTED");
-        rights.ownerOf(rightsId);
+        rights.ownerOf(delegateId);
         // Check that delegation reset
         assertFalse(registry.checkDelegateForToken(creator, address(rights), address(nft), tokenId));
     }
@@ -97,20 +97,20 @@ contract LiquidDelegateTest is Test {
         vm.assume(creator != ZERO);
         vm.assume(rightsOwner != ZERO);
         vm.assume(creator != rightsOwner);
-        uint256 rightsId = _create(creator, tokenId, uint96(block.timestamp) + interval, ZERO);
+        uint256 delegateId = _create(creator, tokenId, uint96(block.timestamp) + interval, ZERO);
         // Fail to expire before expiration
         vm.startPrank(creator);
-        rights.transferFrom(creator, rightsOwner, rightsId);
+        rights.transferFrom(creator, rightsOwner, delegateId);
         vm.expectRevert(LiquidDelegate.InvalidBurn.selector);
-        rights.burn(rightsId);
+        rights.burn(delegateId);
         vm.stopPrank();
         // Succeed at expiring after expiration, let anyone expire
         vm.warp(uint96(block.timestamp) + interval);
         vm.prank(rightsOwner);
-        rights.burn(rightsId);
+        rights.burn(delegateId);
         // Check that token burned
         vm.expectRevert("NOT_MINTED");
-        rights.ownerOf(rightsId);
+        rights.ownerOf(delegateId);
         // Check that delegation reset
         assertFalse(registry.checkDelegateForToken(creator, address(rights), address(nft), tokenId));
     }
@@ -119,37 +119,37 @@ contract LiquidDelegateTest is Test {
         vm.assume(creator != ZERO);
         vm.assume(rightsOwner != ZERO);
         vm.assume(creator != rightsOwner);
-        uint256 rightsId = _create(creator, tokenId, uint96(block.timestamp) + interval, ZERO);
+        uint256 delegateId = _create(creator, tokenId, uint96(block.timestamp) + interval, ZERO);
         // Transfer to buyer
         vm.startPrank(creator);
-        rights.transferFrom(creator, rightsOwner, rightsId);
+        rights.transferFrom(creator, rightsOwner, delegateId);
         vm.stopPrank();
         // Pass expiration, then extend
         vm.warp(uint96(block.timestamp) + interval);
         vm.prank(creator);
-        rights.extend(rightsId, uint96(block.timestamp) + interval);
+        rights.extend(delegateId, uint96(block.timestamp) + interval);
         // Fail to burn before extended expiration
         vm.startPrank(creator);
         vm.expectRevert(LiquidDelegate.InvalidBurn.selector);
-        rights.burn(rightsId);
+        rights.burn(delegateId);
         vm.stopPrank();
         // Now warp and burn successfully
         vm.warp(uint96(block.timestamp) + interval);
         vm.startPrank(creator);
-        rights.burn(rightsId);
+        rights.burn(delegateId);
         // Check that token burned
         vm.expectRevert("NOT_MINTED");
-        rights.ownerOf(rightsId);
+        rights.ownerOf(delegateId);
         // Check that delegation reset
         assertFalse(registry.checkDelegateForToken(creator, address(rights), address(nft), tokenId));
     }
 
     function testCreateAndFlashloan(address creator, uint256 tokenId) public {
         vm.assume(creator != ZERO);
-        uint256 rightsId = _create(creator, tokenId, uint96(block.timestamp) + interval, ZERO);
+        uint256 delegateId = _create(creator, tokenId, uint96(block.timestamp) + interval, ZERO);
         NFTFlashBorrower borrower = new NFTFlashBorrower(address(rights));
         vm.prank(creator);
-        rights.flashLoan(rightsId, borrower, bytes(""));
+        rights.flashLoan(delegateId, borrower, bytes(""));
     }
 
     // function testCreateAndClaimFees(address creator, address fundsClaimer, uint256 tokenId) public {
@@ -162,7 +162,7 @@ contract LiquidDelegateTest is Test {
     //     vm.prank(liquidDelegateOwner);
     //     rights.setCreationFee(0.3 ether);
     //     vm.deal(creator, 100 ether);
-    //     uint256 rightsId = _create(creator, tokenId, uint96(block.timestamp) + interval, ZERO);
+    //     uint256 delegateId = _create(creator, tokenId, uint96(block.timestamp) + interval, ZERO);
     //     assertEq(address(rights).balance, rights.creationFee());
     //     vm.prank(liquidDelegateOwner);
     //     rights.claimFunds(payable(fundsClaimer));
@@ -172,8 +172,8 @@ contract LiquidDelegateTest is Test {
 
     function testMetadata() public {
         uint256 tokenId = 5;
-        uint256 rightsId = _create(address(0x1), tokenId, uint96(block.timestamp) + interval, ZERO);
-        string memory metadata = rights.tokenURI(rightsId);
+        uint256 delegateId = _create(address(0x1), tokenId, uint96(block.timestamp) + interval, ZERO);
+        string memory metadata = rights.tokenURI(delegateId);
         console2.log(metadata);
     }
 }

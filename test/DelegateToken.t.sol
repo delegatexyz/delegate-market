@@ -67,17 +67,17 @@ contract DelegateTokenTest is Test {
         vm.startPrank(tokenOwner);
         token.setApprovalForAll(address(ld), true);
 
-        uint256 rightsId = ld.create(ldTo, principalTo, address(token), tokenId, expiryType, expiryValue);
+        uint256 delegateId = ld.create(ldTo, principalTo, address(token), tokenId, expiryType, expiryValue);
 
         vm.stopPrank();
 
-        assertEq(ld.ownerOf(rightsId), ldTo);
-        assertEq(principal.ownerOf(rightsId), principalTo);
+        assertEq(ld.ownerOf(delegateId), ldTo);
+        assertEq(principal.ownerOf(delegateId), principalTo);
 
-        (uint256 baseRightsId, uint256 activeRightsId, Rights memory rights) = ld.getRights(rightsId);
-        assertEq(activeRightsId, rightsId);
-        assertEq(baseRightsId, ld.getBaseRightsId(address(token), tokenId));
-        assertEq(uint256(bytes32(bytes25(bytes32(rightsId)))), baseRightsId);
+        (uint256 baseDelegateId, uint256 activeDelegateId, Rights memory rights) = ld.getRights(delegateId);
+        assertEq(activeDelegateId, delegateId);
+        assertEq(baseDelegateId, ld.getBaseDelegateId(address(token), tokenId));
+        assertEq(uint256(bytes32(bytes25(bytes32(delegateId)))), baseDelegateId);
         assertEq(rights.nonce, 0);
         assertEq(rights.tokenContract, address(token));
         assertEq(rights.tokenId, tokenId);
@@ -101,10 +101,10 @@ contract DelegateTokenTest is Test {
         token.mint(address(ld), underlyingTokenId);
 
         vm.prank(from);
-        uint256 rightsId = ld.createUnprotected(from, from, address(token), underlyingTokenId, expiryType, expiryValue);
+        uint256 delegateId = ld.createUnprotected(from, from, address(token), underlyingTokenId, expiryType, expiryValue);
 
         vm.prank(from);
-        ld.transferFrom(from, to, rightsId);
+        ld.transferFrom(from, to, delegateId);
 
         assertTrue(registry.checkDelegateForToken(to, address(ld), address(token), underlyingTokenId));
 
@@ -148,17 +148,17 @@ contract DelegateTokenTest is Test {
         vm.startPrank(tokenOwner);
         token.transferFrom(tokenOwner, address(ld), tokenId);
 
-        uint256 rightsId = ld.createUnprotected(ldTo, principalTo, address(token), tokenId, expiryType, expiryValue);
+        uint256 delegateId = ld.createUnprotected(ldTo, principalTo, address(token), tokenId, expiryType, expiryValue);
 
         vm.stopPrank();
 
-        assertEq(ld.ownerOf(rightsId), ldTo);
-        assertEq(principal.ownerOf(rightsId), principalTo);
+        assertEq(ld.ownerOf(delegateId), ldTo);
+        assertEq(principal.ownerOf(delegateId), principalTo);
 
-        (uint256 baseRightsId, uint256 activeRightsId, Rights memory rights) = ld.getRights(rightsId);
-        assertEq(activeRightsId, rightsId);
-        assertEq(baseRightsId, ld.getBaseRightsId(address(token), tokenId));
-        assertEq(uint256(bytes32(bytes25(bytes32(rightsId)))), baseRightsId);
+        (uint256 baseDelegateId, uint256 activeDelegateId, Rights memory rights) = ld.getRights(delegateId);
+        assertEq(activeDelegateId, delegateId);
+        assertEq(baseDelegateId, ld.getBaseDelegateId(address(token), tokenId));
+        assertEq(uint256(bytes32(bytes25(bytes32(delegateId)))), baseDelegateId);
         assertEq(rights.nonce, 0);
         assertEq(rights.tokenContract, address(token));
         assertEq(rights.tokenId, tokenId);
@@ -223,13 +223,13 @@ contract DelegateTokenTest is Test {
         address user = makeAddr("user");
         token.mint(address(ld), id);
         vm.prank(user);
-        uint256 rightsId = ld.createUnprotected(user, user, address(token), id, ExpiryType.Relative, 10 seconds);
+        uint256 delegateId = ld.createUnprotected(user, user, address(token), id, ExpiryType.Relative, 10 seconds);
 
         vm.prank(ldOwner);
         ld.setBaseURI("https://test-uri.com/");
 
-        emit log_named_string("delegate tokenURI:", ld.tokenURI(rightsId));
-        emit log_named_string("principal tokenURI:", principal.tokenURI(rightsId));
+        emit log_named_string("delegate tokenURI:", ld.tokenURI(delegateId));
+        emit log_named_string("principal tokenURI:", principal.tokenURI(delegateId));
     }
 
     function randUser(uint256 i) internal view returns (address) {

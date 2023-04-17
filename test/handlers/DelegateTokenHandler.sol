@@ -78,14 +78,14 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         MockERC721(token).approve(address(liquidDelegate), id);
 
-        uint256 rightsId =
+        uint256 delegateId =
             liquidDelegate.create(currentActor, currentActor, address(token), id, ExpiryType.Relative, 1 seconds);
-        allDelegateTokens.add(rightsId);
-        allPrincipalTokens.add(rightsId);
-        existingDelegateTokens.add(rightsId);
-        existingPrincipalTokens.add(rightsId);
-        ownedLDTokens[currentActor].add(rightsId);
-        ownedPrTokens[currentActor].add(rightsId);
+        allDelegateTokens.add(delegateId);
+        allPrincipalTokens.add(delegateId);
+        existingDelegateTokens.add(delegateId);
+        existingPrincipalTokens.add(delegateId);
+        ownedLDTokens[currentActor].add(delegateId);
+        ownedPrTokens[currentActor].add(delegateId);
 
         vm.stopPrank();
     }
@@ -99,38 +99,38 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         if (to == address(0)) to = currentActor;
 
         // Select random token from actor owns.
-        uint256 rightsId = ownedLDTokens[currentActor].get(rightsSeed);
+        uint256 delegateId = ownedLDTokens[currentActor].get(rightsSeed);
         // If they don't have tokens create new one.
         vm.startPrank(currentActor);
-        if (rightsId == 0) {
+        if (delegateId == 0) {
             (address token, uint256 id) = _mintToken(backupTokenSeed, currentActor);
             MockERC721(token).approve(address(liquidDelegate), id);
 
-            rightsId = liquidDelegate.create(to, currentActor, address(token), id, ExpiryType.Relative, 1 seconds);
+            delegateId = liquidDelegate.create(to, currentActor, address(token), id, ExpiryType.Relative, 1 seconds);
 
-            allDelegateTokens.add(rightsId);
-            allPrincipalTokens.add(rightsId);
-            existingDelegateTokens.add(rightsId);
-            existingPrincipalTokens.add(rightsId);
-            ownedPrTokens[currentActor].add(rightsId);
+            allDelegateTokens.add(delegateId);
+            allPrincipalTokens.add(delegateId);
+            existingDelegateTokens.add(delegateId);
+            existingPrincipalTokens.add(delegateId);
+            ownedPrTokens[currentActor].add(delegateId);
         } else {
-            ownedLDTokens[currentActor].remove(rightsId);
-            liquidDelegate.transferFrom(currentActor, to, rightsId);
+            ownedLDTokens[currentActor].remove(delegateId);
+            liquidDelegate.transferFrom(currentActor, to, delegateId);
         }
 
         vm.stopPrank();
-        ownedLDTokens[to].add(rightsId);
+        ownedLDTokens[to].add(delegateId);
     }
 
     function burnLDToken(uint256 actorSeed, uint256 rightsSeed) public useActor(actorSeed) countCall("ld_burn") {
-        uint256 rightsId = ownedLDTokens[currentActor].get(rightsSeed);
+        uint256 delegateId = ownedLDTokens[currentActor].get(rightsSeed);
 
-        if (rightsId != 0) {
+        if (delegateId != 0) {
             vm.startPrank(currentActor);
 
-            liquidDelegate.burn(rightsId);
-            ownedLDTokens[currentActor].remove(rightsId);
-            existingDelegateTokens.remove(rightsId);
+            liquidDelegate.burn(delegateId);
+            ownedLDTokens[currentActor].remove(delegateId);
+            existingDelegateTokens.remove(delegateId);
 
             vm.stopPrank();
         }

@@ -34,10 +34,10 @@ interface IDelegateTokenBase {
                              EVENTS
     //////////////////////////////////////////////////////////////*/
 
-    event RightsCreated(uint256 indexed baseRightsId, uint56 indexed nonce, uint40 expiry);
-    event RightsExtended(uint256 indexed baseRightsId, uint56 indexed nonce, uint40 previousExpiry, uint40 newExpiry);
-    event RightsBurned(uint256 indexed baseRightsId, uint56 indexed nonce);
-    event UnderlyingWithdrawn(uint256 indexed baseRightsId, uint56 indexed nonce, address to);
+    event RightsCreated(uint256 indexed baseDelegateId, uint56 indexed nonce, uint40 expiry);
+    event RightsExtended(uint256 indexed baseDelegateId, uint56 indexed nonce, uint40 previousExpiry, uint40 newExpiry);
+    event RightsBurned(uint256 indexed baseDelegateId, uint56 indexed nonce);
+    event UnderlyingWithdrawn(uint256 indexed baseDelegateId, uint56 indexed nonce, address to);
 
     /*//////////////////////////////////////////////////////////////
                       VIEW & INTROSPECTION
@@ -51,13 +51,13 @@ interface IDelegateTokenBase {
     function getRights(address tokenContract, uint256 tokenId)
         external
         view
-        returns (uint256 baseRightsId, uint256 activeRightsId, Rights memory rights);
-    function getRights(uint256 rightsId)
+        returns (uint256 baseDelegateId, uint256 activeDelegateId, Rights memory rights);
+    function getRights(uint256 delegateId)
         external
         view
-        returns (uint256 baseRightsId, uint256 activeRightsId, Rights memory rights);
+        returns (uint256 baseDelegateId, uint256 activeDelegateId, Rights memory rights);
 
-    function getBaseRightsId(address tokenContract, uint256 tokenId) external pure returns (uint256);
+    function getBaseDelegateId(address tokenContract, uint256 tokenId) external pure returns (uint256);
     function getExpiry(ExpiryType expiryType, uint256 expiryValue) external view returns (uint40);
 
     /*//////////////////////////////////////////////////////////////
@@ -71,7 +71,7 @@ interface IDelegateTokenBase {
         uint256 tokenId,
         ExpiryType expiryType,
         uint256 expiryValue
-    ) external returns (uint256);
+    ) external payable returns (uint256);
 
     function create(
         address ldRecipient,
@@ -80,16 +80,16 @@ interface IDelegateTokenBase {
         uint256 tokenId,
         ExpiryType expiryType,
         uint256 expiryValue
-    ) external returns (uint256);
+    ) external payable returns (uint256);
 
-    function extend(uint256 rightsId, ExpiryType expiryType, uint256 expiryValue) external;
+    function extend(uint256 delegateId, ExpiryType expiryType, uint256 expiryValue) external;
 
     /*//////////////////////////////////////////////////////////////
                          REDEEM METHODS
     //////////////////////////////////////////////////////////////*/
 
-    function burn(uint256 rightsId) external;
-    function burnWithPermit(address from, uint256 rightsId, bytes calldata sig) external;
+    function burn(uint256 delegateId) external;
+    function burnWithPermit(address from, uint256 delegateId, bytes calldata sig) external;
 
     function withdrawTo(address to, uint56 nonce, address tokenContract, uint256 tokenId) external;
 
@@ -97,7 +97,7 @@ interface IDelegateTokenBase {
                        FLASHLOAN METHODS
     //////////////////////////////////////////////////////////////*/
 
-    function flashLoan(address receiver, uint256 rightsId, address tokenContract, uint256 tokenId, bytes calldata data)
+    function flashLoan(address receiver, uint256 delegateId, address tokenContract, uint256 tokenId, bytes calldata data)
         external;
 }
 

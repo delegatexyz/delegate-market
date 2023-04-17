@@ -54,9 +54,9 @@ contract DelegateTokenInvariants is Test, InvariantTest, BaseLiquidDelegateTest 
     }
 
     function delegateOwnerDelegated(address tokenContract, uint256 tokenId) external {
-        (, uint256 rightsId,) = ld.getRights(ld.getBaseRightsId(tokenContract, tokenId));
+        (, uint256 delegateId,) = ld.getRights(ld.getBaseDelegateId(tokenContract, tokenId));
         address owner;
-        try ld.ownerOf(rightsId) returns (address retrievedOwner) {
+        try ld.ownerOf(delegateId) returns (address retrievedOwner) {
             owner = retrievedOwner;
         } catch {}
         assertTrue(owner != address(0));
@@ -72,31 +72,31 @@ contract DelegateTokenInvariants is Test, InvariantTest, BaseLiquidDelegateTest 
         handler.forAllPrincipalTokens(this.rightsNonceLteActive);
     }
 
-    function rightsNonceLteActive(uint256 rightsId) external {
-        uint56 nonce = uint56(rightsId);
-        (,, Rights memory rights) = ld.getRights(rightsId);
+    function rightsNonceLteActive(uint256 delegateId) external {
+        uint56 nonce = uint56(delegateId);
+        (,, Rights memory rights) = ld.getRights(delegateId);
         assertLe(nonce, rights.nonce);
     }
 
     /// @dev Two existing principal tokens should never have the same base rights Id
     function invariant_onlySinglePrincipal() public {
-        handler.forEachExistingPrincipalToken(this.uniquePrincipalBaseRightsId);
+        handler.forEachExistingPrincipalToken(this.uniquePrincipalBaseDelegateId);
     }
 
     uint256 internal currentPrId;
 
-    function uniquePrincipalBaseRightsId(uint256 prId) external {
+    function uniquePrincipalBaseDelegateId(uint256 prId) external {
         currentPrId = prId;
-        handler.forEachExistingPrincipalToken(this.noDuplicatePrBaseRightsId);
+        handler.forEachExistingPrincipalToken(this.noDuplicatePrBaseDelegateId);
         currentPrId = 0;
     }
 
-    function noDuplicatePrBaseRightsId(uint256 prId) external {
+    function noDuplicatePrBaseDelegateId(uint256 prId) external {
         // `forEach` iterates over whole set so need to skip the item itself.
         if (prId != currentPrId) {
-            (uint256 baseRightsId1,,) = ld.getRights(prId);
-            (uint256 baseRightsId2,,) = ld.getRights(currentPrId);
-            assertTrue(baseRightsId1 != baseRightsId2);
+            (uint256 baseDelegateId1,,) = ld.getRights(prId);
+            (uint256 baseDelegateId2,,) = ld.getRights(currentPrId);
+            assertTrue(baseDelegateId1 != baseDelegateId2);
         }
     }
 }

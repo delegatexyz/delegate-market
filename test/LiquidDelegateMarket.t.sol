@@ -36,7 +36,7 @@ contract LiquidDelegateMarketTest is Test {
 
     function _create(address creator, uint256 tokenId, uint96 expiration, address payable referrer)
         internal
-        returns (uint256 rightsId)
+        returns (uint256 delegateId)
     {
         vm.startPrank(creator);
         nft.mint(creator, tokenId);
@@ -50,12 +50,12 @@ contract LiquidDelegateMarketTest is Test {
     function testBidAndSell(address creator, address buyer, uint256 tokenId) public {
         vm.assume(creator != ZERO);
         vm.assume(buyer != ZERO);
-        uint256 rightsId = _create(creator, tokenId, uint96(block.timestamp) + interval, ZERO);
+        uint256 delegateId = _create(creator, tokenId, uint96(block.timestamp) + interval, ZERO);
         uint256 bidPrice = 0.25 ether;
         uint256 bidId = market.nextBidId();
         vm.deal(buyer, 100 ether);
         vm.prank(buyer);
-        market.bid{value: bidPrice}(rightsId);
+        market.bid{value: bidPrice}(delegateId);
         vm.startPrank(creator);
         rights.setApprovalForAll(address(market), true);
         market.sell(bidId);
@@ -63,22 +63,22 @@ contract LiquidDelegateMarketTest is Test {
 
     function testBidAndCancel(address creator, uint256 tokenId) public {
         vm.assume(creator != ZERO);
-        uint256 rightsId = _create(creator, tokenId, uint96(block.timestamp) + interval, ZERO);
+        uint256 delegateId = _create(creator, tokenId, uint96(block.timestamp) + interval, ZERO);
         uint256 bidPrice = 0.25 ether;
         uint256 bidId = market.nextBidId();
-        market.bid{value: bidPrice}(rightsId);
+        market.bid{value: bidPrice}(delegateId);
         market.cancelBid(bidId);
     }
 
     function testListAndBuy(address creator, address buyer, uint256 tokenId) public {
         vm.assume(creator != ZERO);
         vm.assume(buyer != ZERO);
-        uint256 rightsId = _create(creator, tokenId, uint96(block.timestamp) + interval, ZERO);
+        uint256 delegateId = _create(creator, tokenId, uint96(block.timestamp) + interval, ZERO);
         uint256 listPrice = 0.25 ether;
         uint256 listingId = market.nextListingId();
         vm.startPrank(creator);
         rights.setApprovalForAll(address(market), true);
-        market.list(rightsId, listPrice);
+        market.list(delegateId, listPrice);
         vm.stopPrank();
         vm.deal(buyer, 100 ether);
         vm.prank(buyer);
