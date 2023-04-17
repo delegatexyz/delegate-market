@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.19;
 
-import {ERC2981} from "openzeppelin-contracts/token/common/ERC2981.sol";
-import {IERC165} from "openzeppelin-contracts/utils/introspection/IERC165.sol";
+import {ERC2981} from "openzeppelin-contracts/contracts/token/common/ERC2981.sol";
+import {IERC165} from "openzeppelin-contracts/contracts/utils/introspection/IERC165.sol";
 import {Owned} from "solmate/auth/Owned.sol";
 
 import {LibString} from "solady/utils/LibString.sol";
