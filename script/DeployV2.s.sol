@@ -16,7 +16,7 @@ contract DeployV2 is Script {
 
     address payable constant ZERO = payable(address(0x0));
     DelegationRegistry registry = DelegationRegistry(0x00000000000076A84feF008CDAbe6409d2FE638B);
-    address seaport14 = 0x00000000000001ad428e4906aE43D8F9852d0dD6;
+    address seaport15 = 0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC;
     address deployer = 0xe5ee2B9d5320f2D1492e16567F36b578372B3d9F;
 
     address ptAddress = address(0xcA2430C1Ac3f9bfd558481Fcf5cce5dC1d3454bC); // populate via simulation
@@ -32,7 +32,7 @@ contract DeployV2 is Script {
 
         PrincipalToken pt = new PrincipalToken(dtAddress);
         DelegateToken dt = new DelegateToken(address(registry), ptAddress, baseURI, deployer);
-        WrapOfferer market = new WrapOfferer(seaport14, dtAddress);
+        WrapOfferer market = new WrapOfferer(seaport15, dtAddress);
 
         require(address(pt) == ptAddress, "wrong sim");
         require(address(dt) == dtAddress, "wrong sim");
