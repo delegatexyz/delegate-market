@@ -97,8 +97,13 @@ interface IDelegateTokenBase {
                        FLASHLOAN METHODS
     //////////////////////////////////////////////////////////////*/
 
-    function flashLoan(address receiver, uint256 delegateId, address tokenContract, uint256 tokenId, bytes calldata data)
-        external;
+    function flashLoan(
+        address receiver,
+        uint256 delegateId,
+        address tokenContract,
+        uint256 tokenId,
+        bytes calldata data
+    ) external;
 }
 
 interface IDelegateToken is IERC721, IDelegateTokenBase {}

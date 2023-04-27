@@ -19,7 +19,8 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
     using SafeCastLib for uint256;
 
     /// @notice The value flash borrowers need to return from `onFlashLoan` for the call to be successful.
-    bytes32 public constant FLASHLOAN_CALLBACK_SUCCESS = bytes32(uint256(keccak256("INFTFlashBorrower.onFlashLoan")) - 1);
+    bytes32 public constant FLASHLOAN_CALLBACK_SUCCESS =
+        bytes32(uint256(keccak256("INFTFlashBorrower.onFlashLoan")) - 1);
 
     uint256 internal constant BASE_RIGHTS_ID_MASK = 0xffffffffffffffffffffffffffffffffffffffffffffffffff00000000000000;
     uint256 internal constant RIGHTS_ID_NONCE_BITSIZE = 56;
@@ -70,14 +71,21 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
      * @param tokenId Token ID of underlying token to be borrowed
      * @param data Added metadata to be relayed to borrower
      */
-    function flashLoan(address receiver, uint256 delegateId, address tokenContract, uint256 tokenId, bytes calldata data)
-        external
-    {
+    function flashLoan(
+        address receiver,
+        uint256 delegateId,
+        address tokenContract,
+        uint256 tokenId,
+        bytes calldata data
+    ) external {
         if (!isApprovedOrOwner(msg.sender, delegateId)) revert NotAuthorized();
         if (getBaseDelegateId(tokenContract, tokenId) != delegateId & BASE_RIGHTS_ID_MASK) revert InvalidFlashloan();
         ERC721(tokenContract).transferFrom(address(this), receiver, tokenId);
 
-        if (INFTFlashBorrower(receiver).onFlashLoan(msg.sender, tokenContract, tokenId, data) != FLASHLOAN_CALLBACK_SUCCESS) {
+        if (
+            INFTFlashBorrower(receiver).onFlashLoan(msg.sender, tokenContract, tokenId, data)
+                != FLASHLOAN_CALLBACK_SUCCESS
+        ) {
             revert InvalidFlashloan();
         }
 

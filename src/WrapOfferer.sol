@@ -29,23 +29,28 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
 
     uint256 internal constant EMPTY_RECEIPT_PLACEHOLDER = 1;
 
-    /// @dev 20 * 2 (addresses) + 1 * 2 (enums) + 5 * 2 (uin40) = 52
+    /// @dev 20 * 2 (addresses) + 1 * 2 (enums) + 5 * 2 (uint40) = 52
     uint256 internal constant CONTEXT_MIN_SIZE = 52;
 
     bytes32 internal constant RECEIPT_TYPE_HASH = keccak256(
         "WrapReceipt(address token,uint256 id,string expiryType,uint256 expiryTime,address delegateRecipient,address principalRecipient,uint256 nonce)"
     );
 
+    /// @notice Address for Seaport 1.5
     address public immutable SEAPORT;
-    address public immutable LIQUID_DELEGATE;
 
+    /// @notice Address for the delegate token
+    address public immutable DELEGATE_TOKEN;
+
+    /// @dev Used as transient storage to hold the latest receiptHash
     uint256 internal validatedReceiptId = EMPTY_RECEIPT_PLACEHOLDER;
 
+    /// @dev Stores used receipt nonces to prevent double-fills
     mapping(address => LibBitmap.Bitmap) internal usedNonces;
 
-    constructor(address _SEAPORT, address _LIQUID_DELEGATE) {
+    constructor(address _SEAPORT, address _DELEGATE_TOKEN) {
         SEAPORT = _SEAPORT;
-        LIQUID_DELEGATE = _LIQUID_DELEGATE;
+        DELEGATE_TOKEN = _DELEGATE_TOKEN;
     }
 
     modifier onlySeaport(address caller) {
@@ -53,14 +58,18 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
         _;
     }
 
+    /// TODO: inheritdoc ContractOffererInterface
+    /// @param fulfiller Unused here
+    /// @param minimumReceived The minimum items that the caller (liquid delegate) is willing to receive
+    /// @param maximumSpent The maximum items that the caller (liquid delegate) is willing to spend
+    /// @param context Encoded based on the schema ID
     function generateOrder(
-        address,
-        // What LiquidDelegate is giving up
+        address fulfiller,
         SpentItem[] calldata minimumReceived,
-        // What LiquidDelegate is receiving
         SpentItem[] calldata maximumSpent,
-        bytes calldata context // encoded based on the schemaID
+        bytes calldata context
     ) external onlySeaport(msg.sender) returns (SpentItem[] memory, ReceivedItem[] memory) {
+        // TODO: Is it necessary to restrict this to onlySeaport? It writes validatedReceiptId to storage
         (address tokenContract, uint256 tokenId) = _getTokenFromSpends(maximumSpent);
         (address signer, bytes32 receiptHash, uint40 nonce, bytes memory sig) =
             _receiptFromContext(tokenContract, tokenId, context);
@@ -72,16 +81,23 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
         return _createReturnItems(minimumReceived.length, receiptHash, tokenContract, tokenId);
     }
 
+    /// @notice Return a boolean showing whether the order nonce has been already used, and made invalid, by the user
     function getNonceUsed(address owner, uint256 nonce) external view returns (bool) {
         return usedNonces[owner].get(nonce);
     }
 
+    /// TODO: inheritdoc ContractOffererInterface
+    /// @param offer The offer items, unused here
+    /// @param consideration The consideration items
+    /// @param context Encoded based on the schemaID
+    /// @param orderHashes The order hashes, unused here
+    /// @param contractNonce The contract nonce
     function ratifyOrder(
-        SpentItem[] calldata,
+        SpentItem[] calldata offer,
         ReceivedItem[] calldata consideration,
         bytes calldata context, // encoded based on the schemaID
-        bytes32[] calldata,
-        uint256
+        bytes32[] calldata orderHashes,
+        uint256 contractNonce
     ) external onlySeaport(msg.sender) returns (bytes4) {
         (, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient,,) =
             decodeContext(context);
@@ -90,7 +106,7 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
         validatedReceiptId = EMPTY_RECEIPT_PLACEHOLDER;
 
         // `DelegateToken.createUnprotected` checks whether the appropriate NFT has been deposited.
-        IDelegateToken(LIQUID_DELEGATE).createUnprotected(
+        IDelegateToken(DELEGATE_TOKEN).createUnprotected(
             delegateRecipient,
             principalRecipient,
             consideration[0].token,
@@ -102,6 +118,7 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
         return this.ratifyOrder.selector;
     }
 
+    /// TODO: inheritdoc ContractOffererInterface
     function previewOrder(
         address caller,
         address,
@@ -122,6 +139,7 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
         return _createReturnItems(minimumReceived.length, receiptHash, tokenContract, tokenId);
     }
 
+    /// TODO: inheritdoc ContractOffererInterface
     function getSeaportMetadata() external pure returns (string memory, Schema[] memory) {
         return (name(), new Schema[](0));
     }
@@ -142,7 +160,7 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
         } else if (expiryType == ExpiryType.Absolute) {
             expiryTypeHash = ABSOLUTE_EXPIRY_TYPE_HASH;
         } else {
-            // Incase another enum type accidentally added
+            // Revert if invalid enum types used
             revert InvalidExpiryType();
         }
 
@@ -238,7 +256,7 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
             token: tokenContract,
             identifier: tokenId,
             amount: 1,
-            recipient: payable(LIQUID_DELEGATE)
+            recipient: payable(DELEGATE_TOKEN)
         });
     }
 

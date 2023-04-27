@@ -101,7 +101,8 @@ contract DelegateTokenTest is Test {
         token.mint(address(ld), underlyingTokenId);
 
         vm.prank(from);
-        uint256 delegateId = ld.createUnprotected(from, from, address(token), underlyingTokenId, expiryType, expiryValue);
+        uint256 delegateId =
+            ld.createUnprotected(from, from, address(token), underlyingTokenId, expiryType, expiryValue);
 
         vm.prank(from);
         ld.transferFrom(from, to, delegateId);
