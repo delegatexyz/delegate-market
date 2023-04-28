@@ -1,10 +1,14 @@
 # This Makefile will be checked into the public repo, do not store sensitive secrets here
 export GOERLI_RPC=https://goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161
 export GOERLI_CHAINID=5
+export GOERLI_FORK_BLOCK=8907950
 
 
 test-fast:
 	forge test --no-match-path test/DelegateToken.invariants.t.sol
+
+test-fork:
+	forge test -vvv --rpc-url ${GOERLI_RPC} --fork-block-number ${GOERLI_FORK_BLOCK} --match-path test/WrapOfferer.t.sol
 
 deploy-simulate:
 	# For live deployment, add --broadcast --verify --delay 30 --etherscan-api-key ${ETHERSCAN_API_KEY}
