@@ -46,7 +46,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         vm.label(buyer.addr, "buyer");
 
         vm.prank(seller.addr);
-        token.setApprovalForAll(address(conduit), true);
+        token.setApprovalForAll(address(seaport), true);
 
         AdvancedOrder[] memory orders = new AdvancedOrder[](3);
 
@@ -153,7 +153,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         vm.label(buyer.addr, "buyer");
 
         vm.prank(seller.addr);
-        token.setApprovalForAll(address(conduit), true);
+        token.setApprovalForAll(address(seaport), true);
 
         AdvancedOrder[] memory orders = new AdvancedOrder[](3);
 
@@ -164,7 +164,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         uint256 expectedETH = 0.22 ether;
         weth.mint(buyer.addr, expectedETH);
         vm.prank(buyer.addr);
-        weth.approve(address(conduit), type(uint256).max);
+        weth.approve(address(seaport), type(uint256).max);
         uint256 tokenId = 34;
         token.mint(seller.addr, tokenId);
         uint40 buyerNonce = 0;
@@ -263,7 +263,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
             endTime: block.timestamp + 3 days,
             zoneHash: bytes32(0),
             salt: 1,
-            conduitKey: conduitKey,
+            conduitKey: 0x0000000000000000000000000000000000000000000000000000000000000000,
             totalOriginalConsiderationItems: totalConsiders
         });
         return AdvancedOrder({
@@ -312,7 +312,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
             endTime: block.timestamp + 3 days,
             zoneHash: bytes32(0),
             salt: 1,
-            conduitKey: conduitKey,
+            conduitKey: 0x0000000000000000000000000000000000000000000000000000000000000000,
             totalOriginalConsiderationItems: 1
         });
         return AdvancedOrder({parameters: orderParams, numerator: 1, denominator: 1, signature: "", extraData: context});
@@ -353,7 +353,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
             endTime: block.timestamp + 3 days,
             zoneHash: bytes32(0),
             salt: 1,
-            conduitKey: conduitKey,
+            conduitKey: 0x0000000000000000000000000000000000000000000000000000000000000000,
             totalOriginalConsiderationItems: totalConsiders
         });
         return AdvancedOrder({
