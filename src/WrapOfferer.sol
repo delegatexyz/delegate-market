@@ -11,6 +11,7 @@ import {ItemType} from "seaport/lib/ConsiderationEnums.sol";
 
 import {IDelegateToken, ExpiryType} from "./interfaces/IDelegateToken.sol";
 
+/// @notice A Seaport ContractOfferer
 contract WrapOfferer is IWrapOfferer, EIP712 {
     using LibBitmap for LibBitmap.Bitmap;
 
@@ -53,6 +54,10 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
         DELEGATE_TOKEN = _DELEGATE_TOKEN;
     }
 
+    /**
+     * -----------SEAPORT CALLBACKS-----------
+     */
+
     modifier onlySeaport(address caller) {
         if (caller != SEAPORT) revert NotSeaport();
         _;
@@ -74,6 +79,7 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
         (address signer, bytes32 receiptHash, uint40 nonce, bytes memory sig) =
             _receiptFromContext(tokenContract, tokenId, context);
         if (!usedNonces[signer].toggle(nonce)) revert NonceAlreadyUsed();
+        // TOOD: Why is this signature verification of context data necessary? Seaport already validates the entire offer signature
         if (!SignatureCheckerLib.isValidSignatureNow(signer, _hashTypedData(receiptHash), sig)) {
             revert InvalidSignature();
         }
@@ -119,14 +125,17 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
     }
 
     /// TODO: inheritdoc ContractOffererInterface
+    /// @param caller The address of the caller (Seaport)
+    /// @param fulfiller Unused. The address of fulfiller (account calling Seaport)
+    /// @param minimumReceived What LiquidDelegate is giving up
+    /// @param maximumSpent What LiquidDelegate is receiving
+    /// @param context ABI-packed data about the delegate token
     function previewOrder(
         address caller,
-        address,
-        // What LiquidDelegate is giving up
+        address fulfiller,
         SpentItem[] calldata minimumReceived,
-        // What LiquidDelegate is receiving
         SpentItem[] calldata maximumSpent,
-        bytes calldata context // encoded based on the schemaID
+        bytes calldata context
     ) public view onlySeaport(caller) returns (SpentItem[] memory offer, ReceivedItem[] memory consideration) {
         (address tokenContract, uint256 tokenId) = _getTokenFromSpends(maximumSpent);
         if (caller != SEAPORT) revert NotSeaport();
@@ -144,7 +153,11 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
         return (name(), new Schema[](0));
     }
 
-    // /// @dev Builds unique ERC-712 struct hash
+    /**
+     * -----------HELPER FUNCTIONS-----------
+     */
+
+    /// @dev Builds unique ERC-712 struct hash
     function getReceiptHash(
         address delegateRecipient,
         address principalRecipient,

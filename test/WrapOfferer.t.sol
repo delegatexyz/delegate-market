@@ -100,7 +100,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         vm.prank(buyer.addr);
         seaport.matchAdvancedOrders{value: expectedETH}(orders, new CriteriaResolver[](0), fulfillments, buyer.addr);
 
-        // =========== Verify Correct Receival ===========
+        // =========== Verify Correct Receipt ===========
         assertEq(seller.addr.balance, expectedETH);
         (, uint256 activeDelegateId, Rights memory rights) = ld.getRights(address(token), tokenId);
         assertEq(ld.ownerOf(activeDelegateId), buyer.addr);
