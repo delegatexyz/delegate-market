@@ -39,24 +39,16 @@ contract LiquidDelegateMarket {
     uint256 public nextListingId = 1;
 
     /// @notice Emitted when a bid is created
-    event BidCreated(
-        uint256 indexed bidId, address indexed bidder, uint256 indexed liquidDelegateId, uint256 weiAmount
-    );
+    event BidCreated(uint256 indexed bidId, address indexed bidder, uint256 indexed liquidDelegateId, uint256 weiAmount);
 
     /// @notice Emitted when a bid is canceled or fulfilled
-    event BidCanceled(
-        uint256 indexed bidId, address indexed bidder, uint256 indexed liquidDelegateId, uint256 weiAmount
-    );
+    event BidCanceled(uint256 indexed bidId, address indexed bidder, uint256 indexed liquidDelegateId, uint256 weiAmount);
 
     /// @notice Emitted when a listing is created
-    event ListingCreated(
-        uint256 indexed listingId, address indexed seller, uint256 indexed liquidDelegateId, uint256 weiAmount
-    );
+    event ListingCreated(uint256 indexed listingId, address indexed seller, uint256 indexed liquidDelegateId, uint256 weiAmount);
 
     /// @notice Emitted when a listing is canceled or fulfilled
-    event ListingCanceled(
-        uint256 indexed listingId, address indexed seller, uint256 indexed liquidDelegateId, uint256 weiAmount
-    );
+    event ListingCanceled(uint256 indexed listingId, address indexed seller, uint256 indexed liquidDelegateId, uint256 weiAmount);
 
     /// @notice Emitted when a liquid delegate is sold
     event Sale(uint256 indexed liquidDelegateId, address indexed buyer, address indexed seller, uint256 weiAmount);
@@ -91,8 +83,7 @@ contract LiquidDelegateMarket {
     /// @param liquidDelegateId The id of the liquid delegate
     /// @param weiAmount The amount to sell for
     function list(uint256 liquidDelegateId, uint256 weiAmount) external {
-        listings[nextListingId] =
-            Listing({seller: msg.sender, liquidDelegateId: uint96(liquidDelegateId), weiAmount: weiAmount});
+        listings[nextListingId] = Listing({seller: msg.sender, liquidDelegateId: uint96(liquidDelegateId), weiAmount: weiAmount});
         emit ListingCreated(nextListingId++, msg.sender, liquidDelegateId, weiAmount);
     }
 

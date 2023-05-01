@@ -32,7 +32,7 @@ contract BaseSeaportTest is Test {
         seaport = SeaportInterface(deployedSeaport);
         vm.label(deployedSeaport, "Seaport");
 
-        (,,address empiricalConduitControllerAddress) = seaport.information();
+        (,, address empiricalConduitControllerAddress) = seaport.information();
         assertEq(empiricalConduitControllerAddress, address(conduitController));
 
         vm.startPrank(conduitOwner);

@@ -29,10 +29,7 @@ contract LiquidDelegateTest is Test {
 
     receive() external payable {}
 
-    function _create(address creator, uint256 tokenId, uint96 expiration, address payable referrer)
-        internal
-        returns (uint256 delegateId)
-    {
+    function _create(address creator, uint256 tokenId, uint96 expiration, address payable referrer) internal returns (uint256 delegateId) {
         vm.startPrank(creator);
         nft.mint(creator, tokenId);
         nft.approve(address(rights), tokenId);

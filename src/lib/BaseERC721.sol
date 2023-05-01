@@ -18,11 +18,7 @@ abstract contract BaseERC721 is ERC721 {
         return approvedOrOwner;
     }
 
-    function _isApprovedOrOwner(address spender, uint256 id)
-        internal
-        view
-        returns (bool approvedOrOwner, address owner)
-    {
+    function _isApprovedOrOwner(address spender, uint256 id) internal view returns (bool approvedOrOwner, address owner) {
         owner = _ownerOf[id];
         approvedOrOwner = spender == owner || isApprovedForAll[owner][spender] || getApproved[id] == spender;
     }

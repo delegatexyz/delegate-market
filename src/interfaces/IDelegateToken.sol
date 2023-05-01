@@ -48,14 +48,8 @@ interface IDelegateTokenBase {
     function DELEGATION_REGISTRY() external view returns (address);
     function PRINCIPAL_TOKEN() external view returns (address);
 
-    function getRights(address tokenContract, uint256 tokenId)
-        external
-        view
-        returns (uint256 baseDelegateId, uint256 activeDelegateId, Rights memory rights);
-    function getRights(uint256 delegateId)
-        external
-        view
-        returns (uint256 baseDelegateId, uint256 activeDelegateId, Rights memory rights);
+    function getRights(address tokenContract, uint256 tokenId) external view returns (uint256 baseDelegateId, uint256 activeDelegateId, Rights memory rights);
+    function getRights(uint256 delegateId) external view returns (uint256 baseDelegateId, uint256 activeDelegateId, Rights memory rights);
 
     function getBaseDelegateId(address tokenContract, uint256 tokenId) external pure returns (uint256);
     function getExpiry(ExpiryType expiryType, uint256 expiryValue) external view returns (uint40);
@@ -73,14 +67,10 @@ interface IDelegateTokenBase {
         uint256 expiryValue
     ) external payable returns (uint256);
 
-    function create(
-        address ldRecipient,
-        address principalRecipient,
-        address tokenContract,
-        uint256 tokenId,
-        ExpiryType expiryType,
-        uint256 expiryValue
-    ) external payable returns (uint256);
+    function create(address ldRecipient, address principalRecipient, address tokenContract, uint256 tokenId, ExpiryType expiryType, uint256 expiryValue)
+        external
+        payable
+        returns (uint256);
 
     function extend(uint256 delegateId, ExpiryType expiryType, uint256 expiryValue) external;
 
@@ -97,13 +87,7 @@ interface IDelegateTokenBase {
                        FLASHLOAN METHODS
     //////////////////////////////////////////////////////////////*/
 
-    function flashLoan(
-        address receiver,
-        uint256 delegateId,
-        address tokenContract,
-        uint256 tokenId,
-        bytes calldata data
-    ) external;
+    function flashLoan(address receiver, uint256 delegateId, address tokenContract, uint256 tokenId, bytes calldata data) external;
 }
 
 interface IDelegateToken is IERC721, IDelegateTokenBase {}

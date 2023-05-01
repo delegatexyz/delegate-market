@@ -68,16 +68,14 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
     /// @param minimumReceived The minimum items that the caller (liquid delegate) is willing to receive
     /// @param maximumSpent The maximum items that the caller (liquid delegate) is willing to spend
     /// @param context Encoded based on the schema ID
-    function generateOrder(
-        address fulfiller,
-        SpentItem[] calldata minimumReceived,
-        SpentItem[] calldata maximumSpent,
-        bytes calldata context
-    ) external onlySeaport(msg.sender) returns (SpentItem[] memory, ReceivedItem[] memory) {
+    function generateOrder(address fulfiller, SpentItem[] calldata minimumReceived, SpentItem[] calldata maximumSpent, bytes calldata context)
+        external
+        onlySeaport(msg.sender)
+        returns (SpentItem[] memory, ReceivedItem[] memory)
+    {
         // TODO: Is it necessary to restrict this to onlySeaport? It writes validatedReceiptId to storage
         (address tokenContract, uint256 tokenId) = _getTokenFromSpends(maximumSpent);
-        (address signer, bytes32 receiptHash, uint40 nonce, bytes memory sig) =
-            _receiptFromContext(tokenContract, tokenId, context);
+        (address signer, bytes32 receiptHash, uint40 nonce, bytes memory sig) = _receiptFromContext(tokenContract, tokenId, context);
         if (!usedNonces[signer].toggle(nonce)) revert NonceAlreadyUsed();
         // TOOD: Why is this signature verification of context data necessary? Seaport already validates the entire offer signature
         if (!SignatureCheckerLib.isValidSignatureNow(signer, _hashTypedData(receiptHash), sig)) {
@@ -105,20 +103,14 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
         bytes32[] calldata orderHashes,
         uint256 contractNonce
     ) external onlySeaport(msg.sender) returns (bytes4) {
-        (, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient,,) =
-            decodeContext(context);
+        (, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient,,) = decodeContext(context);
 
         // Remove validated receipt
         validatedReceiptId = EMPTY_RECEIPT_PLACEHOLDER;
 
         // `DelegateToken.createUnprotected` checks whether the appropriate NFT has been deposited.
         IDelegateToken(DELEGATE_TOKEN).createUnprotected(
-            delegateRecipient,
-            principalRecipient,
-            consideration[0].token,
-            consideration[0].identifier,
-            expiryType,
-            expiryValue
+            delegateRecipient, principalRecipient, consideration[0].token, consideration[0].identifier, expiryType, expiryValue
         );
 
         return this.ratifyOrder.selector;
@@ -130,17 +122,15 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
     /// @param minimumReceived What LiquidDelegate is giving up
     /// @param maximumSpent What LiquidDelegate is receiving
     /// @param context ABI-packed data about the delegate token
-    function previewOrder(
-        address caller,
-        address fulfiller,
-        SpentItem[] calldata minimumReceived,
-        SpentItem[] calldata maximumSpent,
-        bytes calldata context
-    ) public view onlySeaport(caller) returns (SpentItem[] memory offer, ReceivedItem[] memory consideration) {
+    function previewOrder(address caller, address fulfiller, SpentItem[] calldata minimumReceived, SpentItem[] calldata maximumSpent, bytes calldata context)
+        public
+        view
+        onlySeaport(caller)
+        returns (SpentItem[] memory offer, ReceivedItem[] memory consideration)
+    {
         (address tokenContract, uint256 tokenId) = _getTokenFromSpends(maximumSpent);
         if (caller != SEAPORT) revert NotSeaport();
-        (address signer, bytes32 receiptHash, uint40 nonce, bytes memory sig) =
-            _receiptFromContext(tokenContract, tokenId, context);
+        (address signer, bytes32 receiptHash, uint40 nonce, bytes memory sig) = _receiptFromContext(tokenContract, tokenId, context);
         if (usedNonces[signer].get(nonce)) revert NonceAlreadyUsed();
         if (!SignatureCheckerLib.isValidSignatureNow(signer, _hashTypedData(receiptHash), sig)) {
             revert InvalidSignature();
@@ -177,11 +167,7 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
             revert InvalidExpiryType();
         }
 
-        receiptHash = keccak256(
-            abi.encode(
-                RECEIPT_TYPE_HASH, token, id, expiryTypeHash, expiryValue, delegateRecipient, principalRecipient, nonce
-            )
-        );
+        receiptHash = keccak256(abi.encode(RECEIPT_TYPE_HASH, token, id, expiryTypeHash, expiryValue, delegateRecipient, principalRecipient, nonce));
     }
 
     function DOMAIN_SEPARATOR() external view returns (bytes32) {
@@ -206,9 +192,7 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
         uint40 nonce,
         bytes memory signature
     ) public pure returns (bytes memory) {
-        return abi.encodePacked(
-            fillerType, expiryType, expiryValue, delegateRecipient, principalRecipient, nonce, signature
-        );
+        return abi.encodePacked(fillerType, expiryType, expiryValue, delegateRecipient, principalRecipient, nonce, signature);
     }
 
     function decodeContext(bytes calldata context)
@@ -252,32 +236,17 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
     {
         offer = new SpentItem[](receiptCount);
         for (uint256 i; i < receiptCount;) {
-            offer[i] = SpentItem({
-                itemType: ItemType.ERC721,
-                token: address(this),
-                identifier: uint256(receiptHash),
-                amount: 1
-            });
+            offer[i] = SpentItem({itemType: ItemType.ERC721, token: address(this), identifier: uint256(receiptHash), amount: 1});
             unchecked {
                 ++i;
             }
         }
 
         consideration = new ReceivedItem[](1);
-        consideration[0] = ReceivedItem({
-            itemType: ItemType.ERC721,
-            token: tokenContract,
-            identifier: tokenId,
-            amount: 1,
-            recipient: payable(DELEGATE_TOKEN)
-        });
+        consideration[0] = ReceivedItem({itemType: ItemType.ERC721, token: tokenContract, identifier: tokenId, amount: 1, recipient: payable(DELEGATE_TOKEN)});
     }
 
-    function _receiptFromContext(address token, uint256 id, bytes calldata context)
-        internal
-        pure
-        returns (address, bytes32, uint40, bytes memory)
-    {
+    function _receiptFromContext(address token, uint256 id, bytes calldata context) internal pure returns (address, bytes32, uint40, bytes memory) {
         (
             ReceiptFillerType fillerType,
             ExpiryType expiryType,
@@ -288,10 +257,8 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
             bytes memory signature
         ) = decodeContext(context);
 
-        bool delegateSigning =
-            fillerType == ReceiptFillerType.PrincipalOpen || fillerType == ReceiptFillerType.PrincipalClosed;
-        bool matchClosed =
-            fillerType == ReceiptFillerType.PrincipalClosed || fillerType == ReceiptFillerType.DelegateClosed;
+        bool delegateSigning = fillerType == ReceiptFillerType.PrincipalOpen || fillerType == ReceiptFillerType.PrincipalClosed;
+        bool matchClosed = fillerType == ReceiptFillerType.PrincipalClosed || fillerType == ReceiptFillerType.DelegateClosed;
 
         address signer = delegateSigning ? delegateRecipient : principalRecipient;
 

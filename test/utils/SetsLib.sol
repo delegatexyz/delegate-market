@@ -72,10 +72,7 @@ library SetsLib {
         }
     }
 
-    function reduce(TokenSet storage s, uint256 acc, function(uint256,address,uint256) external returns (uint256) func)
-        internal
-        returns (uint256)
-    {
+    function reduce(TokenSet storage s, uint256 acc, function(uint256,address,uint256) external returns (uint256) func) internal returns (uint256) {
         for (uint256 i; i < s.tokens.length; ++i) {
             Token memory t = s.tokens[i];
             acc = func(acc, t.addr, t.id);
@@ -115,10 +112,7 @@ library SetsLib {
         }
     }
 
-    function reduce(AddressSet storage s, uint256 acc, function(uint256,address) external returns (uint256) func)
-        internal
-        returns (uint256)
-    {
+    function reduce(AddressSet storage s, uint256 acc, function(uint256,address) external returns (uint256) func) internal returns (uint256) {
         for (uint256 i; i < s.addrs.length; ++i) {
             acc = func(acc, s.addrs[i]);
         }
@@ -172,10 +166,7 @@ library SetsLib {
         }
     }
 
-    function reduce(UintSet storage s, uint256 acc, function(uint256,uint256) external returns (uint256) func)
-        internal
-        returns (uint256)
-    {
+    function reduce(UintSet storage s, uint256 acc, function(uint256,uint256) external returns (uint256) func) internal returns (uint256) {
         for (uint256 i; i < s.nums.length; ++i) {
             acc = func(acc, s.nums[i]);
         }

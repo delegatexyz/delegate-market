@@ -87,13 +87,7 @@ contract DelegateTokenTest is Test {
         assertFalse(registry.checkDelegateForToken(notLdTo, address(ld), address(token), tokenId));
     }
 
-    function test_fuzzingTransferDelegation(
-        address from,
-        address to,
-        uint256 underlyingTokenId,
-        bool expiryTypeRelative,
-        uint256 time
-    ) public {
+    function test_fuzzingTransferDelegation(address from, address to, uint256 underlyingTokenId, bool expiryTypeRelative, uint256 time) public {
         vm.assume(from != address(0));
         vm.assume(to != address(0));
 
@@ -101,8 +95,7 @@ contract DelegateTokenTest is Test {
         token.mint(address(ld), underlyingTokenId);
 
         vm.prank(from);
-        uint256 delegateId =
-            ld.createUnprotected(from, from, address(token), underlyingTokenId, expiryType, expiryValue);
+        uint256 delegateId = ld.createUnprotected(from, from, address(token), underlyingTokenId, expiryType, expiryValue);
 
         vm.prank(from);
         ld.transferFrom(from, to, delegateId);
@@ -114,12 +107,7 @@ contract DelegateTokenTest is Test {
         }
     }
 
-    function test_fuzzingCannotCreateWithoutToken(
-        address minter,
-        uint256 tokenId,
-        bool expiryTypeRelative,
-        uint256 time
-    ) public {
+    function test_fuzzingCannotCreateWithoutToken(address minter, uint256 tokenId, bool expiryTypeRelative, uint256 time) public {
         vm.assume(minter != address(0));
         (ExpiryType expiryType,, uint256 expiryValue) = prepareValidExpiry(expiryTypeRelative, time);
 
@@ -183,13 +171,9 @@ contract DelegateTokenTest is Test {
         ld.createUnprotected(attacker, attacker, address(token), tokenId, ExpiryType.Relative, 5 days);
     }
 
-    function test_fuzzingCannotCreateWithNonexistentContract(
-        address minter,
-        address tokenContract,
-        uint256 tokenId,
-        bool expiryTypeRelative,
-        uint256 time
-    ) public {
+    function test_fuzzingCannotCreateWithNonexistentContract(address minter, address tokenContract, uint256 tokenId, bool expiryTypeRelative, uint256 time)
+        public
+    {
         vm.assume(minter != address(0));
         vm.assume(tokenContract.code.length == 0);
 
@@ -237,11 +221,7 @@ contract DelegateTokenTest is Test {
         return users[bound(i, 0, TOTAL_USERS - 1)];
     }
 
-    function prepareValidExpiry(bool expiryTypeRelative, uint256 time)
-        internal
-        view
-        returns (ExpiryType, uint256, uint256)
-    {
+    function prepareValidExpiry(bool expiryTypeRelative, uint256 time) internal view returns (ExpiryType, uint256, uint256) {
         ExpiryType expiryType = expiryTypeRelative ? ExpiryType.Relative : ExpiryType.Absolute;
         time = bound(time, block.timestamp + 1, type(uint40).max);
         uint256 expiryValue = expiryType == ExpiryType.Relative ? time - block.timestamp : time;

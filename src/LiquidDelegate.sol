@@ -70,22 +70,10 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
     string internal baseURI;
 
     /// @notice Emitted on each deposit creation
-    event RightsCreated(
-        uint256 indexed liquidDelegateId,
-        address indexed depositor,
-        address indexed contract_,
-        uint256 tokenId,
-        uint256 expiration
-    );
+    event RightsCreated(uint256 indexed liquidDelegateId, address indexed depositor, address indexed contract_, uint256 tokenId, uint256 expiration);
 
     /// @notice Emitted on each deposit burning
-    event RightsBurned(
-        uint256 indexed liquidDelegateId,
-        address indexed depositor,
-        address indexed contract_,
-        uint256 tokenId,
-        uint256 expiration
-    );
+    event RightsBurned(uint256 indexed liquidDelegateId, address indexed depositor, address indexed contract_, uint256 tokenId, uint256 expiration);
 
     error AccessControl();
     error InvalidBurn();
@@ -95,9 +83,7 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
     error SendEtherFailed();
     error WrongFee();
 
-    constructor(address _DELEGATION_REGISTRY, address owner, string memory _baseURI)
-        ERC721("LiquidDelegate", "RIGHTS")
-    {
+    constructor(address _DELEGATION_REGISTRY, address owner, string memory _baseURI) ERC721("LiquidDelegate", "RIGHTS") {
         DELEGATION_REGISTRY = _DELEGATION_REGISTRY;
         baseURI = _baseURI;
         metadataOwner = owner;
@@ -125,13 +111,7 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
     /// @param referrer Set to the zero address by default, alternate frontends can populate this to receive half the creation fee
     function create(address contract_, uint256 tokenId, uint96 expiration, address payable referrer) external payable {
         ERC721(contract_).transferFrom(msg.sender, address(this), tokenId);
-        idsToRights[nextLiquidDelegateId] = Rights({
-            depositor: msg.sender,
-            contract_: contract_,
-            tokenId: tokenId,
-            expiration: expiration,
-            referrer: referrer
-        });
+        idsToRights[nextLiquidDelegateId] = Rights({depositor: msg.sender, contract_: contract_, tokenId: tokenId, expiration: expiration, referrer: referrer});
         _mint(msg.sender, nextLiquidDelegateId);
         emit RightsCreated(nextLiquidDelegateId++, msg.sender, contract_, tokenId, expiration);
     }

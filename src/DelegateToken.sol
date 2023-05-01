@@ -19,8 +19,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
     using SafeCastLib for uint256;
 
     /// @notice The value flash borrowers need to return from `onFlashLoan` for the call to be successful.
-    bytes32 public constant FLASHLOAN_CALLBACK_SUCCESS =
-        bytes32(uint256(keccak256("INFTFlashBorrower.onFlashLoan")) - 1);
+    bytes32 public constant FLASHLOAN_CALLBACK_SUCCESS = bytes32(uint256(keccak256("INFTFlashBorrower.onFlashLoan")) - 1);
 
     uint256 internal constant BASE_RIGHTS_ID_MASK = 0xffffffffffffffffffffffffffffffffffffffffffffffffff00000000000000;
     uint256 internal constant RIGHTS_ID_NONCE_BITSIZE = 56;
@@ -33,12 +32,10 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
 
     mapping(uint256 => Rights) internal _idsToRights;
 
-    constructor(
-        address _DELEGATION_REGISTRY,
-        address _PRINCIPAL_TOKEN,
-        string memory _baseURI,
-        address initialMetadataOwner
-    ) BaseERC721(_name(), _symbol()) DTMetadataManager(_baseURI, initialMetadataOwner) {
+    constructor(address _DELEGATION_REGISTRY, address _PRINCIPAL_TOKEN, string memory _baseURI, address initialMetadataOwner)
+        BaseERC721(_name(), _symbol())
+        DTMetadataManager(_baseURI, initialMetadataOwner)
+    {
         DELEGATION_REGISTRY = _DELEGATION_REGISTRY;
         PRINCIPAL_TOKEN = _PRINCIPAL_TOKEN;
     }
@@ -71,21 +68,12 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
      * @param tokenId Token ID of underlying token to be borrowed
      * @param data Added metadata to be relayed to borrower
      */
-    function flashLoan(
-        address receiver,
-        uint256 delegateId,
-        address tokenContract,
-        uint256 tokenId,
-        bytes calldata data
-    ) external {
+    function flashLoan(address receiver, uint256 delegateId, address tokenContract, uint256 tokenId, bytes calldata data) external {
         if (!isApprovedOrOwner(msg.sender, delegateId)) revert NotAuthorized();
         if (getBaseDelegateId(tokenContract, tokenId) != delegateId & BASE_RIGHTS_ID_MASK) revert InvalidFlashloan();
         ERC721(tokenContract).transferFrom(address(this), receiver, tokenId);
 
-        if (
-            INFTFlashBorrower(receiver).onFlashLoan(msg.sender, tokenContract, tokenId, data)
-                != FLASHLOAN_CALLBACK_SUCCESS
-        ) {
+        if (INFTFlashBorrower(receiver).onFlashLoan(msg.sender, tokenContract, tokenId, data) != FLASHLOAN_CALLBACK_SUCCESS) {
             revert InvalidFlashloan();
         }
 
@@ -131,14 +119,11 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
      * @return New rights ID that is also the token ID of both the newly created principal and
      * delegate tokens.
      */
-    function create(
-        address delegateRecipient,
-        address principalRecipient,
-        address tokenContract,
-        uint256 tokenId,
-        ExpiryType expiryType,
-        uint256 expiryValue
-    ) external payable returns (uint256) {
+    function create(address delegateRecipient, address principalRecipient, address tokenContract, uint256 tokenId, ExpiryType expiryType, uint256 expiryValue)
+        external
+        payable
+        returns (uint256)
+    {
         ERC721(tokenContract).transferFrom(msg.sender, address(this), tokenId);
         uint40 expiry = getExpiry(expiryType, expiryValue);
         return _mint(delegateRecipient, principalRecipient, tokenContract, tokenId, expiry);
@@ -181,11 +166,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
      * format is `abi.encodePacked(r, s, v)`. ERC-1271 signatures are also accepted.
      */
     function burnWithPermit(address spender, uint256 delegateId, bytes calldata sig) external {
-        if (
-            !SignatureCheckerLib.isValidSignatureNowCalldata(
-                spender, _hashTypedData(keccak256(abi.encode(BURN_PERMIT_TYPE_HASH, delegateId))), sig
-            )
-        ) {
+        if (!SignatureCheckerLib.isValidSignatureNowCalldata(spender, _hashTypedData(keccak256(abi.encode(BURN_PERMIT_TYPE_HASH, delegateId))), sig)) {
             revert InvalidSignature();
         }
         _burnAuth(spender, delegateId);
@@ -248,22 +229,14 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
         return ERC721.supportsInterface(interfaceId) || DTMetadataManager.supportsInterface(interfaceId);
     }
 
-    function getRights(address tokenContract, uint256 tokenId)
-        public
-        view
-        returns (uint256 baseDelegateId, uint256 activeDelegateId, Rights memory rights)
-    {
+    function getRights(address tokenContract, uint256 tokenId) public view returns (uint256 baseDelegateId, uint256 activeDelegateId, Rights memory rights) {
         baseDelegateId = getBaseDelegateId(tokenContract, tokenId);
         rights = _idsToRights[baseDelegateId];
         activeDelegateId = baseDelegateId | rights.nonce;
         if (rights.tokenContract == address(0)) revert NoRights();
     }
 
-    function getRights(uint256 delegateId)
-        public
-        view
-        returns (uint256 baseDelegateId, uint256 activeDelegateId, Rights memory rights)
-    {
+    function getRights(uint256 delegateId) public view returns (uint256 baseDelegateId, uint256 activeDelegateId, Rights memory rights) {
         baseDelegateId = delegateId & BASE_RIGHTS_ID_MASK;
         rights = _idsToRights[baseDelegateId];
         activeDelegateId = baseDelegateId | rights.nonce;
@@ -285,13 +258,10 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
         if (expiry <= block.timestamp) revert ExpiryTimeNotInFuture();
     }
 
-    function _mint(
-        address delegateRecipient,
-        address principalRecipient,
-        address tokenContract,
-        uint256 tokenId,
-        uint40 expiry
-    ) internal returns (uint256 delegateId) {
+    function _mint(address delegateRecipient, address principalRecipient, address tokenContract, uint256 tokenId, uint40 expiry)
+        internal
+        returns (uint256 delegateId)
+    {
         uint256 baseDelegateId = getBaseDelegateId(tokenContract, tokenId);
         Rights storage rights = _idsToRights[baseDelegateId];
         uint56 nonce = rights.nonce;
@@ -299,17 +269,14 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
 
         if (nonce == 0) {
             // First time rights for this token are set up, store everything.
-            _idsToRights[baseDelegateId] =
-                Rights({tokenContract: tokenContract, expiry: uint40(expiry), nonce: 0, tokenId: tokenId});
+            _idsToRights[baseDelegateId] = Rights({tokenContract: tokenContract, expiry: uint40(expiry), nonce: 0, tokenId: tokenId});
         } else {
             // Rights already used once, so only need to update expiry.
             rights.expiry = uint40(expiry);
         }
 
         _mint(delegateRecipient, delegateId);
-        IDelegationRegistry(DELEGATION_REGISTRY).delegateForToken(
-            delegateRecipient, rights.tokenContract, rights.tokenId, true
-        );
+        IDelegationRegistry(DELEGATION_REGISTRY).delegateForToken(delegateRecipient, rights.tokenContract, rights.tokenId, true);
 
         PrincipalToken(PRINCIPAL_TOKEN).mint(principalRecipient, delegateId);
 

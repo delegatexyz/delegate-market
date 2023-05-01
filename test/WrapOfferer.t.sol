@@ -60,9 +60,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         token.mint(seller.addr, tokenId);
         uint40 sellerNonce = 0;
         // 2. Create and sign wrap receipt
-        bytes32 receiptHash = wofferer.getReceiptHash(
-            address(0), seller.addr, address(token), tokenId, expiryType, expiryValue, sellerNonce
-        );
+        bytes32 receiptHash = wofferer.getReceiptHash(address(0), seller.addr, address(token), tokenId, expiryType, expiryValue, sellerNonce);
         (bytes memory receiptSig,) = signERC712(seller, wofferer.DOMAIN_SEPARATOR(), receiptHash);
         // 3. Build Order
         orders[0] = _createSellerOrder(seller, tokenId, uint256(receiptHash), expectedETH, false);
@@ -71,15 +69,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         orders[1] = _createWrapContractOrder(
             tokenId,
             uint256(receiptHash),
-            wofferer.encodeContext(
-                ReceiptFillerType.DelegateOpen,
-                expiryType,
-                uint40(expiryValue),
-                buyer.addr,
-                seller.addr,
-                sellerNonce,
-                receiptSig
-            )
+            wofferer.encodeContext(ReceiptFillerType.DelegateOpen, expiryType, uint40(expiryValue), buyer.addr, seller.addr, sellerNonce, receiptSig)
         );
 
         // ========== Create Buy Delegate Order ==========
@@ -117,11 +107,8 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         uint40 inNonce,
         bytes memory inSig
     ) public {
-        ReceiptFillerType inFillerType = ReceiptFillerType(
-            bound(rawFillerType, uint8(type(ReceiptFillerType).min), uint8(type(ReceiptFillerType).max))
-        );
-        ExpiryType inExpiryType =
-            ExpiryType(bound(rawExpiryType, uint8(type(ExpiryType).min), uint8(type(ExpiryType).max)));
+        ReceiptFillerType inFillerType = ReceiptFillerType(bound(rawFillerType, uint8(type(ReceiptFillerType).min), uint8(type(ReceiptFillerType).max)));
+        ExpiryType inExpiryType = ExpiryType(bound(rawExpiryType, uint8(type(ExpiryType).min), uint8(type(ExpiryType).max)));
 
         (
             ReceiptFillerType outFillerType,
@@ -131,11 +118,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
             address outPrincipalRecipient,
             uint40 outNonce,
             bytes memory outSig
-        ) = wofferer.decodeContext(
-            wofferer.encodeContext(
-                inFillerType, inExpiryType, inExpiryValue, inDelegateRecipient, inPrincipalRecipient, inNonce, inSig
-            )
-        );
+        ) = wofferer.decodeContext(wofferer.encodeContext(inFillerType, inExpiryType, inExpiryValue, inDelegateRecipient, inPrincipalRecipient, inNonce, inSig));
         assertEq(uint8(inFillerType), uint8(outFillerType));
         assertEq(uint8(inExpiryType), uint8(outExpiryType));
         assertEq(inExpiryValue, outExpiryValue);
@@ -169,9 +152,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         token.mint(seller.addr, tokenId);
         uint40 buyerNonce = 0;
         // 2. Create and sign wrap receipt
-        bytes32 receiptHash = wofferer.getReceiptHash(
-            buyer.addr, address(0), address(token), tokenId, expiryType, expiryValue, buyerNonce
-        );
+        bytes32 receiptHash = wofferer.getReceiptHash(buyer.addr, address(0), address(token), tokenId, expiryType, expiryValue, buyerNonce);
 
         (bytes memory receiptSig,) = signERC712(buyer, wofferer.DOMAIN_SEPARATOR(), receiptHash);
         // 3. Build Order
@@ -181,15 +162,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         orders[1] = _createWrapContractOrder(
             tokenId,
             uint256(receiptHash),
-            wofferer.encodeContext(
-                ReceiptFillerType.PrincipalOpen,
-                expiryType,
-                uint40(expiryValue),
-                buyer.addr,
-                seller.addr,
-                buyerNonce,
-                receiptSig
-            )
+            wofferer.encodeContext(ReceiptFillerType.PrincipalOpen, expiryType, uint40(expiryValue), buyer.addr, seller.addr, buyerNonce, receiptSig)
         );
 
         // ========= Create Sell Delegate Order ==========
@@ -218,21 +191,13 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         assertEq(rights.expiry, expiryValue);
     }
 
-    function _createSellerOrder(
-        User memory user,
-        uint256 tokenId,
-        uint256 receiptId,
-        uint256 expectedETH,
-        bool submittingAsCaller
-    ) internal view returns (AdvancedOrder memory) {
+    function _createSellerOrder(User memory user, uint256 tokenId, uint256 receiptId, uint256 expectedETH, bool submittingAsCaller)
+        internal
+        view
+        returns (AdvancedOrder memory)
+    {
         OfferItem[] memory offer = new OfferItem[](1);
-        offer[0] = OfferItem({
-            itemType: ItemType.ERC721,
-            token: address(token),
-            identifierOrCriteria: tokenId,
-            startAmount: 1,
-            endAmount: 1
-        });
+        offer[0] = OfferItem({itemType: ItemType.ERC721, token: address(token), identifierOrCriteria: tokenId, startAmount: 1, endAmount: 1});
         uint256 totalConsiders = receiptId == 0 ? 1 : 2;
         ConsiderationItem[] memory consideration = new ConsiderationItem[](totalConsiders);
         consideration[0] = ConsiderationItem({
@@ -276,21 +241,11 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         });
     }
 
-    function _createWrapContractOrder(uint256 tokenId, uint256 receiptId, bytes memory context)
-        internal
-        view
-        returns (AdvancedOrder memory)
-    {
+    function _createWrapContractOrder(uint256 tokenId, uint256 receiptId, bytes memory context) internal view returns (AdvancedOrder memory) {
         // Wrap Offerer, offers gives a certain receipt as a commitment that certain parties
         // received principal / delegate tokens with certain terms
         OfferItem[] memory offer = new OfferItem[](1);
-        offer[0] = OfferItem({
-            itemType: ItemType.ERC721,
-            token: address(wofferer),
-            identifierOrCriteria: receiptId,
-            startAmount: 1,
-            endAmount: 1
-        });
+        offer[0] = OfferItem({itemType: ItemType.ERC721, token: address(wofferer), identifierOrCriteria: receiptId, startAmount: 1, endAmount: 1});
         // Wrap Offerer expects the Liquid Delegate contract to receive the underlying so that it
         // can execute the `mint` in ratify.
         ConsiderationItem[] memory consideration = new ConsiderationItem[](1);
@@ -370,17 +325,15 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         return signOrder(_user, seaportDomainSeparator, _params, seaport.getCounter(_user.addr));
     }
 
-    function _constructFulfillment(
-        uint256 _offerOrderIndex,
-        uint256 _offerItemIndex,
-        uint256 _considerationOrderIndex,
-        uint256 _considerationItemIndex
-    ) internal pure returns (Fulfillment memory) {
+    function _constructFulfillment(uint256 _offerOrderIndex, uint256 _offerItemIndex, uint256 _considerationOrderIndex, uint256 _considerationItemIndex)
+        internal
+        pure
+        returns (Fulfillment memory)
+    {
         FulfillmentComponent[] memory offerComponents = new FulfillmentComponent[](1);
         offerComponents[0] = FulfillmentComponent({orderIndex: _offerOrderIndex, itemIndex: _offerItemIndex});
         FulfillmentComponent[] memory considerationComponents = new FulfillmentComponent[](1);
-        considerationComponents[0] =
-            FulfillmentComponent({orderIndex: _considerationOrderIndex, itemIndex: _considerationItemIndex});
+        considerationComponents[0] = FulfillmentComponent({orderIndex: _considerationOrderIndex, itemIndex: _considerationItemIndex});
         return Fulfillment({offerComponents: offerComponents, considerationComponents: considerationComponents});
     }
 }

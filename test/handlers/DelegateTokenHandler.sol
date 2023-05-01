@@ -78,8 +78,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         MockERC721(token).approve(address(liquidDelegate), id);
 
-        uint256 delegateId =
-            liquidDelegate.create(currentActor, currentActor, address(token), id, ExpiryType.Relative, 1 seconds);
+        uint256 delegateId = liquidDelegate.create(currentActor, currentActor, address(token), id, ExpiryType.Relative, 1 seconds);
         allDelegateTokens.add(delegateId);
         allPrincipalTokens.add(delegateId);
         existingDelegateTokens.add(delegateId);
@@ -136,11 +135,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         }
     }
 
-    function withdrawExpired(uint256 actorSeed, uint256 prSeed)
-        public
-        useActor(actorSeed)
-        countCall("withdraw_expired")
-    {
+    function withdrawExpired(uint256 actorSeed, uint256 prSeed) public useActor(actorSeed) countCall("withdraw_expired") {
         uint256 prId = ownedPrTokens[currentActor].get(prSeed);
 
         if (prId == 0) return;
@@ -163,11 +158,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         }
     }
 
-    function withdrawBurned(uint256 actorSeed, uint256 prSeed)
-        public
-        useActor(actorSeed)
-        countCall("withdraw_burned")
-    {
+    function withdrawBurned(uint256 actorSeed, uint256 prSeed) public useActor(actorSeed) countCall("withdraw_burned") {
         uint256 prId = ownedPrTokens[currentActor].get(prSeed);
         if (prId == 0) return;
 
@@ -195,8 +186,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         (,, Rights memory rights) = liquidDelegate.getRights(prId);
 
-        ExpiryType expiryType =
-            ExpiryType(bound(rawExpiryType, uint256(type(ExpiryType).min), uint256(type(ExpiryType).max)).toUint8());
+        ExpiryType expiryType = ExpiryType(bound(rawExpiryType, uint256(type(ExpiryType).min), uint256(type(ExpiryType).max)).toUint8());
 
         uint256 minTime = (rights.expiry > block.timestamp ? rights.expiry : block.timestamp) + 1;
         uint256 maxTime = expiryType == ExpiryType.Relative ? type(uint40).max - block.timestamp : type(uint40).max;
