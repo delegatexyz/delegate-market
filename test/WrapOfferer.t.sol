@@ -52,7 +52,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
 
         // ========= Create Sell Delegate Order ==========
         // 1. Define parameters
-        ExpiryType expiryType = ExpiryType.Relative;
+        ExpiryType expiryType = ExpiryType.RELATIVE;
         uint256 expiryValue = 30 days;
         uint256 expectedETH = 0.3 ether;
         vm.deal(buyer.addr, expectedETH);
@@ -142,7 +142,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
 
         // ============== Create Buy Order ===============
         // 1. Define parameters
-        ExpiryType expiryType = ExpiryType.Absolute;
+        ExpiryType expiryType = ExpiryType.ABSOLUTE;
         uint256 expiryValue = block.timestamp + 40 days;
         uint256 expectedETH = 0.22 ether;
         weth.mint(buyer.addr, expectedETH);

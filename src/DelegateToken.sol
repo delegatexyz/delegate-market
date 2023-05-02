@@ -77,8 +77,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
             revert InvalidFlashloan();
         }
 
-        // Safer and cheaper to expect the token to have been returned rather than pulling it with
-        // `transferFrom`.
+        // Safer and cheaper to expect the token to have been returned rather than pulling it with `transferFrom`.
         if (ERC721(tokenContract).ownerOf(tokenId) != address(this)) revert InvalidFlashloan();
     }
 
@@ -248,9 +247,9 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
     }
 
     function getExpiry(ExpiryType expiryType, uint256 expiryValue) public view returns (uint40 expiry) {
-        if (expiryType == ExpiryType.Relative) {
+        if (expiryType == ExpiryType.RELATIVE) {
             expiry = (block.timestamp + expiryValue).toUint40();
-        } else if (expiryType == ExpiryType.Absolute) {
+        } else if (expiryType == ExpiryType.ABSOLUTE) {
             expiry = expiryValue.toUint40();
         } else {
             revert InvalidExpiryType();

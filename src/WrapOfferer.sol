@@ -49,6 +49,8 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
     /// @dev Stores used receipt nonces to prevent double-fills
     mapping(address => LibBitmap.Bitmap) internal usedNonces;
 
+    /// @param _SEAPORT The latest seaport address, currently using 1.5
+    /// @param _DELEGATE_TOKEN The delegate token to operate on
     constructor(address _SEAPORT, address _DELEGATE_TOKEN) {
         SEAPORT = _SEAPORT;
         DELEGATE_TOKEN = _DELEGATE_TOKEN;
@@ -99,7 +101,7 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
     function ratifyOrder(
         SpentItem[] calldata offer,
         ReceivedItem[] calldata consideration,
-        bytes calldata context, // encoded based on the schemaID
+        bytes calldata context,
         bytes32[] calldata orderHashes,
         uint256 contractNonce
     ) external onlySeaport(msg.sender) returns (bytes4) {
@@ -109,9 +111,10 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
         validatedReceiptId = EMPTY_RECEIPT_PLACEHOLDER;
 
         // `DelegateToken.createUnprotected` checks whether the appropriate NFT has been deposited.
-        IDelegateToken(DELEGATE_TOKEN).createUnprotected(
-            delegateRecipient, principalRecipient, consideration[0].token, consideration[0].identifier, expiryType, expiryValue
-        );
+        // TODO: fix stack-too-deep
+        // IDelegateToken(DELEGATE_TOKEN).createUnprotected(
+        //     delegateRecipient, principalRecipient, consideration[0].token, consideration[0].identifier, expiryType, expiryValue
+        // );
 
         return this.ratifyOrder.selector;
     }
@@ -158,9 +161,9 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
         uint40 nonce
     ) public pure returns (bytes32 receiptHash) {
         bytes32 expiryTypeHash;
-        if (expiryType == ExpiryType.Relative) {
+        if (expiryType == ExpiryType.RELATIVE) {
             expiryTypeHash = RELATIVE_EXPIRY_TYPE_HASH;
-        } else if (expiryType == ExpiryType.Absolute) {
+        } else if (expiryType == ExpiryType.ABSOLUTE) {
             expiryTypeHash = ABSOLUTE_EXPIRY_TYPE_HASH;
         } else {
             // Revert if invalid enum types used
@@ -263,6 +266,7 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
         address signer = delegateSigning ? delegateRecipient : principalRecipient;
 
         // Check signature
+        // TODO: Fix stack-too-deep
         bytes32 receiptHash = getReceiptHash(
             matchClosed || delegateSigning ? delegateRecipient : address(0),
             matchClosed || !delegateSigning ? principalRecipient : address(0),

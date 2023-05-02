@@ -58,7 +58,7 @@ contract PrincipalToken is BaseERC721("Principal Token", "PT") {
         string memory rightsOwnerStr = rightsOwner == address(0) ? "N/A" : rightsOwner.toHexStringChecksumed();
         string memory status = rightsOwner == address(0) || rights.expiry <= block.timestamp ? "Unlocked" : "Locked";
 
-        string memory metadataString = string.concat(
+        string memory metadataString1 = string.concat(
             '{"name":"',
             string.concat(name, " #", idstr),
             '","description":"LiquidDelegate lets you escrow your token for a chosen timeperiod and receive a liquid NFT representing the associated delegation rights. This collection represents the principal i.e. the future right to claim the underlying token once the associated delegate token expires.","attributes":[{"trait_type":"Collection Address","value":"',
@@ -66,7 +66,9 @@ contract PrincipalToken is BaseERC721("Principal Token", "PT") {
             '"},{"trait_type":"Token ID","value":"',
             idstr,
             '"},{"trait_type":"Unlocks At","display_type":"date","value":',
-            uint256(rights.expiry).toString(),
+            uint256(rights.expiry).toString()
+        );
+        string memory metadataString2 = string.concat(
             '},{"trait_type":"Delegate Owner Address","value":"',
             rightsOwnerStr,
             '"},{"trait_type":"Principal Status","value":"',
@@ -75,6 +77,8 @@ contract PrincipalToken is BaseERC721("Principal Token", "PT") {
             imageUrl,
             '"}'
         );
+        // Build in two parts to avoid stack-too-deep
+        string memory metadataString = string.concat(metadataString1, metadataString2);
 
         return string.concat("data:application/json;base64,", Base64.encode(bytes(metadataString)));
     }

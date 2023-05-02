@@ -162,13 +162,13 @@ contract DelegateTokenTest is Test {
         uint256 tokenId = token.mintNext(tokenOwner);
         vm.startPrank(tokenOwner);
         token.setApprovalForAll(address(ld), true);
-        ld.create(tokenOwner, tokenOwner, address(token), tokenId, ExpiryType.Relative, 10 days);
+        ld.create(tokenOwner, tokenOwner, address(token), tokenId, ExpiryType.RELATIVE, 10 days);
         vm.stopPrank();
 
         address attacker = makeAddr("attacker");
         vm.prank(attacker);
         vm.expectRevert();
-        ld.createUnprotected(attacker, attacker, address(token), tokenId, ExpiryType.Relative, 5 days);
+        ld.createUnprotected(attacker, attacker, address(token), tokenId, ExpiryType.RELATIVE, 5 days);
     }
 
     function test_fuzzingCannotCreateWithNonexistentContract(address minter, address tokenContract, uint256 tokenId, bool expiryTypeRelative, uint256 time)
@@ -208,7 +208,7 @@ contract DelegateTokenTest is Test {
         address user = makeAddr("user");
         token.mint(address(ld), id);
         vm.prank(user);
-        uint256 delegateId = ld.createUnprotected(user, user, address(token), id, ExpiryType.Relative, 10 seconds);
+        uint256 delegateId = ld.createUnprotected(user, user, address(token), id, ExpiryType.RELATIVE, 10 seconds);
 
         vm.prank(ldOwner);
         ld.setBaseURI("https://test-uri.com/");
@@ -222,9 +222,9 @@ contract DelegateTokenTest is Test {
     }
 
     function prepareValidExpiry(bool expiryTypeRelative, uint256 time) internal view returns (ExpiryType, uint256, uint256) {
-        ExpiryType expiryType = expiryTypeRelative ? ExpiryType.Relative : ExpiryType.Absolute;
+        ExpiryType expiryType = expiryTypeRelative ? ExpiryType.RELATIVE : ExpiryType.ABSOLUTE;
         time = bound(time, block.timestamp + 1, type(uint40).max);
-        uint256 expiryValue = expiryType == ExpiryType.Relative ? time - block.timestamp : time;
+        uint256 expiryValue = expiryType == ExpiryType.RELATIVE ? time - block.timestamp : time;
         return (expiryType, time, expiryValue);
     }
 }

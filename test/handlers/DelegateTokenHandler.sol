@@ -78,7 +78,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         MockERC721(token).approve(address(liquidDelegate), id);
 
-        uint256 delegateId = liquidDelegate.create(currentActor, currentActor, address(token), id, ExpiryType.Relative, 1 seconds);
+        uint256 delegateId = liquidDelegate.create(currentActor, currentActor, address(token), id, ExpiryType.RELATIVE, 1 seconds);
         allDelegateTokens.add(delegateId);
         allPrincipalTokens.add(delegateId);
         existingDelegateTokens.add(delegateId);
@@ -105,7 +105,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
             (address token, uint256 id) = _mintToken(backupTokenSeed, currentActor);
             MockERC721(token).approve(address(liquidDelegate), id);
 
-            delegateId = liquidDelegate.create(to, currentActor, address(token), id, ExpiryType.Relative, 1 seconds);
+            delegateId = liquidDelegate.create(to, currentActor, address(token), id, ExpiryType.RELATIVE, 1 seconds);
 
             allDelegateTokens.add(delegateId);
             allPrincipalTokens.add(delegateId);
@@ -189,7 +189,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         ExpiryType expiryType = ExpiryType(bound(rawExpiryType, uint256(type(ExpiryType).min), uint256(type(ExpiryType).max)).toUint8());
 
         uint256 minTime = (rights.expiry > block.timestamp ? rights.expiry : block.timestamp) + 1;
-        uint256 maxTime = expiryType == ExpiryType.Relative ? type(uint40).max - block.timestamp : type(uint40).max;
+        uint256 maxTime = expiryType == ExpiryType.RELATIVE ? type(uint40).max - block.timestamp : type(uint40).max;
         // No possible extension
         if (maxTime < minTime) return;
 

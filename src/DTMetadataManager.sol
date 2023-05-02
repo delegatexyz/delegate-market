@@ -49,7 +49,7 @@ abstract contract DTMetadataManager is ERC2981, Owned {
         string memory pownerstr = principalOwner == address(0) ? "N/A" : principalOwner.toHexStringChecksumed();
         string memory status = principalOwner == address(0) || expiry <= block.timestamp ? "Expired" : "Active";
 
-        string memory metadataString = string.concat(
+        string memory metadataStringPart1 = string.concat(
             '{"name":"',
             _name(),
             " #",
@@ -59,7 +59,9 @@ abstract contract DTMetadataManager is ERC2981, Owned {
             '"},{"trait_type":"Token ID","value":"',
             idstr,
             '"},{"trait_type":"Expires At","display_type":"date","value":',
-            uint256(expiry).toString(),
+            uint256(expiry).toString()
+        );
+        string memory metadataStringPart2 = string.concat(
             '},{"trait_type":"Principal Owner Address","value":"',
             pownerstr,
             '"},{"trait_type":"Delegate Status","value":"',
@@ -71,6 +73,8 @@ abstract contract DTMetadataManager is ERC2981, Owned {
             idstr,
             '"}'
         );
+        // Build via two substrings to avoid stack-too-deep
+        string memory metadataString = string.concat(metadataStringPart1, metadataStringPart2);
 
         return string.concat("data:application/json;base64,", Base64.encode(bytes(metadataString)));
     }
