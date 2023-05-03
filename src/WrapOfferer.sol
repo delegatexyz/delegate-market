@@ -32,9 +32,8 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
     /// @dev 20 * 2 (addresses) + 1 * 2 (enums) + 5 * 1 (uint40) = 47
     uint256 internal constant CONTEXT_MIN_SIZE = 47;
 
-    bytes32 internal constant RECEIPT_TYPE_HASH = keccak256(
-        "WrapReceipt(address token,uint256 id,string expiryType,uint256 expiryTime,address delegateRecipient,address principalRecipient)"
-    );
+    bytes32 internal constant RECEIPT_TYPE_HASH =
+        keccak256("WrapReceipt(address token,uint256 id,string expiryType,uint256 expiryTime,address delegateRecipient,address principalRecipient)");
 
     /// @notice Address for Seaport 1.5
     address public immutable SEAPORT;
@@ -140,14 +139,11 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
     /// @param id The NFT id
     /// @param expiryType Whether expiration is an absolute timestamp or relative offset from order fulfillment
     /// @param expiryValue The expiration absolute timestamp or relative offset, in UTC seconds
-    function getReceiptHash(
-        address delegateRecipient,
-        address principalRecipient,
-        address token,
-        uint256 id,
-        ExpiryType expiryType,
-        uint256 expiryValue
-    ) public pure returns (bytes32 receiptHash) {
+    function getReceiptHash(address delegateRecipient, address principalRecipient, address token, uint256 id, ExpiryType expiryType, uint256 expiryValue)
+        public
+        pure
+        returns (bytes32 receiptHash)
+    {
         bytes32 expiryTypeHash;
         if (expiryType == ExpiryType.RELATIVE) {
             expiryTypeHash = RELATIVE_EXPIRY_TYPE_HASH;
@@ -176,27 +172,18 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
     }
 
     /// @notice Pack information about the Liquid Delegate to be created into a reversible bytes object
-    function encodeContext(
-        ReceiptFillerType fillerType,
-        ExpiryType expiryType,
-        uint40 expiryValue,
-        address delegateRecipient,
-        address principalRecipient,
-        bytes memory signature
-    ) public pure returns (bytes memory) {
-        return abi.encodePacked(fillerType, expiryType, expiryValue, delegateRecipient, principalRecipient, signature);
+    function encodeContext(ReceiptFillerType fillerType, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient)
+        public
+        pure
+        returns (bytes memory)
+    {
+        return abi.encodePacked(fillerType, expiryType, expiryValue, delegateRecipient, principalRecipient);
     }
 
     function decodeContext(bytes calldata context)
         public
         pure
-        returns (
-            ReceiptFillerType fillerType,
-            ExpiryType expiryType,
-            uint40 expiryValue,
-            address delegateRecipient,
-            address principalRecipient
-        )
+        returns (ReceiptFillerType fillerType, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient)
     {
         if (context.length < CONTEXT_MIN_SIZE) revert InvalidContext();
         fillerType = ReceiptFillerType(uint8(context[0]));
@@ -236,26 +223,14 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
 
     /// @return receiptHash The receipt hash for a given context to match with the receipt id
     function _receiptFromContext(address token, uint256 id, bytes calldata context) internal pure returns (bytes32 receiptHash) {
-        (
-            ReceiptFillerType fillerType,
-            ExpiryType expiryType,
-            uint40 expiryValue,
-            address delegateRecipient,
-            address principalRecipient
-        ) = decodeContext(context);
+        (ReceiptFillerType fillerType, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient) =
+            decodeContext(context);
 
         bool delegateSigning = fillerType == ReceiptFillerType.PrincipalOpen || fillerType == ReceiptFillerType.PrincipalClosed;
         bool matchClosed = fillerType == ReceiptFillerType.PrincipalClosed || fillerType == ReceiptFillerType.DelegateClosed;
         if (!(matchClosed || delegateSigning)) delegateRecipient = address(0);
         if (!(matchClosed || !delegateSigning)) principalRecipient = address(0);
 
-        receiptHash = getReceiptHash(
-            delegateRecipient,
-            principalRecipient,
-            token,
-            id,
-            expiryType,
-            expiryValue
-        );
+        receiptHash = getReceiptHash(delegateRecipient, principalRecipient, token, id, expiryType, expiryValue);
     }
 }

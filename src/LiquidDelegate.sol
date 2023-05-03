@@ -83,12 +83,12 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
     error SendEtherFailed();
     error WrongFee();
 
-    constructor(address _DELEGATION_REGISTRY, address owner, string memory _baseURI) ERC721("LiquidDelegate", "RIGHTS") {
+    constructor(address _DELEGATION_REGISTRY, address _owner, string memory _baseURI) ERC721("LiquidDelegate", "RIGHTS") {
         DELEGATION_REGISTRY = _DELEGATION_REGISTRY;
         baseURI = _baseURI;
-        metadataOwner = owner;
-        royaltyOwner = owner;
-        _setDefaultRoyalty(owner, 1000);
+        metadataOwner = _owner;
+        royaltyOwner = _owner;
+        _setDefaultRoyalty(_owner, 1000);
     }
 
     /// @dev See {IERC165-supportsInterface}.

@@ -68,10 +68,10 @@ contract LiquidDelegateMarket {
     /// @param bidId The id of the bid to cancel
     function cancelBid(uint256 bidId) external {
         // Move data into memory to delete the bid data first, preventing reentrancy
-        Bid memory bid = bids[bidId];
-        uint256 liquidDelegateId = bid.liquidDelegateId;
-        uint256 bidAmount = bid.weiAmount;
-        address bidder = bid.bidder;
+        Bid memory _bid = bids[bidId];
+        uint256 liquidDelegateId = _bid.liquidDelegateId;
+        uint256 bidAmount = _bid.weiAmount;
+        address bidder = _bid.bidder;
         delete bids[bidId];
 
         require(msg.sender == bidder, "NOT_YOUR_BID");
@@ -121,10 +121,10 @@ contract LiquidDelegateMarket {
     /// @param bidId The id of the bid, not the liquid delegate
     function sell(uint256 bidId) external {
         // Move data into memory to delete the bid data first, preventing reentrancy
-        Bid memory bid = bids[bidId];
-        uint256 liquidDelegateId = bid.liquidDelegateId;
-        uint256 bidAmount = bid.weiAmount;
-        address bidder = bid.bidder;
+        Bid memory _bid = bids[bidId];
+        uint256 liquidDelegateId = _bid.liquidDelegateId;
+        uint256 bidAmount = _bid.weiAmount;
+        address bidder = _bid.bidder;
         delete bids[bidId];
 
         address currentOwner = IERC721(LIQUID_DELEGATE).ownerOf(liquidDelegateId);
