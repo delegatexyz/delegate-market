@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.19;
 
-import {EIP712} from "solady/utils/EIP712.sol";
 import {IWrapOfferer, ReceiptFillerType} from "./interfaces/IWrapOfferer.sol";
 
 import {LibBitmap} from "solady/utils/LibBitmap.sol";
@@ -11,7 +10,7 @@ import {ItemType} from "seaport/lib/ConsiderationEnums.sol";
 import {IDelegateToken, ExpiryType} from "./interfaces/IDelegateToken.sol";
 
 /// @notice A Seaport ContractOfferer
-contract WrapOfferer is IWrapOfferer, EIP712 {
+contract WrapOfferer is IWrapOfferer {
     using LibBitmap for LibBitmap.Bitmap;
 
     bytes32 internal constant RELATIVE_EXPIRY_TYPE_HASH = keccak256("Relative");
@@ -114,21 +113,20 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
         returns (SpentItem[] memory offer, ReceivedItem[] memory consideration)
     {
         (address tokenContract, uint256 tokenId) = _getTokenFromSpends(maximumSpent);
-        if (caller != SEAPORT) revert NotSeaport();
         bytes32 receiptHash = _receiptFromContext(tokenContract, tokenId, context);
         return _createReturnItems(minimumReceived.length, receiptHash, tokenContract, tokenId);
     }
 
     /// TODO: inheritdoc ContractOffererInterface
     function getSeaportMetadata() external pure returns (string memory, Schema[] memory) {
-        return (name(), new Schema[](0));
+        return ("Liquid Delegate Contract Offerer", new Schema[](0));
     }
 
     /**
      * -----------HELPER FUNCTIONS-----------
      */
 
-    /// @dev Builds unique ERC-712 struct hash to be signed by the offerer within the Seaport offer
+    /// @dev Builds unique ERC-712 struct hash to be passed as context data
     /// @param delegateRecipient The user to get the delegate token
     /// @param principalRecipient The user to get the principal token
     /// @param token The NFT contract address
@@ -151,15 +149,6 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
         }
 
         receiptHash = keccak256(abi.encode(RECEIPT_TYPE_HASH, token, id, expiryTypeHash, expiryValue, delegateRecipient, principalRecipient));
-    }
-
-    /// @notice Used in generating EIP-712 signatures
-    function DOMAIN_SEPARATOR() external view returns (bytes32) {
-        return _domainSeparator();
-    }
-
-    function name() public pure returns (string memory) {
-        return "Liquid Delegate Seaport Offerer";
     }
 
     function transferFrom(address from, address, uint256 id) public view {
@@ -187,10 +176,6 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
         expiryValue = uint40(bytes5(context[2:7]));
         delegateRecipient = address(bytes20(context[7:27]));
         principalRecipient = address(bytes20(context[27:47]));
-    }
-
-    function _domainNameAndVersion() internal pure override returns (string memory, string memory) {
-        return (name(), "1");
     }
 
     function _getTokenFromSpends(SpentItem[] calldata inSpends) internal pure returns (address, uint256) {
