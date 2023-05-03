@@ -15,23 +15,13 @@ contract WrapOfferer is IWrapOfferer {
 
     bytes32 internal constant RELATIVE_EXPIRY_TYPE_HASH = keccak256("Relative");
     bytes32 internal constant ABSOLUTE_EXPIRY_TYPE_HASH = keccak256("Absolute");
-
-    error NotSeaport();
-    error EmptyReceived();
-    error IncorrectReceived();
-    error InvalidExpiryType();
-    error InvalidReceiptTransfer();
-    error InvalidReceiptId();
-    error InvalidContext();
-    error NonceAlreadyUsed();
+    bytes32 internal constant RECEIPT_TYPE_HASH =
+        keccak256("WrapReceipt(address token,uint256 id,string expiryType,uint256 expiryTime,address delegateRecipient,address principalRecipient)");
 
     uint256 internal constant EMPTY_RECEIPT_PLACEHOLDER = 1;
 
     /// @dev 20 * 2 (addresses) + 1 * 2 (enums) + 5 * 1 (uint40) = 47
-    uint256 internal constant CONTEXT_MIN_SIZE = 47;
-
-    bytes32 internal constant RECEIPT_TYPE_HASH =
-        keccak256("WrapReceipt(address token,uint256 id,string expiryType,uint256 expiryTime,address delegateRecipient,address principalRecipient)");
+    uint256 internal constant CONTEXT_SIZE = 47;
 
     /// @notice Address for Seaport 1.5
     address public immutable SEAPORT;
@@ -41,6 +31,13 @@ contract WrapOfferer is IWrapOfferer {
 
     /// @dev Used as transient storage to hold the latest receiptHash
     uint256 internal validatedReceiptId = EMPTY_RECEIPT_PLACEHOLDER;
+
+    error NotSeaport();
+    error IncorrectReceived();
+    error InvalidExpiryType();
+    error InvalidReceiptTransfer();
+    error InvalidReceiptId();
+    error InvalidContext();
 
     /// @param _SEAPORT The latest seaport address, currently using 1.5
     /// @param _DELEGATE_TOKEN The delegate token to operate on
@@ -77,13 +74,11 @@ contract WrapOfferer is IWrapOfferer {
     /// TODO: inheritdoc ContractOffererInterface
     /// @param consideration The consideration items
     /// @param context Encoded based on the schemaID
-    function ratifyOrder(
-        SpentItem[] calldata,
-        ReceivedItem[] calldata consideration,
-        bytes calldata context,
-        bytes32[] calldata,
-        uint256
-    ) external onlySeaport(msg.sender) returns (bytes4) {
+    function ratifyOrder(SpentItem[] calldata, ReceivedItem[] calldata consideration, bytes calldata context, bytes32[] calldata, uint256)
+        external
+        onlySeaport(msg.sender)
+        returns (bytes4)
+    {
         (, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient) = decodeContext(context);
 
         // Remove validated receipt
@@ -170,7 +165,7 @@ contract WrapOfferer is IWrapOfferer {
         pure
         returns (ReceiptFillerType fillerType, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient)
     {
-        if (context.length < CONTEXT_MIN_SIZE) revert InvalidContext();
+        if (context.length != CONTEXT_SIZE) revert InvalidContext();
         fillerType = ReceiptFillerType(uint8(context[0]));
         expiryType = ExpiryType(uint8(context[1]));
         expiryValue = uint40(bytes5(context[2:7]));
@@ -179,7 +174,7 @@ contract WrapOfferer is IWrapOfferer {
     }
 
     function _getTokenFromSpends(SpentItem[] calldata inSpends) internal pure returns (address, uint256) {
-        if (inSpends.length == 0) revert EmptyReceived();
+        if (inSpends.length == 0) revert IncorrectReceived();
         SpentItem calldata inItem = inSpends[0];
         if (inItem.amount != 1 || inItem.itemType != ItemType.ERC721) revert IncorrectReceived();
         return (inItem.token, inItem.identifier);
@@ -191,11 +186,8 @@ contract WrapOfferer is IWrapOfferer {
         returns (SpentItem[] memory offer, ReceivedItem[] memory consideration)
     {
         offer = new SpentItem[](receiptCount);
-        for (uint256 i; i < receiptCount;) {
+        for (uint256 i; i < receiptCount; ++i) {
             offer[i] = SpentItem({itemType: ItemType.ERC721, token: address(this), identifier: uint256(receiptHash), amount: 1});
-            unchecked {
-                ++i;
-            }
         }
 
         consideration = new ReceivedItem[](1);
