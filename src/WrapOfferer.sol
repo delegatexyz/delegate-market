@@ -4,7 +4,6 @@ pragma solidity ^0.8.19;
 import {EIP712} from "solady/utils/EIP712.sol";
 import {IWrapOfferer, ReceiptFillerType} from "./interfaces/IWrapOfferer.sol";
 
-import {SignatureCheckerLib} from "solady/utils/SignatureCheckerLib.sol";
 import {LibBitmap} from "solady/utils/LibBitmap.sol";
 import {ReceivedItem, SpentItem, Schema} from "seaport/interfaces/ContractOffererInterface.sol";
 import {ItemType} from "seaport/lib/ConsiderationEnums.sol";
@@ -77,17 +76,14 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
     }
 
     /// TODO: inheritdoc ContractOffererInterface
-    /// @param offer The offer items, unused here
     /// @param consideration The consideration items
     /// @param context Encoded based on the schemaID
-    /// @param orderHashes The order hashes, unused here
-    /// @param contractNonce Unused - The contract nonce
     function ratifyOrder(
-        SpentItem[] calldata offer,
+        SpentItem[] calldata,
         ReceivedItem[] calldata consideration,
         bytes calldata context,
-        bytes32[] calldata orderHashes,
-        uint256 contractNonce
+        bytes32[] calldata,
+        uint256
     ) external onlySeaport(msg.sender) returns (bytes4) {
         (, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient) = decodeContext(context);
 
