@@ -84,6 +84,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         // Wrap Receipt => Seller
         fulfillments[1] = _constructFulfillment(1, 0, 0, 1);
         // Buyer ETH => Seller
+        // offer: (2, 0); consideration: (0, 0); (orderIndex, itemIndex)
         fulfillments[2] = _constructFulfillment(2, 0, 0, 0);
 
         // =============== Execute Orders ================
@@ -246,8 +247,8 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         // received principal / delegate tokens with certain terms
         OfferItem[] memory offer = new OfferItem[](1);
         offer[0] = OfferItem({itemType: ItemType.ERC721, token: address(wofferer), identifierOrCriteria: receiptId, startAmount: 1, endAmount: 1});
-        // Wrap Offerer expects the Liquid Delegate contract to receive the underlying so that it
-        // can execute the `mint` in ratify.
+        // Wrap Offerer expects the Liquid Delegate contract to receive the underlying NFT so that it
+        // can execute the `createUnprotected` in ratify.
         ConsiderationItem[] memory consideration = new ConsiderationItem[](1);
         consideration[0] = ConsiderationItem({
             itemType: ItemType.ERC721,

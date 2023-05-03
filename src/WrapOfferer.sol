@@ -22,7 +22,6 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
     error EmptyReceived();
     error IncorrectReceived();
     error InvalidExpiryType();
-    error InvalidSignature();
     error InvalidReceiptTransfer();
     error InvalidReceiptId();
     error InvalidContext();
@@ -30,8 +29,8 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
 
     uint256 internal constant EMPTY_RECEIPT_PLACEHOLDER = 1;
 
-    /// @dev 20 * 2 (addresses) + 1 * 2 (enums) + 5 * 2 (uint40) = 52
-    uint256 internal constant CONTEXT_MIN_SIZE = 52;
+    /// @dev 20 * 2 (addresses) + 1 * 2 (enums) + 5 * 1 (uint40) = 47
+    uint256 internal constant CONTEXT_MIN_SIZE = 47;
 
     bytes32 internal constant RECEIPT_TYPE_HASH = keccak256(
         "WrapReceipt(address token,uint256 id,string expiryType,uint256 expiryTime,address delegateRecipient,address principalRecipient)"
@@ -64,21 +63,16 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
 
     /// TODO: inheritdoc ContractOffererInterface
     /// @param fulfiller Unused here
-    /// @param minimumReceived The minimum items that the caller (liquid delegate) is willing to receive
-    /// @param maximumSpent The maximum items that the caller (liquid delegate) is willing to spend
+    /// @param minimumReceived The minimum items that the caller is willing to receive (the Liquid Delegate)
+    /// @param maximumSpent The maximum items that the caller is willing to spend (the spot NFT)
     /// @param context Encoded based on the schema ID
     function generateOrder(address fulfiller, SpentItem[] calldata minimumReceived, SpentItem[] calldata maximumSpent, bytes calldata context)
         external
         onlySeaport(msg.sender)
         returns (SpentItem[] memory, ReceivedItem[] memory)
     {
-        // TODO: Is it necessary to restrict this to onlySeaport? It writes validatedReceiptId to storage
         (address tokenContract, uint256 tokenId) = _getTokenFromSpends(maximumSpent);
-        (address signer, bytes32 receiptHash, bytes memory sig) = _receiptFromContext(tokenContract, tokenId, context);
-        // TOOD: Why is this signature verification of context data necessary? Seaport already validates the entire offer signature
-        if (!SignatureCheckerLib.isValidSignatureNow(signer, _hashTypedData(receiptHash), sig)) {
-            revert InvalidSignature();
-        }
+        bytes32 receiptHash = _receiptFromContext(tokenContract, tokenId, context);
         validatedReceiptId = uint256(receiptHash);
         return _createReturnItems(minimumReceived.length, receiptHash, tokenContract, tokenId);
     }
@@ -96,16 +90,18 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
         bytes32[] calldata orderHashes,
         uint256 contractNonce
     ) external onlySeaport(msg.sender) returns (bytes4) {
-        (, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient,) = decodeContext(context);
+        (, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient) = decodeContext(context);
 
         // Remove validated receipt
         validatedReceiptId = EMPTY_RECEIPT_PLACEHOLDER;
 
         // `DelegateToken.createUnprotected` checks whether the appropriate NFT has been deposited.
-        // TODO: fix stack-too-deep
-        // IDelegateToken(DELEGATE_TOKEN).createUnprotected(
-        //     delegateRecipient, principalRecipient, consideration[0].token, consideration[0].identifier, expiryType, expiryValue
-        // );
+        // Address stack-too-deep by caching consideration values in memory
+        address considerationToken = consideration[0].token;
+        uint256 considerationIdentifier = consideration[0].identifier;
+        IDelegateToken(DELEGATE_TOKEN).createUnprotected(
+            delegateRecipient, principalRecipient, considerationToken, considerationIdentifier, expiryType, expiryValue
+        );
 
         return this.ratifyOrder.selector;
     }
@@ -124,10 +120,7 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
     {
         (address tokenContract, uint256 tokenId) = _getTokenFromSpends(maximumSpent);
         if (caller != SEAPORT) revert NotSeaport();
-        (address signer, bytes32 receiptHash, bytes memory sig) = _receiptFromContext(tokenContract, tokenId, context);
-        if (!SignatureCheckerLib.isValidSignatureNow(signer, _hashTypedData(receiptHash), sig)) {
-            revert InvalidSignature();
-        }
+        bytes32 receiptHash = _receiptFromContext(tokenContract, tokenId, context);
         return _createReturnItems(minimumReceived.length, receiptHash, tokenContract, tokenId);
     }
 
@@ -202,8 +195,7 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
             ExpiryType expiryType,
             uint40 expiryValue,
             address delegateRecipient,
-            address principalRecipient,
-            bytes memory signature
+            address principalRecipient
         )
     {
         if (context.length < CONTEXT_MIN_SIZE) revert InvalidContext();
@@ -212,7 +204,6 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
         expiryValue = uint40(bytes5(context[2:7]));
         delegateRecipient = address(bytes20(context[7:27]));
         principalRecipient = address(bytes20(context[27:47]));
-        signature = context[52:];
     }
 
     function _domainNameAndVersion() internal pure override returns (string memory, string memory) {
@@ -243,49 +234,28 @@ contract WrapOfferer is IWrapOfferer, EIP712 {
         consideration[0] = ReceivedItem({itemType: ItemType.ERC721, token: tokenContract, identifier: tokenId, amount: 1, recipient: payable(DELEGATE_TOKEN)});
     }
 
-    function _receiptFromContext(address token, uint256 id, bytes calldata context) internal pure returns (address, bytes32, bytes memory) {
+    /// @return receiptHash The receipt hash for a given context to match with the receipt id
+    function _receiptFromContext(address token, uint256 id, bytes calldata context) internal pure returns (bytes32 receiptHash) {
         (
             ReceiptFillerType fillerType,
             ExpiryType expiryType,
             uint40 expiryValue,
             address delegateRecipient,
-            address principalRecipient,
-            bytes memory signature
+            address principalRecipient
         ) = decodeContext(context);
 
-        address signer;
-
-        {
         bool delegateSigning = fillerType == ReceiptFillerType.PrincipalOpen || fillerType == ReceiptFillerType.PrincipalClosed;
         bool matchClosed = fillerType == ReceiptFillerType.PrincipalClosed || fillerType == ReceiptFillerType.DelegateClosed;
-        signer = delegateSigning ? delegateRecipient : principalRecipient;
         if (!(matchClosed || delegateSigning)) delegateRecipient = address(0);
         if (!(matchClosed || !delegateSigning)) principalRecipient = address(0);
-        }
 
-        // Check signature
-        // TODO: Fix stack-too-deep
-        bytes32 receiptHash;
-        {
-            receiptHash = getReceiptHash(
-                delegateRecipient,
-                principalRecipient,
-                token,
-                id,
-                expiryType,
-                expiryValue
-            );
-        }
-        // bytes32 receiptHash = getReceiptHash(
-        //     matchClosed || delegateSigning ? delegateRecipient : address(0),
-        //     matchClosed || !delegateSigning ? principalRecipient : address(0),
-        //     token,
-        //     id,
-        //     expiryType,
-        //     expiryValue
-        // );
-
-        // return (signer, receiptHash, signature);
-        return (address(0x0), bytes32(""), bytes(""));
+        receiptHash = getReceiptHash(
+            delegateRecipient,
+            principalRecipient,
+            token,
+            id,
+            expiryType,
+            expiryValue
+        );
     }
 }

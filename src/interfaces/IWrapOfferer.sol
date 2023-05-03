@@ -40,7 +40,6 @@ interface IWrapOfferer is ContractOffererInterface {
             ExpiryType expiryType,
             uint40 expiryValue,
             address delegateRecipient,
-            address principalRecipient,
-            bytes memory signature
+            address principalRecipient
         );
 }
