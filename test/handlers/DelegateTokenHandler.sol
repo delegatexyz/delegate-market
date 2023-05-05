@@ -145,7 +145,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         (,, Rights memory rights) = liquidDelegate.getRights(prId);
         vm.warp(rights.expiry);
         vm.startPrank(currentActor);
-        liquidDelegate.withdrawTo(currentActor, rights.nonce, rights.tokenContract, rights.tokenId);
+        liquidDelegate.withdrawTo(currentActor, rights.tokenContract, rights.tokenId);
         vm.stopPrank();
 
         existingPrincipalTokens.remove(prId);
@@ -173,7 +173,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         (,, Rights memory rights) = liquidDelegate.getRights(prId);
         vm.prank(currentActor);
-        liquidDelegate.withdrawTo(currentActor, rights.nonce, rights.tokenContract, rights.tokenId);
+        liquidDelegate.withdrawTo(currentActor, rights.tokenContract, rights.tokenId);
 
         existingPrincipalTokens.remove(prId);
         ownedPrTokens[currentActor].remove(prId);

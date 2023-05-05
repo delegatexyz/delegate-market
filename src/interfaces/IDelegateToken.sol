@@ -83,7 +83,7 @@ interface IDelegateTokenBase {
     function burn(uint256 delegateId) external;
     function burnWithPermit(address from, uint256 delegateId, bytes calldata sig) external;
 
-    function withdrawTo(address to, uint56 nonce, address tokenContract, uint256 tokenId) external;
+    function withdrawTo(address to, address tokenContract, uint256 tokenId) external;
 
     /*//////////////////////////////////////////////////////////////
                        FLASHLOAN METHODS

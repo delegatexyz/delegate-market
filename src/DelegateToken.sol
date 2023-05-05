@@ -178,21 +178,21 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
      * address.
      * @dev Forcefully burns the associated delegate token if still in circulation.
      * @param to Recipient of the underlying token.
-     * @param nonce The nonce of the associated rights, found as the last 56-bits of the rights ID
-     * or by calling `getRights(uint256)`.
      * @param tokenContract Address of underlying token contract.
      * @param tokenId Token ID of underlying token to be withdrawn.
      */
-    function withdrawTo(address to, uint56 nonce, address tokenContract, uint256 tokenId) external {
+    function withdrawTo(address to, address tokenContract, uint256 tokenId) external {
         uint256 baseDelegateId = getBaseDelegateId(tokenContract, tokenId);
+        uint56 nonce = _idsToRights[baseDelegateId].nonce;
         uint256 delegateId = baseDelegateId | nonce;
+        // TODO: remove nonce from storage
         PrincipalToken(PRINCIPAL_TOKEN).burnIfAuthorized(msg.sender, delegateId);
 
         // Check whether the delegate token still exists.
         address owner = _ownerOf[delegateId];
         if (owner != address(0)) {
             // If it still exists the only valid way to withdraw is the delegation having expired.
-            if (block.timestamp < _idsToRights[baseDelegateId].expiry) {
+            if (block.timestamp < _idsToRights[baseDelegateId].expiry && owner != msg.sender) {
                 revert WithdrawNotAvailable();
             }
             _burn(owner, delegateId);
