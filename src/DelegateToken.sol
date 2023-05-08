@@ -185,7 +185,6 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
         uint256 baseDelegateId = getBaseDelegateId(tokenContract, tokenId);
         uint56 nonce = _idsToRights[baseDelegateId].nonce;
         uint256 delegateId = baseDelegateId | nonce;
-        // TODO: remove nonce from storage
         PrincipalToken(PRINCIPAL_TOKEN).burnIfAuthorized(msg.sender, delegateId);
 
         // Check whether the delegate token still exists.
@@ -283,9 +282,14 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
     }
 
     function _burnAuth(address spender, uint256 delegateId) internal {
+        (,, Rights memory rights) = getRights(delegateId);
+        uint40 expiry = rights.expiry;
         (bool approvedOrOwner, address owner) = _isApprovedOrOwner(spender, delegateId);
-        if (!approvedOrOwner) revert NotAuthorized();
-        _burn(owner, delegateId);
+        if (block.timestamp >= expiry || approvedOrOwner) {
+            _burn(owner, delegateId);
+        } else {
+            revert NotAuthorized();
+        }
     }
 
     function _burn(address owner, uint256 delegateId) internal {
