@@ -6,14 +6,14 @@ import {LibRLP} from "solady/utils/LibRLP.sol";
 import {LibString} from "solady/utils/LibString.sol";
 import {DelegateToken, ExpiryType, Rights} from "src/DelegateToken.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
-import {DelegationRegistry} from "src/DelegationRegistry.sol";
+import {DelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
 import {MockERC721} from "./mock/MockERC721.sol";
 
 contract DelegateTokenTest is Test {
     using LibString for uint256;
 
     // Environment contracts.
-    DelegationRegistry registry;
+    DelegateRegistry registry;
     DelegateToken ld;
     PrincipalToken principal;
     MockERC721 token;
@@ -26,7 +26,7 @@ contract DelegateTokenTest is Test {
     address[TOTAL_USERS] internal users;
 
     function setUp() public {
-        registry = new DelegationRegistry();
+        registry = new DelegateRegistry();
 
         vm.startPrank(coreDeployer);
         ld = new DelegateToken(
@@ -83,8 +83,8 @@ contract DelegateTokenTest is Test {
         assertEq(rights.tokenId, tokenId);
         assertEq(rights.expiry, expiry);
 
-        assertTrue(registry.checkDelegateForToken(ldTo, address(ld), address(token), tokenId));
-        assertFalse(registry.checkDelegateForToken(notLdTo, address(ld), address(token), tokenId));
+        assertTrue(registry.checkDelegateForERC721(ldTo, address(ld), address(token), tokenId, ""));
+        assertFalse(registry.checkDelegateForERC721(notLdTo, address(ld), address(token), tokenId, ""));
     }
 
     function test_fuzzingTransferDelegation(address from, address to, uint256 underlyingTokenId, bool expiryTypeRelative, uint256 time) public {
@@ -100,10 +100,10 @@ contract DelegateTokenTest is Test {
         vm.prank(from);
         ld.transferFrom(from, to, delegateId);
 
-        assertTrue(registry.checkDelegateForToken(to, address(ld), address(token), underlyingTokenId));
+        assertTrue(registry.checkDelegateForERC721(to, address(ld), address(token), underlyingTokenId, ""));
 
         if (from != to) {
-            assertFalse(registry.checkDelegateForToken(from, address(ld), address(token), underlyingTokenId));
+            assertFalse(registry.checkDelegateForERC721(from, address(ld), address(token), underlyingTokenId, ""));
         }
     }
 
@@ -153,8 +153,8 @@ contract DelegateTokenTest is Test {
         assertEq(rights.tokenId, tokenId);
         assertEq(rights.expiry, expiry);
 
-        assertTrue(registry.checkDelegateForToken(ldTo, address(ld), address(token), tokenId));
-        assertFalse(registry.checkDelegateForToken(notLdTo, address(ld), address(token), tokenId));
+        assertTrue(registry.checkDelegateForERC721(ldTo, address(ld), address(token), tokenId, ""));
+        assertFalse(registry.checkDelegateForERC721(notLdTo, address(ld), address(token), tokenId, ""));
     }
 
     function testCannotMintWithExisting() public {

@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 import {Script} from "forge-std/Script.sol";
 import {console2} from "forge-std/console2.sol";
-import {DelegationRegistry} from "../src/DelegationRegistry.sol";
+import {DelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
 import {DelegateToken} from "../src/DelegateToken.sol";
 import {PrincipalToken} from "../src/PrincipalToken.sol";
 import {WrapOfferer} from "../src/WrapOfferer.sol";
@@ -15,11 +15,13 @@ contract DeployV2 is Script {
     using Strings for address;
 
     address payable constant ZERO = payable(address(0x0));
-    DelegationRegistry registry = DelegationRegistry(0x00000000000076A84feF008CDAbe6409d2FE638B);
+    DelegateRegistry registry = DelegateRegistry(0x00000000000076A84feF008CDAbe6409d2FE638B);
     address seaport15 = 0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC;
     address deployer = 0xe5ee2B9d5320f2D1492e16567F36b578372B3d9F;
 
     string baseURI = "https://metadata.delegate.cash/liquid/";
+
+    WrapOfferer market;
 
     // Modified from https://ethereum.stackexchange.com/questions/760/how-is-the-address-of-an-ethereum-contract-computed
     function addressFrom(address _origin, uint256 _nonce) public pure returns (address) {
@@ -58,7 +60,7 @@ contract DeployV2 is Script {
 
         PrincipalToken pt = new PrincipalToken(dtPrediction);
         DelegateToken dt = new DelegateToken(address(registry), ptPrediction, baseURI, deployer);
-        WrapOfferer market = new WrapOfferer(seaport15, dtPrediction);
+        market = new WrapOfferer(seaport15, dtPrediction);
 
         console2.log("ptAddress:", address(pt));
         console2.log("dtAddress:", address(dt));

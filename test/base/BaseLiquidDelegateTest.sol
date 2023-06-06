@@ -7,10 +7,10 @@ import {LibRLP} from "solady/utils/LibRLP.sol";
 
 import {DelegateToken} from "src/DelegateToken.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
-import {DelegationRegistry} from "src/DelegationRegistry.sol";
+import {DelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
 
 contract BaseLiquidDelegateTest is Test {
-    DelegationRegistry internal registry;
+    DelegateRegistry internal registry;
     PrincipalToken internal principal;
     DelegateToken internal ld;
 
@@ -18,7 +18,7 @@ contract BaseLiquidDelegateTest is Test {
     address internal ldOwner = makeAddr("LD_OWNER");
 
     constructor() {
-        registry = new DelegationRegistry();
+        registry = new DelegateRegistry();
 
         vm.startPrank(ldDeployer);
         ld = new DelegateToken(

@@ -11,7 +11,7 @@ import {SignatureCheckerLib} from "solady/utils/SignatureCheckerLib.sol";
 import {SafeCastLib} from "solady/utils/SafeCastLib.sol";
 
 import {ERC721} from "solmate/tokens/ERC721.sol";
-import {IDelegationRegistry} from "./interfaces/IDelegationRegistry.sol";
+import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
 import {PrincipalToken} from "./PrincipalToken.sol";
 import {INFTFlashBorrower} from "./interfaces/INFTFlashBorrower.sol";
 
@@ -54,8 +54,8 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
         uint56 nonce = uint56(id);
         if (_idsToRights[baseDelegateId].nonce == nonce) {
             Rights memory rights = _idsToRights[baseDelegateId];
-            IDelegationRegistry(DELEGATION_REGISTRY).delegateForToken(from, rights.tokenContract, rights.tokenId, false);
-            IDelegationRegistry(DELEGATION_REGISTRY).delegateForToken(to, rights.tokenContract, rights.tokenId, true);
+            IDelegateRegistry(DELEGATION_REGISTRY).delegateERC721(from, rights.tokenContract, rights.tokenId, "", false);
+            IDelegateRegistry(DELEGATION_REGISTRY).delegateERC721(to, rights.tokenContract, rights.tokenId, "", true);
         }
     }
 
@@ -274,7 +274,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
         }
 
         _mint(delegateRecipient, delegateId);
-        IDelegationRegistry(DELEGATION_REGISTRY).delegateForToken(delegateRecipient, rights.tokenContract, rights.tokenId, true);
+        IDelegateRegistry(DELEGATION_REGISTRY).delegateERC721(delegateRecipient, rights.tokenContract, rights.tokenId, "", true);
 
         PrincipalToken(PRINCIPAL_TOKEN).mint(principalRecipient, delegateId);
 
@@ -297,7 +297,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
         uint56 nonce = uint56(delegateId);
 
         Rights memory rights = _idsToRights[baseDelegateId];
-        IDelegationRegistry(DELEGATION_REGISTRY).delegateForToken(owner, rights.tokenContract, rights.tokenId, false);
+        IDelegateRegistry(DELEGATION_REGISTRY).delegateERC721(owner, rights.tokenContract, rights.tokenId, "", false);
 
         _burn(delegateId);
         emit RightsBurned(baseDelegateId, nonce);

@@ -15,7 +15,7 @@ contract NFTFlashBorrower is INFTFlashBorrower {
     /**
      * @inheritdoc INFTFlashBorrower
      */
-    function onFlashLoan(address initiator, address token, uint256 id, bytes calldata data) external returns (bytes32) {
+    function onFlashLoan(address , address token, uint256 id, bytes calldata) external returns (bytes32) {
         require(msg.sender == liquidDelegation, "untrusted flashloan sender");
         require(ERC721(token).ownerOf(id) == address(this), "flashloan failed");
         ERC721(token).approve(liquidDelegation, id);

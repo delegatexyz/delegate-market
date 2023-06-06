@@ -1,2 +1,14 @@
+@rari-capital/solmate/=lib/seaport/lib/solmate/
+delegate-registry/=lib/delegate-registry/
+ds-test/=lib/forge-std/lib/ds-test/src/
+erc4626-tests/=lib/delegate-registry/lib/openzeppelin-contracts/lib/erc4626-tests/
+forge-std/=lib/forge-std/src/
+murky/=lib/delegate-registry/lib/murky/src/
 openzeppelin-contracts/=lib/openzeppelin-contracts/
-seaport/=lib/seaport/contracts/
+openzeppelin/=lib/delegate-registry/lib/openzeppelin-contracts/contracts/
+seaport-core/=lib/seaport/contracts/
+seaport-sol/=lib/seaport/contracts/helpers/sol/
+seaport/=lib/seaport/contracts
+solady/=lib/solady/src/
+solarray/=lib/seaport/lib/solarray/src/
+solmate/=lib/solmate/src/
