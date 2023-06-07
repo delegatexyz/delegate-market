@@ -1,20 +1,21 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.20;
 
-import {BaseERC721} from "./lib/BaseERC721.sol";
-import {EIP712} from "solady/utils/EIP712.sol";
-import {Multicallable} from "solady/utils/Multicallable.sol";
-import {DTMetadataManager} from "./DTMetadataManager.sol";
 import {IDelegateTokenBase, ExpiryType, Rights} from "./interfaces/IDelegateToken.sol";
+import {INFTFlashBorrower} from "./interfaces/INFTFlashBorrower.sol";
+
+import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
+import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
 
 import {SignatureCheckerLib} from "solady/utils/SignatureCheckerLib.sol";
 
-import {ERC721} from "solmate/tokens/ERC721.sol";
-import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
+import {BaseERC721, ERC721} from "./BaseERC721.sol";
+import {DTMetadataManager} from "./DTMetadataManager.sol";
 import {PrincipalToken} from "./PrincipalToken.sol";
-import {INFTFlashBorrower} from "./interfaces/INFTFlashBorrower.sol";
 
-contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable, DTMetadataManager {
+import {EIP712} from "solady/utils/EIP712.sol";
+
+contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, DTMetadataManager {
     /// @notice The value flash borrowers need to return from `onFlashLoan` for the call to be successful.
     bytes32 public constant FLASHLOAN_CALLBACK_SUCCESS = bytes32(uint256(keccak256("INFTFlashBorrower.onFlashLoan")) - 1);
 
@@ -89,14 +90,14 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
     function flashLoan(address receiver, uint256 delegateId, address tokenContract, uint256 tokenId, bytes calldata data) external {
         if (!isApprovedOrOwner(msg.sender, delegateId)) revert NotAuthorized();
         if (getBaseDelegateId(tokenContract, tokenId) != delegateId & BASE_RIGHTS_ID_MASK) revert InvalidFlashloan();
-        ERC721(tokenContract).transferFrom(address(this), receiver, tokenId);
+        IERC721(tokenContract).transferFrom(address(this), receiver, tokenId);
 
         if (INFTFlashBorrower(receiver).onFlashLoan(msg.sender, tokenContract, tokenId, data) != FLASHLOAN_CALLBACK_SUCCESS) {
             revert InvalidFlashloan();
         }
 
         // Safer and cheaper to expect the token to have been returned rather than pulling it with `transferFrom`.
-        if (ERC721(tokenContract).ownerOf(tokenId) != address(this)) revert InvalidFlashloan();
+        if (IERC721(tokenContract).ownerOf(tokenId) != address(this)) revert InvalidFlashloan();
     }
 
     /**
@@ -119,7 +120,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
         ExpiryType expiryType,
         uint256 expiryValue
     ) external payable returns (uint256) {
-        if (ERC721(tokenContract).ownerOf(tokenId) != address(this)) revert UnderlyingMissing();
+        if (IERC721(tokenContract).ownerOf(tokenId) != address(this)) revert UnderlyingMissing();
         uint256 expiry = getExpiry(expiryType, expiryValue);
         return _mint(delegateRecipient, principalRecipient, tokenContract, tokenId, expiry);
     }
@@ -141,7 +142,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
         payable
         returns (uint256)
     {
-        ERC721(tokenContract).transferFrom(msg.sender, address(this), tokenId);
+        IERC721(tokenContract).transferFrom(msg.sender, address(this), tokenId);
         uint256 expiry = getExpiry(expiryType, expiryValue);
         return _mint(delegateRecipient, principalRecipient, tokenContract, tokenId, expiry);
     }
@@ -216,7 +217,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, Multicallable,
         }
         _writeRightsInfo(baseDelegateId, expiry, nonce + 1, tokenContract);
         emit UnderlyingWithdrawn(baseDelegateId, uint56(nonce), to);
-        ERC721(tokenContract).transferFrom(address(this), to, tokenId);
+        IERC721(tokenContract).transferFrom(address(this), to, tokenId);
     }
 
     function DOMAIN_SEPARATOR() external view returns (bytes32) {
