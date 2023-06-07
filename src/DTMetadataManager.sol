@@ -43,7 +43,7 @@ abstract contract DTMetadataManager is ERC2981, Owned {
         return string.concat(_baseURI, "contract");
     }
 
-    function _buildTokenURI(address tokenContract, uint256 id, uint40 expiry, address principalOwner) internal view returns (string memory) {
+    function _buildTokenURI(address tokenContract, uint256 id, uint256 expiry, address principalOwner) internal view returns (string memory) {
         string memory idstr = id.toString();
 
         string memory pownerstr = principalOwner == address(0) ? "N/A" : principalOwner.toHexStringChecksumed();
@@ -59,7 +59,7 @@ abstract contract DTMetadataManager is ERC2981, Owned {
             '"},{"trait_type":"Token ID","value":"',
             idstr,
             '"},{"trait_type":"Expires At","display_type":"date","value":',
-            uint256(expiry).toString()
+            expiry.toString()
         );
         string memory metadataStringPart2 = string.concat(
             '},{"trait_type":"Principal Owner Address","value":"',

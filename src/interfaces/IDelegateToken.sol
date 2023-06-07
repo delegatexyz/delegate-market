@@ -10,10 +10,11 @@ enum ExpiryType
     ABSOLUTE
 }
 
+// For returning data only, do not store with this
 struct Rights {
     address tokenContract;
-    uint40 expiry;
-    uint56 nonce;
+    uint256 expiry;
+    uint256 nonce;
     uint256 tokenId;
 }
 
@@ -31,15 +32,17 @@ interface IDelegateTokenBase {
     error NoRights();
     error NotContract();
     error InvalidFlashloan();
+    error NonceTooLarge();
+    error ExpiryTooLarge();
 
     /*//////////////////////////////////////////////////////////////
                              EVENTS
     //////////////////////////////////////////////////////////////*/
 
-    event RightsCreated(uint256 indexed baseDelegateId, uint56 indexed nonce, uint40 expiry);
-    event RightsExtended(uint256 indexed baseDelegateId, uint56 indexed nonce, uint40 previousExpiry, uint40 newExpiry);
-    event RightsBurned(uint256 indexed baseDelegateId, uint56 indexed nonce);
-    event UnderlyingWithdrawn(uint256 indexed baseDelegateId, uint56 indexed nonce, address to);
+    event RightsCreated(uint256 indexed baseDelegateId, uint256 indexed nonce, uint256 expiry);
+    event RightsExtended(uint256 indexed baseDelegateId, uint256 indexed nonce, uint256 previousExpiry, uint256 newExpiry);
+    event RightsBurned(uint256 indexed baseDelegateId, uint256 indexed nonce);
+    event UnderlyingWithdrawn(uint256 indexed baseDelegateId, uint256 indexed nonce, address to);
 
     /*//////////////////////////////////////////////////////////////
                       VIEW & INTROSPECTION
@@ -54,7 +57,7 @@ interface IDelegateTokenBase {
     function getRights(uint256 delegateId) external view returns (uint256 baseDelegateId, uint256 activeDelegateId, Rights memory rights);
 
     function getBaseDelegateId(address tokenContract, uint256 tokenId) external pure returns (uint256);
-    function getExpiry(ExpiryType expiryType, uint256 expiryValue) external view returns (uint40);
+    function getExpiry(ExpiryType expiryType, uint256 expiryValue) external view returns (uint256);
 
     /*//////////////////////////////////////////////////////////////
                          CREATE METHODS

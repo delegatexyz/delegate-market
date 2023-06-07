@@ -18,7 +18,7 @@ import {INFTFlashLender} from "./interfaces/INFTFlashLender.sol";
  * TODO:
  * easier royalty sharing for third parties, ERC2981 specifies a single receiver
  * batch creation, be careful to avoid people paying themselves in things that should be gated. create, extend, burn, transfer
- * let pople silo licensing rights and sell two different rights to two different accounts
+ * let people silo licensing rights and sell two different rights to two different accounts
  * add creation time for easy staking composability (and liquid staking extensions)
  * make flashloan payable to pass along msg.value?
  * enumerate all the LDs owned by a specific individual?
