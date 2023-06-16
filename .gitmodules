@@ -22,3 +22,6 @@
 	url = https://github.com/delegatecash/delegate-registry
 	branch = v2
 	ignore = dirty
+[submodule "lib/seaport-types"]
+	path = lib/seaport-types
+	url = https://github.com/ProjectOpenSea/seaport-types
