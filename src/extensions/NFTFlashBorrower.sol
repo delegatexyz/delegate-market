@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {ERC721} from "solmate/tokens/ERC721.sol";
-import {INFTFlashBorrower} from "./interfaces/INFTFlashBorrower.sol";
+import {INFTFlashBorrower} from "../interfaces/INFTFlashBorrower.sol";
 
 /// @notice Example flash loan integration, does nothing but you could insert airdrop claiming here
 contract NFTFlashBorrower is INFTFlashBorrower {
