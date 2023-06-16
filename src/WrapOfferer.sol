@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.20;
 
-import {IWrapOfferer, ReceiptFillerType} from "./interfaces/IWrapOfferer.sol";
+import {ContractOffererInterface, IWrapOfferer, ReceiptFillerType} from "./interfaces/IWrapOfferer.sol";
 
 import {LibBitmap} from "solady/utils/LibBitmap.sol";
-// import {ReceivedItem, SpentItem, Schema} from "seaport/interfaces/ContractOffererInterface.sol";
-import {
-    ContractOffererInterface
-} from "seaport-types/src/interfaces/ContractOffererInterface.sol";
+import {ReceivedItem, SpentItem, Schema} from "seaport-types/src/interfaces/ContractOffererInterface.sol";
 import {ItemType} from "seaport-types/src/lib/ConsiderationEnums.sol";
 
 import {IDelegateToken, ExpiryType} from "./interfaces/IDelegateToken.sol";
@@ -116,6 +113,11 @@ contract WrapOfferer is IWrapOfferer {
     /// TODO: inheritdoc ContractOffererInterface
     function getSeaportMetadata() external pure returns (string memory, Schema[] memory) {
         return ("Liquid Delegate Contract Offerer", new Schema[](0));
+    }
+
+    /// @dev See {IERC165-supportsInterface}.
+    function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
+        return interfaceId == type(ContractOffererInterface).interfaceId || interfaceId == 0x01ffc9a7; // ERC165 Interface ID for ERC165
     }
 
     /**

@@ -51,7 +51,7 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
         uint96 expiration;
         address contract_;
         uint256 tokenId;
-        uint256 amount;
+        // uint256 amount;
         address referrer;
     }
 

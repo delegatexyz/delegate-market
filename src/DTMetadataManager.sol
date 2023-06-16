@@ -45,7 +45,7 @@ abstract contract DTMetadataManager is ERC2981, Owned {
     function _buildTokenURI(address tokenContract, uint256 id, uint256 expiry, address principalOwner) internal view returns (string memory) {
         string memory idstr = id.toString();
 
-        string memory pownerstr = principalOwner == address(0) ? "N/A" : principalOwner.toHexStringChecksumed();
+        string memory pownerstr = principalOwner == address(0) ? "N/A" : principalOwner.toHexStringChecksummed();
         string memory status = principalOwner == address(0) || expiry <= block.timestamp ? "Expired" : "Active";
 
         string memory metadataStringPart1 = string.concat(
@@ -54,7 +54,7 @@ abstract contract DTMetadataManager is ERC2981, Owned {
             " #",
             idstr,
             '","description":"LiquidDelegate lets you escrow your token for a chosen timeperiod and receive a liquid NFT representing the associated delegation rights. This collection represents the tokenized delegation rights.","attributes":[{"trait_type":"Collection Address","value":"',
-            tokenContract.toHexStringChecksumed(),
+            tokenContract.toHexStringChecksummed(),
             '"},{"trait_type":"Token ID","value":"',
             idstr,
             '"},{"trait_type":"Expires At","display_type":"date","value":',

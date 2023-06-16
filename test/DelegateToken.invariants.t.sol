@@ -10,7 +10,7 @@ import {Rights} from "src/DelegateToken.sol";
 
 import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
 
-contract DelegateTokenInvariants is Test, StdInvariant, BaseLiquidDelegateTest {
+contract DelegateTokenInvariants is StdInvariant, BaseLiquidDelegateTest {
     DelegateTokenHandler internal handler;
 
     bytes4[] internal selectors;

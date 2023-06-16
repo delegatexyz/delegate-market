@@ -55,14 +55,14 @@ contract PrincipalToken is BaseERC721("Principal Token", "PT") {
             rightsOwner = retrievedOwner;
         } catch {}
 
-        string memory rightsOwnerStr = rightsOwner == address(0) ? "N/A" : rightsOwner.toHexStringChecksumed();
+        string memory rightsOwnerStr = rightsOwner == address(0) ? "N/A" : rightsOwner.toHexStringChecksummed();
         string memory status = rightsOwner == address(0) || rights.expiry <= block.timestamp ? "Unlocked" : "Locked";
 
         string memory metadataStringPart1 = string.concat(
             '{"name":"',
             string.concat(name, " #", idstr),
             '","description":"LiquidDelegate lets you escrow your token for a chosen timeperiod and receive a liquid NFT representing the associated delegation rights. This collection represents the principal i.e. the future right to claim the underlying token once the associated delegate token expires.","attributes":[{"trait_type":"Collection Address","value":"',
-            rights.tokenContract.toHexStringChecksumed(),
+            rights.tokenContract.toHexStringChecksummed(),
             '"},{"trait_type":"Token ID","value":"',
             idstr,
             '"},{"trait_type":"Unlocks At","display_type":"date","value":',
