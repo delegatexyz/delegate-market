@@ -11,6 +11,7 @@ enum ExpiryType
 }
 
 enum TokenType {
+    NONE,
     ERC721,
     ERC20,
     ERC1155
@@ -78,14 +79,21 @@ interface IDelegateTokenBase {
         address tokenContract,
         TokenType tokenType,
         uint256 tokenId,
+        uint256 tokenAmount,
         ExpiryType expiryType,
         uint256 expiryValue
     ) external payable returns (uint256);
 
-    function create(address ldRecipient, address principalRecipient, address tokenContract, TokenType tokenType, uint256 tokenId, ExpiryType expiryType, uint256 expiryValue)
-        external
-        payable
-        returns (uint256);
+    function create(
+        address ldRecipient,
+        address principalRecipient,
+        address tokenContract,
+        TokenType tokenType,
+        uint256 tokenId,
+        uint256 tokenAmount,
+        ExpiryType expiryType,
+        uint256 expiryValue
+    ) external payable returns (uint256);
 
     function extend(uint256 delegateId, ExpiryType expiryType, uint256 expiryValue) external;
 

@@ -104,7 +104,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, ERC2981, Owned
      */
     function flashLoan(address receiver, uint256 delegateId, address tokenContract, uint256 tokenId, bytes calldata data) external payable {
         if (!isApprovedOrOwner(msg.sender, delegateId)) revert NotAuthorized();
-        if (getBaseDelegateId(tokenContract, tokenId) != delegateId & BASE_RIGHTS_ID_MASK) revert InvalidFlashloan();
+        if (getBaseDelegateId(TokenType.ERC721, tokenContract, tokenId, 0) != delegateId & BASE_RIGHTS_ID_MASK) revert InvalidFlashloan();
         IERC721(tokenContract).transferFrom(address(this), receiver, tokenId);
 
         if (INFTFlashBorrower(receiver).onFlashLoan{value: msg.value}(msg.sender, tokenContract, tokenId, data) != FLASHLOAN_CALLBACK_SUCCESS) {
@@ -133,13 +133,17 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, ERC2981, Owned
         address tokenContract,
         TokenType tokenType,
         uint256 tokenId,
+        uint256 tokenAmount,
         ExpiryType expiryType,
         uint256 expiryValue
     ) external payable returns (uint256) {
-        if (tokenType != TokenType.ERC721) revert InvalidTokenType();
-        if (IERC721(tokenContract).ownerOf(tokenId) != address(this)) revert UnderlyingMissing();
+        if (tokenType == TokenType.ERC721) {
+            if (IERC721(tokenContract).ownerOf(tokenId) != address(this)) revert UnderlyingMissing();
+        } else {
+            revert InvalidTokenType();
+        }        
         uint256 expiry = getExpiry(expiryType, expiryValue);
-        return _mint(delegateRecipient, principalRecipient, tokenContract, tokenId, expiry);
+        return _mint(delegateRecipient, principalRecipient, tokenType, tokenContract, tokenId, tokenAmount, expiry);
     }
 
     /**
@@ -154,15 +158,28 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, ERC2981, Owned
      * @return New rights ID that is also the token ID of both the newly created principal and
      * delegate tokens.
      */
-    function create(address delegateRecipient, address principalRecipient, address tokenContract, TokenType tokenType, uint256 tokenId, ExpiryType expiryType, uint256 expiryValue)
-        external
-        payable
-        returns (uint256)
-    {
-        if (tokenType != TokenType.ERC721) revert InvalidTokenType();
-        IERC721(tokenContract).transferFrom(msg.sender, address(this), tokenId);
+    function create(
+        address delegateRecipient,
+        address principalRecipient,
+        address tokenContract,
+        TokenType tokenType,
+        uint256 tokenId,
+        uint256 tokenAmount,
+        ExpiryType expiryType,
+        uint256 expiryValue
+    ) external payable returns (uint256) {
+        if (tokenType == TokenType.ERC721) {
+            IERC721(tokenContract).transferFrom(msg.sender, address(this), tokenId);
+            tokenAmount = 0;
+        } else if (tokenType == TokenType.ERC20) {
+            // TODO: Handle nonstandard tokens like USDT and BNB
+            IERC20(tokenContract).transferFrom(msg.sender, address(this), tokenAmount);
+            tokenId = 0;
+        } else if (tokenType == TokenType.ERC1155) {
+            IERC1155(tokenContract).safeTransferFrom(msg.sender, address(this), tokenId, tokenAmount);
+        }
         uint256 expiry = getExpiry(expiryType, expiryValue);
-        return _mint(delegateRecipient, principalRecipient, tokenContract, tokenId, expiry);
+        return _mint(delegateRecipient, principalRecipient, tokenType, tokenContract, tokenId, tokenAmount, expiry);
     }
 
     /**
@@ -288,8 +305,8 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, ERC2981, Owned
         if (tokenContract == address(0)) revert NoRights();
     }
 
-    function getBaseDelegateId(address tokenContract, uint256 tokenId) public pure returns (uint256) {
-        return uint256(keccak256(abi.encode(tokenContract, tokenId))) & BASE_RIGHTS_ID_MASK;
+    function getBaseDelegateId(TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount) public pure returns (uint256) {
+        return uint256(keccak256(abi.encode(tokenType, tokenContract, tokenId, tokenAmount))) & BASE_RIGHTS_ID_MASK;
     }
 
     function getExpiry(ExpiryType expiryType, uint256 expiryValue) public view returns (uint256 expiry) {
@@ -304,11 +321,11 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, ERC2981, Owned
         if (expiry > type(uint40).max) revert ExpiryTooLarge();
     }
 
-    function _mint(address delegateRecipient, address principalRecipient, address tokenContract_, uint256 tokenId_, uint256 expiry_)
+    function _mint(address delegateRecipient, address principalRecipient, TokenType tokenType, address tokenContract_, uint256 tokenId_, uint256 amount, uint256 expiry_)
         internal
         returns (uint256 delegateId)
     {
-        uint256 baseDelegateId = getBaseDelegateId(tokenContract_, tokenId_);
+        uint256 baseDelegateId = getBaseDelegateId(tokenType, tokenContract_, tokenId_, tokenAmount);
         (, uint256 nonce,) = _readRightsInfo(baseDelegateId);
         delegateId = baseDelegateId | nonce;
 
