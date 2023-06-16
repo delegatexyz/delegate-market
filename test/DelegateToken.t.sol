@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {Test} from "forge-std/Test.sol";
 import {LibRLP} from "solady/utils/LibRLP.sol";
 import {LibString} from "solady/utils/LibString.sol";
-import {DelegateToken, ExpiryType, ViewRights} from "src/DelegateToken.sol";
+import {DelegateToken, ExpiryType, ViewRights, TokenType} from "src/DelegateToken.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 import {DelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
 import {MockERC721} from "./mock/MockERC721.sol";
@@ -67,7 +67,7 @@ contract DelegateTokenTest is Test {
         vm.startPrank(tokenOwner);
         token.setApprovalForAll(address(ld), true);
 
-        uint256 delegateId = ld.create(ldTo, principalTo, address(token), tokenId, expiryType, expiryValue);
+        uint256 delegateId = ld.create(ldTo, principalTo, address(token), TokenType.ERC721, tokenId, expiryType, expiryValue);
 
         vm.stopPrank();
 
@@ -95,7 +95,7 @@ contract DelegateTokenTest is Test {
         token.mint(address(ld), underlyingTokenId);
 
         vm.prank(from);
-        uint256 delegateId = ld.createUnprotected(from, from, address(token), underlyingTokenId, expiryType, expiryValue);
+        uint256 delegateId = ld.createUnprotected(from, from, address(token), TokenType.ERC721, underlyingTokenId, expiryType, expiryValue);
 
         vm.prank(from);
         ld.transferFrom(from, to, delegateId);
@@ -113,7 +113,7 @@ contract DelegateTokenTest is Test {
 
         vm.startPrank(minter);
         vm.expectRevert();
-        ld.create(minter, minter, address(token), tokenId, expiryType, expiryValue);
+        ld.create(minter, minter, address(token), TokenType.ERC721, tokenId, expiryType, expiryValue);
         vm.stopPrank();
     }
 
@@ -137,7 +137,7 @@ contract DelegateTokenTest is Test {
         vm.startPrank(tokenOwner);
         token.transferFrom(tokenOwner, address(ld), tokenId);
 
-        uint256 delegateId = ld.createUnprotected(ldTo, principalTo, address(token), tokenId, expiryType, expiryValue);
+        uint256 delegateId = ld.createUnprotected(ldTo, principalTo, address(token), TokenType.ERC721, tokenId, expiryType, expiryValue);
 
         vm.stopPrank();
 
@@ -162,13 +162,13 @@ contract DelegateTokenTest is Test {
         uint256 tokenId = token.mintNext(tokenOwner);
         vm.startPrank(tokenOwner);
         token.setApprovalForAll(address(ld), true);
-        ld.create(tokenOwner, tokenOwner, address(token), tokenId, ExpiryType.RELATIVE, 10 days);
+        ld.create(tokenOwner, tokenOwner, address(token), TokenType.ERC721, tokenId, ExpiryType.RELATIVE, 10 days);
         vm.stopPrank();
 
         address attacker = makeAddr("attacker");
         vm.prank(attacker);
         vm.expectRevert();
-        ld.createUnprotected(attacker, attacker, address(token), tokenId, ExpiryType.RELATIVE, 5 days);
+        ld.createUnprotected(attacker, attacker, address(token), TokenType.ERC721, tokenId, ExpiryType.RELATIVE, 5 days);
     }
 
     function test_fuzzingCannotCreateWithNonexistentContract(address minter, address tokenContract, uint256 tokenId, bool expiryTypeRelative, uint256 time)
@@ -181,7 +181,7 @@ contract DelegateTokenTest is Test {
 
         vm.startPrank(minter);
         vm.expectRevert();
-        ld.create(minter, minter, tokenContract, tokenId, expiryType, expiryValue);
+        ld.create(minter, minter, tokenContract, TokenType.ERC721, tokenId, expiryType, expiryValue);
         vm.stopPrank();
     }
 
@@ -208,7 +208,7 @@ contract DelegateTokenTest is Test {
         address user = makeAddr("user");
         token.mint(address(ld), id);
         vm.prank(user);
-        uint256 delegateId = ld.createUnprotected(user, user, address(token), id, ExpiryType.RELATIVE, 10 seconds);
+        uint256 delegateId = ld.createUnprotected(user, user, address(token), TokenType.ERC721, id, ExpiryType.RELATIVE, 10 seconds);
 
         vm.prank(ldOwner);
         ld.setBaseURI("https://test-uri.com/");

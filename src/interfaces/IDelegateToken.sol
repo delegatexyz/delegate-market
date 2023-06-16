@@ -10,6 +10,12 @@ enum ExpiryType
     ABSOLUTE
 }
 
+enum TokenType {
+    ERC721,
+    ERC20,
+    ERC1155
+}
+
 // For returning data only, do not store with this
 struct ViewRights {
     address tokenContract;
@@ -70,12 +76,13 @@ interface IDelegateTokenBase {
         address ldRecipient,
         address principalRecipient,
         address tokenContract,
+        TokenType tokenType,
         uint256 tokenId,
         ExpiryType expiryType,
         uint256 expiryValue
     ) external payable returns (uint256);
 
-    function create(address ldRecipient, address principalRecipient, address tokenContract, uint256 tokenId, ExpiryType expiryType, uint256 expiryValue)
+    function create(address ldRecipient, address principalRecipient, address tokenContract, TokenType tokenType, uint256 tokenId, ExpiryType expiryType, uint256 expiryValue)
         external
         payable
         returns (uint256);

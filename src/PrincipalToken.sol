@@ -8,6 +8,8 @@ import {Base64} from "solady/utils/Base64.sol";
 
 import {BaseERC721} from "./BaseERC721.sol";
 
+/// @notice A simple NFT that doesn't store any user data itself, being tightly linked to the more stateful Delegate Token.
+/// @notice The holder of the PT is eligible to reclaim the escrowed NFT when the DT expires or is burned. 
 contract PrincipalToken is BaseERC721("Principal Token", "PT") {
     using LibString for uint256;
     using LibString for address;
@@ -15,11 +17,6 @@ contract PrincipalToken is BaseERC721("Principal Token", "PT") {
     address public immutable DELEGATE_TOKEN;
 
     error NotDT();
-
-    modifier onlyDT() {
-        if (msg.sender != DELEGATE_TOKEN) revert NotDT();
-        _;
-    }
 
     constructor(address _DELEGATE_TOKEN) {
         DELEGATE_TOKEN = _DELEGATE_TOKEN;
@@ -34,6 +31,11 @@ contract PrincipalToken is BaseERC721("Principal Token", "PT") {
         (bool approvedOrOwner,) = _isApprovedOrOwner(burner, id);
         if (!approvedOrOwner) revert NotAuthorized();
         _burn(id);
+    }
+
+    modifier onlyDT() {
+        if (msg.sender != DELEGATE_TOKEN) revert NotDT();
+        _;
     }
 
     /*//////////////////////////////////////////////////////////////

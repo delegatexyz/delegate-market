@@ -7,7 +7,7 @@ import {LibBitmap} from "solady/utils/LibBitmap.sol";
 import {ReceivedItem, SpentItem, Schema} from "seaport-types/src/interfaces/ContractOffererInterface.sol";
 import {ItemType} from "seaport-types/src/lib/ConsiderationEnums.sol";
 
-import {IDelegateToken, ExpiryType} from "./interfaces/IDelegateToken.sol";
+import {IDelegateToken, ExpiryType, TokenType} from "./interfaces/IDelegateToken.sol";
 
 /// @notice A Seaport ContractOfferer
 contract WrapOfferer is IWrapOfferer {
@@ -88,7 +88,7 @@ contract WrapOfferer is IWrapOfferer {
         address considerationToken = consideration[0].token;
         uint256 considerationIdentifier = consideration[0].identifier;
         IDelegateToken(DELEGATE_TOKEN).createUnprotected(
-            delegateRecipient, principalRecipient, considerationToken, considerationIdentifier, expiryType, expiryValue
+            delegateRecipient, principalRecipient, considerationToken, TokenType.ERC721, considerationIdentifier, expiryType, expiryValue
         );
 
         return this.ratifyOrder.selector;

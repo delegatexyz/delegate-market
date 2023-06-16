@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.20;
 
-import {IDelegateTokenBase, ExpiryType, ViewRights} from "./interfaces/IDelegateToken.sol";
+import {IDelegateTokenBase, ExpiryType, ViewRights, TokenType} from "./interfaces/IDelegateToken.sol";
 import {INFTFlashBorrower} from "./interfaces/INFTFlashBorrower.sol";
 
 import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
+import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
+import {IERC1155} from "openzeppelin-contracts/contracts/token/ERC1155/IERC1155.sol";
 
 import {SignatureCheckerLib} from "solady/utils/SignatureCheckerLib.sol";
 
@@ -39,6 +41,8 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, ERC2981, Owned
     mapping(uint256 delegateId => uint256[3] rights) internal _rights;
 
     string internal _baseURI;
+
+    error InvalidTokenType();
 
     enum StoragePositions {
         info, // PACKED (address tokenContract, uint40 expiry, uint56 nonce)
@@ -127,10 +131,12 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, ERC2981, Owned
         address delegateRecipient,
         address principalRecipient,
         address tokenContract,
+        TokenType tokenType,
         uint256 tokenId,
         ExpiryType expiryType,
         uint256 expiryValue
     ) external payable returns (uint256) {
+        if (tokenType != TokenType.ERC721) revert InvalidTokenType();
         if (IERC721(tokenContract).ownerOf(tokenId) != address(this)) revert UnderlyingMissing();
         uint256 expiry = getExpiry(expiryType, expiryValue);
         return _mint(delegateRecipient, principalRecipient, tokenContract, tokenId, expiry);
@@ -148,11 +154,12 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, ERC2981, Owned
      * @return New rights ID that is also the token ID of both the newly created principal and
      * delegate tokens.
      */
-    function create(address delegateRecipient, address principalRecipient, address tokenContract, uint256 tokenId, ExpiryType expiryType, uint256 expiryValue)
+    function create(address delegateRecipient, address principalRecipient, address tokenContract, TokenType tokenType, uint256 tokenId, ExpiryType expiryType, uint256 expiryValue)
         external
         payable
         returns (uint256)
     {
+        if (tokenType != TokenType.ERC721) revert InvalidTokenType();
         IERC721(tokenContract).transferFrom(msg.sender, address(this), tokenId);
         uint256 expiry = getExpiry(expiryType, expiryValue);
         return _mint(delegateRecipient, principalRecipient, tokenContract, tokenId, expiry);

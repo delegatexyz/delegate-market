@@ -11,7 +11,7 @@ import {MockERC721} from "../mock/MockERC721.sol";
 import {LibString} from "solady/utils/LibString.sol";
 import {SafeCastLib} from "solady/utils/SafeCastLib.sol";
 
-import {IDelegateToken, ExpiryType, ViewRights} from "src/interfaces/IDelegateToken.sol";
+import {IDelegateToken, ExpiryType, ViewRights, TokenType} from "src/interfaces/IDelegateToken.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 
 contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
@@ -78,7 +78,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         MockERC721(token).approve(address(liquidDelegate), id);
 
-        uint256 delegateId = liquidDelegate.create(currentActor, currentActor, address(token), id, ExpiryType.RELATIVE, 1 seconds);
+        uint256 delegateId = liquidDelegate.create(currentActor, currentActor, address(token), TokenType.ERC721, id, ExpiryType.RELATIVE, 1 seconds);
         allDelegateTokens.add(delegateId);
         allPrincipalTokens.add(delegateId);
         existingDelegateTokens.add(delegateId);
@@ -105,7 +105,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
             (address token, uint256 id) = _mintToken(backupTokenSeed, currentActor);
             MockERC721(token).approve(address(liquidDelegate), id);
 
-            delegateId = liquidDelegate.create(to, currentActor, address(token), id, ExpiryType.RELATIVE, 1 seconds);
+            delegateId = liquidDelegate.create(to, currentActor, address(token), TokenType.ERC721, id, ExpiryType.RELATIVE, 1 seconds);
 
             allDelegateTokens.add(delegateId);
             allPrincipalTokens.add(delegateId);
