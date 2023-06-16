@@ -6,14 +6,12 @@
 	path = lib/openzeppelin-contracts
 	url = https://github.com/openzeppelin/openzeppelin-contracts
 	branch = master
-	ignore = dirty
 [submodule "lib/solmate"]
 	path = lib/solmate
 	url = https://github.com/transmissions11/solmate
 [submodule "lib/seaport"]
 	path = lib/seaport
 	url = https://github.com/projectopensea/seaport
-	ignore = dirty
 [submodule "lib/solady"]
 	path = lib/solady
 	url = https://github.com/vectorized/solady
@@ -21,7 +19,3 @@
 	path = lib/delegate-registry
 	url = https://github.com/delegatecash/delegate-registry
 	branch = v2
-	ignore = dirty
-[submodule "lib/seaport-types"]
-	path = lib/seaport-types
-	url = https://github.com/ProjectOpenSea/seaport-types

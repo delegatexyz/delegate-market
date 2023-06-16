@@ -8,7 +8,7 @@ import {LibBitmap} from "solady/utils/LibBitmap.sol";
 import {
     ContractOffererInterface
 } from "seaport-types/src/interfaces/ContractOffererInterface.sol";
-import {ItemType} from "seaport/lib/ConsiderationEnums.sol";
+import {ItemType} from "seaport-types/src/lib/ConsiderationEnums.sol";
 
 import {IDelegateToken, ExpiryType} from "./interfaces/IDelegateToken.sol";
 
