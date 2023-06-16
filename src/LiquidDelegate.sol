@@ -15,12 +15,12 @@ import {INFTFlashLender} from "./interfaces/INFTFlashLender.sol";
  * let people modify the date to later if they are the creator
  * custom errors instead of require strings
  * remove creation fee altogether
+ * make flashloan payable
  * TODO:
  * easier royalty sharing for third parties, ERC2981 specifies a single receiver
  * batch creation, be careful to avoid people paying themselves in things that should be gated. create, extend, burn, transfer
  * let people silo licensing rights and sell two different rights to two different accounts
  * add creation time for easy staking composability (and liquid staking extensions)
- * make flashloan payable to pass along msg.value?
  * enumerate all the LDs owned by a specific individual?
  * deterministic IDs based on keccak(contractAddress, tokenId)?
  */
@@ -51,7 +51,7 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
         uint96 expiration;
         address contract_;
         uint256 tokenId;
-        // uint256 amount;
+        uint256 amount;
         address referrer;
     }
 
@@ -112,7 +112,8 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
     /// @param referrer Set to the zero address by default, alternate frontends can populate this to receive half the creation fee
     function create(address contract_, uint256 tokenId, uint96 expiration, address payable referrer) external payable {
         ERC721(contract_).transferFrom(msg.sender, address(this), tokenId);
-        idsToRights[nextLiquidDelegateId] = Rights({depositor: msg.sender, contract_: contract_, tokenId: tokenId, expiration: expiration, referrer: referrer});
+        idsToRights[nextLiquidDelegateId] =
+            Rights({depositor: msg.sender, contract_: contract_, tokenId: tokenId, amount: 0, expiration: expiration, referrer: referrer});
         _mint(msg.sender, nextLiquidDelegateId);
         emit RightsCreated(nextLiquidDelegateId++, msg.sender, contract_, tokenId, expiration);
     }

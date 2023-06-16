@@ -53,7 +53,10 @@ interface IDelegateTokenBase {
     function DELEGATION_REGISTRY() external view returns (address);
     function PRINCIPAL_TOKEN() external view returns (address);
 
-    function getRights(address tokenContract, uint256 tokenId) external view returns (uint256 baseDelegateId, uint256 activeDelegateId, ViewRights memory rights);
+    function getRights(address tokenContract, uint256 tokenId)
+        external
+        view
+        returns (uint256 baseDelegateId, uint256 activeDelegateId, ViewRights memory rights);
     function getRights(uint256 delegateId) external view returns (uint256 baseDelegateId, uint256 activeDelegateId, ViewRights memory rights);
 
     function getBaseDelegateId(address tokenContract, uint256 tokenId) external pure returns (uint256);

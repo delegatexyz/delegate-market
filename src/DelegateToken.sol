@@ -249,7 +249,11 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, DTMetadataMana
         return ERC721.supportsInterface(interfaceId) || DTMetadataManager.supportsInterface(interfaceId);
     }
 
-    function getRights(address tokenContract_, uint256 tokenId) public view returns (uint256 baseDelegateId, uint256 activeDelegateId, ViewRights memory rights) {
+    function getRights(address tokenContract_, uint256 tokenId)
+        public
+        view
+        returns (uint256 baseDelegateId, uint256 activeDelegateId, ViewRights memory rights)
+    {
         baseDelegateId = getBaseDelegateId(tokenContract_, tokenId);
         (uint256 expiry, uint256 nonce, address tokenContract) = _readRightsInfo(baseDelegateId);
         rights = ViewRights({tokenContract: tokenContract, expiry: expiry, nonce: nonce, tokenId: _rights[baseDelegateId][uint256(StoragePositions.tokenId)]});
