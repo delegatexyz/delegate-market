@@ -12,7 +12,9 @@
 [submodule "lib/solady"]
 	path = lib/solady
 	url = https://github.com/vectorized/solady
+	ignore = dirty
 [submodule "lib/delegate-registry"]
 	path = lib/delegate-registry
 	url = https://github.com/delegatecash/delegate-registry
 	branch = v2
+	ignore = dirty
