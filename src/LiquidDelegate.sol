@@ -6,7 +6,7 @@ import {ERC2981} from "openzeppelin-contracts/contracts/token/common/ERC2981.sol
 import {Base64} from "openzeppelin-contracts/contracts/utils/Base64.sol";
 import {Strings} from "openzeppelin-contracts/contracts/utils/Strings.sol";
 
-import {IDelegationRegistry} from "./interfaces/IDelegationRegistry.sol";
+import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
 import {INFTFlashBorrower} from "./interfaces/INFTFlashBorrower.sol";
 import {INFTFlashLender} from "./interfaces/INFTFlashLender.sol";
 
@@ -18,7 +18,7 @@ import {INFTFlashLender} from "./interfaces/INFTFlashLender.sol";
  * TODO:
  * easier royalty sharing for third parties, ERC2981 specifies a single receiver
  * batch creation, be careful to avoid people paying themselves in things that should be gated. create, extend, burn, transfer
- * let pople silo licensing rights and sell two different rights to two different accounts
+ * let people silo licensing rights and sell two different rights to two different accounts
  * add creation time for easy staking composability (and liquid staking extensions)
  * make flashloan payable to pass along msg.value?
  * enumerate all the LDs owned by a specific individual?
@@ -32,7 +32,7 @@ import {INFTFlashLender} from "./interfaces/INFTFlashLender.sol";
 
 /**
  * @title LiquidDelegate
- * @custom:version 1.1
+ * @custom:version 2.0
  * @custom:author foobar (0xfoobar)
  * @notice An ERC721 that lets users tokenize their delegation rights so they're composable & transferrable
  */
@@ -51,6 +51,7 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
         uint96 expiration;
         address contract_;
         uint256 tokenId;
+        // uint256 amount;
         address referrer;
     }
 
@@ -143,13 +144,13 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
     /// @param liquidDelegateId The id of the liquid delegate to flashloan the escrowed NFT for
     /// @param receiver The address of the receiver implementing the INFTFlashBorrower interface
     /// @param data Unused here
-    function flashLoan(uint256 liquidDelegateId, INFTFlashBorrower receiver, bytes calldata data) external {
+    function flashLoan(uint256 liquidDelegateId, INFTFlashBorrower receiver, bytes calldata data) external payable {
         Rights memory rights = idsToRights[liquidDelegateId];
         if (ownerOf(liquidDelegateId) != msg.sender) {
             revert InvalidFlashLoan();
         }
         ERC721(rights.contract_).transferFrom(address(this), address(receiver), rights.tokenId);
-        if (receiver.onFlashLoan(msg.sender, rights.contract_, rights.tokenId, data) != CALLBACK_SUCCESS) {
+        if (receiver.onFlashLoan{value: msg.value}(msg.sender, rights.contract_, rights.tokenId, data) != CALLBACK_SUCCESS) {
             revert InvalidFlashLoan();
         }
         ERC721(rights.contract_).transferFrom(address(receiver), address(this), rights.tokenId);
@@ -170,8 +171,8 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
             revert LiquidDelegateExpired();
         }
         // Reassign delegation powers
-        IDelegationRegistry(DELEGATION_REGISTRY).delegateForToken(from, rights.contract_, rights.tokenId, false);
-        IDelegationRegistry(DELEGATION_REGISTRY).delegateForToken(to, rights.contract_, rights.tokenId, true);
+        IDelegateRegistry(DELEGATION_REGISTRY).delegateERC721(from, rights.contract_, rights.tokenId, "", false);
+        IDelegateRegistry(DELEGATION_REGISTRY).delegateERC721(to, rights.contract_, rights.tokenId, "", true);
         super.transferFrom(from, to, id);
     }
 
@@ -180,14 +181,14 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
     /// @param id The token id to mint
     function _mint(address to, uint256 id) internal override {
         Rights memory rights = idsToRights[id];
-        IDelegationRegistry(DELEGATION_REGISTRY).delegateForToken(to, rights.contract_, rights.tokenId, true);
+        IDelegateRegistry(DELEGATION_REGISTRY).delegateERC721(to, rights.contract_, rights.tokenId, "", true);
         super._mint(to, id);
     }
 
     /// @dev Undelegate when a liquid delegate is burned
     function _burn(uint256 id) internal override {
         Rights memory rights = idsToRights[id];
-        IDelegationRegistry(DELEGATION_REGISTRY).delegateForToken(ownerOf(id), rights.contract_, rights.tokenId, false);
+        IDelegateRegistry(DELEGATION_REGISTRY).delegateERC721(ownerOf(id), rights.contract_, rights.tokenId, "", false);
         super._burn(id);
     }
 

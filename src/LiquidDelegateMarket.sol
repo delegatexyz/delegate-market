@@ -90,7 +90,7 @@ contract LiquidDelegateMarket {
     /// @notice Cancel your own listing
     /// @param listingId The id of the listing
     function cancelListing(uint256 listingId) external {
-        // No re-entrancy possible here, no external calls
+        // No reentrancy possible here, no external calls
         Listing memory listing = listings[listingId];
         require(msg.sender == listing.seller, "NOT_YOUR_LISTING");
         emit ListingCanceled(listingId, msg.sender, listing.liquidDelegateId, listing.weiAmount);

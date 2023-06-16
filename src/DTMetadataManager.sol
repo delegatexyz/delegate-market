@@ -2,7 +2,6 @@
 pragma solidity ^0.8.20;
 
 import {ERC2981} from "openzeppelin-contracts/contracts/token/common/ERC2981.sol";
-import {IERC165} from "openzeppelin-contracts/contracts/utils/introspection/IERC165.sol";
 import {Owned} from "solmate/auth/Owned.sol";
 
 import {LibString} from "solady/utils/LibString.sol";
@@ -43,10 +42,10 @@ abstract contract DTMetadataManager is ERC2981, Owned {
         return string.concat(_baseURI, "contract");
     }
 
-    function _buildTokenURI(address tokenContract, uint256 id, uint40 expiry, address principalOwner) internal view returns (string memory) {
+    function _buildTokenURI(address tokenContract, uint256 id, uint256 expiry, address principalOwner) internal view returns (string memory) {
         string memory idstr = id.toString();
 
-        string memory pownerstr = principalOwner == address(0) ? "N/A" : principalOwner.toHexStringChecksumed();
+        string memory pownerstr = principalOwner == address(0) ? "N/A" : principalOwner.toHexStringChecksummed();
         string memory status = principalOwner == address(0) || expiry <= block.timestamp ? "Expired" : "Active";
 
         string memory metadataStringPart1 = string.concat(
@@ -55,11 +54,11 @@ abstract contract DTMetadataManager is ERC2981, Owned {
             " #",
             idstr,
             '","description":"LiquidDelegate lets you escrow your token for a chosen timeperiod and receive a liquid NFT representing the associated delegation rights. This collection represents the tokenized delegation rights.","attributes":[{"trait_type":"Collection Address","value":"',
-            tokenContract.toHexStringChecksumed(),
+            tokenContract.toHexStringChecksummed(),
             '"},{"trait_type":"Token ID","value":"',
             idstr,
             '"},{"trait_type":"Expires At","display_type":"date","value":',
-            uint256(expiry).toString()
+            expiry.toString()
         );
         string memory metadataStringPart2 = string.concat(
             '},{"trait_type":"Principal Owner Address","value":"',

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
-import {InvariantTest} from "forge-std/InvariantTest.sol";
+import {StdInvariant} from "forge-std/StdInvariant.sol";
 import {BaseLiquidDelegateTest} from "./base/BaseLiquidDelegateTest.sol";
 
 import {DelegateTokenHandler} from "./handlers/DelegateTokenHandler.sol";
@@ -10,7 +10,7 @@ import {Rights} from "src/DelegateToken.sol";
 
 import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
 
-contract DelegateTokenInvariants is Test, InvariantTest, BaseLiquidDelegateTest {
+contract DelegateTokenInvariants is StdInvariant, BaseLiquidDelegateTest {
     DelegateTokenHandler internal handler;
 
     bytes4[] internal selectors;

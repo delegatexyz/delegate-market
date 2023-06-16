@@ -5,7 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {console2} from "forge-std/console2.sol";
 import {MockERC721} from "solmate/test/utils/mocks/MockERC721.sol";
 import {NFTFlashBorrower} from "../src/NFTFlashBorrower.sol";
-import {DelegationRegistry} from "../src/DelegationRegistry.sol";
+import {DelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
 import {LiquidDelegate} from "../src/LiquidDelegate.sol";
 
 contract LiquidDelegateTest is Test {
@@ -14,11 +14,11 @@ contract LiquidDelegateTest is Test {
     address payable public constant ZERO = payable(address(0x0));
     address payable public constant liquidDelegateOwner = payable(address(0x9));
     MockERC721 public nft;
-    DelegationRegistry public registry;
+    DelegateRegistry public registry;
     LiquidDelegate public rights;
 
     function setUp() public {
-        registry = new DelegationRegistry();
+        registry = new DelegateRegistry();
         nft = new MockERC721("Test", "TEST");
         rights = new LiquidDelegate(address(registry), liquidDelegateOwner, baseURI);
         vm.label(address(registry), "registry");
@@ -43,7 +43,7 @@ contract LiquidDelegateTest is Test {
         vm.assume(creator != ZERO);
         uint256 delegateId = _create(creator, tokenId, uint96(block.timestamp) + 60, ZERO);
         assertEq(rights.ownerOf(delegateId), creator);
-        assertTrue(registry.checkDelegateForToken(creator, address(rights), address(nft), tokenId));
+        assertTrue(registry.checkDelegateForERC721(creator, address(rights), address(nft), tokenId, ""));
     }
 
     // function testCreateAndPayReferrer(address creator, address payable referrer, uint256 tokenId) public {
@@ -67,8 +67,8 @@ contract LiquidDelegateTest is Test {
         vm.prank(creator);
         rights.transferFrom(creator, rightsOwner, delegateId);
         assertEq(rights.ownerOf(delegateId), rightsOwner);
-        assertTrue(registry.checkDelegateForToken(rightsOwner, address(rights), address(nft), tokenId));
-        assertFalse(registry.checkDelegateForToken(creator, address(rights), address(nft), tokenId));
+        assertTrue(registry.checkDelegateForERC721(rightsOwner, address(rights), address(nft), tokenId, ""));
+        assertFalse(registry.checkDelegateForERC721(creator, address(rights), address(nft), tokenId, ""));
     }
 
     function testCreateAndRedeem(address creator, address rightsOwner, uint256 tokenId) public {
@@ -87,7 +87,7 @@ contract LiquidDelegateTest is Test {
         vm.expectRevert("NOT_MINTED");
         rights.ownerOf(delegateId);
         // Check that delegation reset
-        assertFalse(registry.checkDelegateForToken(creator, address(rights), address(nft), tokenId));
+        assertFalse(registry.checkDelegateForERC721(creator, address(rights), address(nft), tokenId, ""));
     }
 
     function testCreateAndExpire(address creator, address rightsOwner, uint256 tokenId) public {
@@ -109,7 +109,7 @@ contract LiquidDelegateTest is Test {
         vm.expectRevert("NOT_MINTED");
         rights.ownerOf(delegateId);
         // Check that delegation reset
-        assertFalse(registry.checkDelegateForToken(creator, address(rights), address(nft), tokenId));
+        assertFalse(registry.checkDelegateForERC721(creator, address(rights), address(nft), tokenId, ""));
     }
 
     function testCreateAndExtend(address creator, address rightsOwner, uint256 tokenId) public {
@@ -138,7 +138,7 @@ contract LiquidDelegateTest is Test {
         vm.expectRevert("NOT_MINTED");
         rights.ownerOf(delegateId);
         // Check that delegation reset
-        assertFalse(registry.checkDelegateForToken(creator, address(rights), address(nft), tokenId));
+        assertFalse(registry.checkDelegateForERC721(creator, address(rights), address(nft), tokenId, ""));
     }
 
     function testCreateAndFlashloan(address creator, uint256 tokenId) public {

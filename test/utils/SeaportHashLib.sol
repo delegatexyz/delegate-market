@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.20;
 
-import {OrderParameters, ConsiderationItem, OfferItem} from "seaport/lib/ConsiderationStructs.sol";
+import {OrderParameters, ConsiderationItem, OfferItem} from "seaport-types/src/lib/ConsiderationStructs.sol";
 
 library SeaportHashLib {
     bytes32 internal constant OFFER_ITEM_TYPEHASH =

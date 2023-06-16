@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 import {console2} from "forge-std/console2.sol";
 import {MockERC721} from "solmate/test/utils/mocks/MockERC721.sol";
 import {NFTFlashBorrower} from "../src/NFTFlashBorrower.sol";
-import {DelegationRegistry} from "../src/DelegationRegistry.sol";
+import {DelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
 import {LiquidDelegate} from "../src/LiquidDelegate.sol";
 import {LiquidDelegateMarket} from "../src/LiquidDelegateMarket.sol";
 
@@ -15,12 +15,12 @@ contract LiquidDelegateMarketTest is Test {
     address payable public constant ZERO = payable(address(0x0));
     address payable public constant liquidDelegateOwner = payable(address(0x9));
     MockERC721 public nft;
-    DelegationRegistry public registry;
+    DelegateRegistry public registry;
     LiquidDelegate public rights;
     LiquidDelegateMarket public market;
 
     function setUp() public {
-        registry = new DelegationRegistry();
+        registry = new DelegateRegistry();
         nft = new MockERC721("Test", "TEST");
         rights = new LiquidDelegate(address(registry), liquidDelegateOwner, baseURI);
         market = new LiquidDelegateMarket(address(rights));
