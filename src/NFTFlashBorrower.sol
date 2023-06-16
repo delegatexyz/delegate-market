@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import {ERC721} from "solmate/tokens/ERC721.sol";
 import {INFTFlashBorrower} from "./interfaces/INFTFlashBorrower.sol";
 
+/// @notice Example flash loan integration, does nothing but you could insert airdrop claiming here
 contract NFTFlashBorrower is INFTFlashBorrower {
     /// @notice The contract to receive flashloans from
     address public immutable liquidDelegation;
@@ -15,7 +16,7 @@ contract NFTFlashBorrower is INFTFlashBorrower {
     /**
      * @inheritdoc INFTFlashBorrower
      */
-    function onFlashLoan(address, address token, uint256 id, bytes calldata) external returns (bytes32) {
+    function onFlashLoan(address, address token, uint256 id, bytes calldata) external payable returns (bytes32) {
         require(msg.sender == liquidDelegation, "untrusted flashloan sender");
         require(ERC721(token).ownerOf(id) == address(this), "flashloan failed");
         ERC721(token).approve(liquidDelegation, id);

@@ -9,5 +9,5 @@ interface INFTFlashLender {
      * @param receiver The receiver of the tokens in the loan, and the receiver of the callback.
      * @param data Arbitrary data structure, intended to contain user-defined parameters.
      */
-    function flashLoan(uint256 delegateId, INFTFlashBorrower receiver, bytes calldata data) external;
+    function flashLoan(uint256 delegateId, INFTFlashBorrower receiver, bytes calldata data) external payable;
 }

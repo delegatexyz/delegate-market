@@ -143,13 +143,13 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
     /// @param liquidDelegateId The id of the liquid delegate to flashloan the escrowed NFT for
     /// @param receiver The address of the receiver implementing the INFTFlashBorrower interface
     /// @param data Unused here
-    function flashLoan(uint256 liquidDelegateId, INFTFlashBorrower receiver, bytes calldata data) external {
+    function flashLoan(uint256 liquidDelegateId, INFTFlashBorrower receiver, bytes calldata data) external payable {
         Rights memory rights = idsToRights[liquidDelegateId];
         if (ownerOf(liquidDelegateId) != msg.sender) {
             revert InvalidFlashLoan();
         }
         ERC721(rights.contract_).transferFrom(address(this), address(receiver), rights.tokenId);
-        if (receiver.onFlashLoan(msg.sender, rights.contract_, rights.tokenId, data) != CALLBACK_SUCCESS) {
+        if (receiver.onFlashLoan{value: msg.value}(msg.sender, rights.contract_, rights.tokenId, data) != CALLBACK_SUCCESS) {
             revert InvalidFlashLoan();
         }
         ERC721(rights.contract_).transferFrom(address(receiver), address(this), rights.tokenId);
