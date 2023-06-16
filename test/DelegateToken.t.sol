@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {Test} from "forge-std/Test.sol";
 import {LibRLP} from "solady/utils/LibRLP.sol";
 import {LibString} from "solady/utils/LibString.sol";
-import {DelegateToken, ExpiryType, Rights} from "src/DelegateToken.sol";
+import {DelegateToken, ExpiryType, ViewRights} from "src/DelegateToken.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 import {DelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
 import {MockERC721} from "./mock/MockERC721.sol";
@@ -74,7 +74,7 @@ contract DelegateTokenTest is Test {
         assertEq(ld.ownerOf(delegateId), ldTo);
         assertEq(principal.ownerOf(delegateId), principalTo);
 
-        (uint256 baseDelegateId, uint256 activeDelegateId, Rights memory rights) = ld.getRights(delegateId);
+        (uint256 baseDelegateId, uint256 activeDelegateId, ViewRights memory rights) = ld.getRights(delegateId);
         assertEq(activeDelegateId, delegateId);
         assertEq(baseDelegateId, ld.getBaseDelegateId(address(token), tokenId));
         assertEq(uint256(bytes32(bytes25(bytes32(delegateId)))), baseDelegateId);
@@ -144,7 +144,7 @@ contract DelegateTokenTest is Test {
         assertEq(ld.ownerOf(delegateId), ldTo);
         assertEq(principal.ownerOf(delegateId), principalTo);
 
-        (uint256 baseDelegateId, uint256 activeDelegateId, Rights memory rights) = ld.getRights(delegateId);
+        (uint256 baseDelegateId, uint256 activeDelegateId, ViewRights memory rights) = ld.getRights(delegateId);
         assertEq(activeDelegateId, delegateId);
         assertEq(baseDelegateId, ld.getBaseDelegateId(address(token), tokenId));
         assertEq(uint256(bytes32(bytes25(bytes32(delegateId)))), baseDelegateId);

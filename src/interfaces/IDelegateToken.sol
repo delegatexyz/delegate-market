@@ -11,7 +11,7 @@ enum ExpiryType
 }
 
 // For returning data only, do not store with this
-struct Rights {
+struct ViewRights {
     address tokenContract;
     uint256 expiry;
     uint256 nonce;
@@ -53,8 +53,8 @@ interface IDelegateTokenBase {
     function DELEGATION_REGISTRY() external view returns (address);
     function PRINCIPAL_TOKEN() external view returns (address);
 
-    function getRights(address tokenContract, uint256 tokenId) external view returns (uint256 baseDelegateId, uint256 activeDelegateId, Rights memory rights);
-    function getRights(uint256 delegateId) external view returns (uint256 baseDelegateId, uint256 activeDelegateId, Rights memory rights);
+    function getRights(address tokenContract, uint256 tokenId) external view returns (uint256 baseDelegateId, uint256 activeDelegateId, ViewRights memory rights);
+    function getRights(uint256 delegateId) external view returns (uint256 baseDelegateId, uint256 activeDelegateId, ViewRights memory rights);
 
     function getBaseDelegateId(address tokenContract, uint256 tokenId) external pure returns (uint256);
     function getExpiry(ExpiryType expiryType, uint256 expiryValue) external view returns (uint256);

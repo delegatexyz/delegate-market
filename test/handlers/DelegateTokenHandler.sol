@@ -11,7 +11,7 @@ import {MockERC721} from "../mock/MockERC721.sol";
 import {LibString} from "solady/utils/LibString.sol";
 import {SafeCastLib} from "solady/utils/SafeCastLib.sol";
 
-import {IDelegateToken, ExpiryType, Rights} from "src/interfaces/IDelegateToken.sol";
+import {IDelegateToken, ExpiryType, ViewRights} from "src/interfaces/IDelegateToken.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 
 contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
@@ -142,7 +142,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         address ldOwner = _getLDOwner(prId);
 
-        (,, Rights memory rights) = liquidDelegate.getRights(prId);
+        (,, ViewRights memory rights) = liquidDelegate.getRights(prId);
         vm.warp(rights.expiry);
         vm.startPrank(currentActor);
         liquidDelegate.withdrawTo(currentActor, rights.tokenContract, rights.tokenId);
@@ -171,7 +171,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
             ownedLDTokens[ldOwner].remove(prId);
         }
 
-        (,, Rights memory rights) = liquidDelegate.getRights(prId);
+        (,, ViewRights memory rights) = liquidDelegate.getRights(prId);
         vm.prank(currentActor);
         liquidDelegate.withdrawTo(currentActor, rights.tokenContract, rights.tokenId);
 
@@ -184,7 +184,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         uint256 prId = existingPrincipalTokens.get(prSeed);
         if (prId == 0) return;
 
-        (,, Rights memory rights) = liquidDelegate.getRights(prId);
+        (,, ViewRights memory rights) = liquidDelegate.getRights(prId);
 
         ExpiryType expiryType = ExpiryType(bound(rawExpiryType, uint256(type(ExpiryType).min), uint256(type(ExpiryType).max)).toUint8());
 

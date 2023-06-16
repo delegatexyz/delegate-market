@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.20;
 
-import {IDelegateTokenBase, ExpiryType, Rights} from "./interfaces/IDelegateToken.sol";
+import {IDelegateTokenBase, ExpiryType, ViewRights} from "./interfaces/IDelegateToken.sol";
 import {INFTFlashBorrower} from "./interfaces/INFTFlashBorrower.sol";
 
 import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
@@ -249,18 +249,18 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, DTMetadataMana
         return ERC721.supportsInterface(interfaceId) || DTMetadataManager.supportsInterface(interfaceId);
     }
 
-    function getRights(address tokenContract_, uint256 tokenId) public view returns (uint256 baseDelegateId, uint256 activeDelegateId, Rights memory rights) {
+    function getRights(address tokenContract_, uint256 tokenId) public view returns (uint256 baseDelegateId, uint256 activeDelegateId, ViewRights memory rights) {
         baseDelegateId = getBaseDelegateId(tokenContract_, tokenId);
         (uint256 expiry, uint256 nonce, address tokenContract) = _readRightsInfo(baseDelegateId);
-        rights = Rights({tokenContract: tokenContract, expiry: expiry, nonce: nonce, tokenId: _rights[baseDelegateId][uint256(StoragePositions.tokenId)]});
+        rights = ViewRights({tokenContract: tokenContract, expiry: expiry, nonce: nonce, tokenId: _rights[baseDelegateId][uint256(StoragePositions.tokenId)]});
         activeDelegateId = baseDelegateId | nonce;
         if (tokenContract == address(0)) revert NoRights();
     }
 
-    function getRights(uint256 delegateId) public view returns (uint256 baseDelegateId, uint256 activeDelegateId, Rights memory rights) {
+    function getRights(uint256 delegateId) public view returns (uint256 baseDelegateId, uint256 activeDelegateId, ViewRights memory rights) {
         baseDelegateId = delegateId & BASE_RIGHTS_ID_MASK;
         (uint256 expiry, uint256 nonce, address tokenContract) = _readRightsInfo(baseDelegateId);
-        rights = Rights({tokenContract: tokenContract, expiry: expiry, nonce: nonce, tokenId: _rights[baseDelegateId][uint256(StoragePositions.tokenId)]});
+        rights = ViewRights({tokenContract: tokenContract, expiry: expiry, nonce: nonce, tokenId: _rights[baseDelegateId][uint256(StoragePositions.tokenId)]});
         activeDelegateId = baseDelegateId | nonce;
         if (tokenContract == address(0)) revert NoRights();
     }
@@ -307,7 +307,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, DTMetadataMana
     }
 
     function _burnAuth(address spender, uint256 delegateId) internal {
-        (,, Rights memory rights) = getRights(delegateId);
+        (,, ViewRights memory rights) = getRights(delegateId);
         uint256 expiry = rights.expiry;
         (bool approvedOrOwner, address owner) = _isApprovedOrOwner(spender, delegateId);
         if (block.timestamp >= expiry || approvedOrOwner) {

@@ -17,7 +17,7 @@ import {
     FulfillmentComponent
 } from "seaport-types/src/lib/ConsiderationStructs.sol";
 import {ItemType, OrderType} from "seaport-types/src/lib/ConsiderationEnums.sol";
-import {Rights} from "src/interfaces/IDelegateToken.sol";
+import {ViewRights} from "src/interfaces/IDelegateToken.sol";
 
 import {WrapOfferer, ReceiptFillerType} from "src/WrapOfferer.sol";
 import {MockERC721} from "./mock/MockERC721.sol";
@@ -91,7 +91,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
 
         // =========== Verify Correct Receipt ===========
         assertEq(seller.addr.balance, expectedETH);
-        (, uint256 activeDelegateId, Rights memory rights) = ld.getRights(address(token), tokenId);
+        (, uint256 activeDelegateId, ViewRights memory rights) = ld.getRights(address(token), tokenId);
         assertEq(ld.ownerOf(activeDelegateId), buyerAddr);
         assertEq(principal.ownerOf(activeDelegateId), sellerAddr);
         assertEq(rights.expiry, block.timestamp + expiryValue);
@@ -174,7 +174,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
 
         // =========== Verify Correct Receival ===========
         assertEq(weth.balanceOf(seller.addr), expectedETH);
-        (, uint256 activeDelegateId, Rights memory rights) = ld.getRights(address(token), tokenId);
+        (, uint256 activeDelegateId, ViewRights memory rights) = ld.getRights(address(token), tokenId);
         assertEq(ld.ownerOf(activeDelegateId), buyer.addr);
         assertEq(principal.ownerOf(activeDelegateId), seller.addr);
         assertEq(rights.expiry, expiryValue);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.20;
 
-import {IDelegateToken, Rights} from "./interfaces/IDelegateToken.sol";
+import {IDelegateToken, ViewRights} from "./interfaces/IDelegateToken.sol";
 
 import {LibString} from "solady/utils/LibString.sol";
 import {Base64} from "solady/utils/Base64.sol";
@@ -45,7 +45,7 @@ contract PrincipalToken is BaseERC721("Principal Token", "PT") {
 
         IDelegateToken dt = IDelegateToken(DELEGATE_TOKEN);
 
-        (,, Rights memory rights) = dt.getRights(id);
+        (,, ViewRights memory rights) = dt.getRights(id);
 
         string memory idstr = rights.tokenId.toString();
         string memory imageUrl = string.concat(dt.baseURI(), "principal/", idstr);
