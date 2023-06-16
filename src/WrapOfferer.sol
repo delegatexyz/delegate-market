@@ -4,7 +4,10 @@ pragma solidity ^0.8.20;
 import {IWrapOfferer, ReceiptFillerType} from "./interfaces/IWrapOfferer.sol";
 
 import {LibBitmap} from "solady/utils/LibBitmap.sol";
-import {ReceivedItem, SpentItem, Schema} from "seaport/interfaces/ContractOffererInterface.sol";
+// import {ReceivedItem, SpentItem, Schema} from "seaport/interfaces/ContractOffererInterface.sol";
+import {
+    ContractOffererInterface
+} from "seaport-types/src/interfaces/ContractOffererInterface.sol";
 import {ItemType} from "seaport/lib/ConsiderationEnums.sol";
 
 import {IDelegateToken, ExpiryType} from "./interfaces/IDelegateToken.sol";

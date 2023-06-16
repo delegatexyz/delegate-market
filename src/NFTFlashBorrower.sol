@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.20;
 
 import {ERC721} from "solmate/tokens/ERC721.sol";
 import {INFTFlashBorrower} from "./interfaces/INFTFlashBorrower.sol";

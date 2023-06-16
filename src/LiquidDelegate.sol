@@ -32,7 +32,7 @@ import {INFTFlashLender} from "./interfaces/INFTFlashLender.sol";
 
 /**
  * @title LiquidDelegate
- * @custom:version 1.1
+ * @custom:version 2.0
  * @custom:author foobar (0xfoobar)
  * @notice An ERC721 that lets users tokenize their delegation rights so they're composable & transferrable
  */
@@ -51,6 +51,7 @@ contract LiquidDelegate is ERC721, ERC2981, INFTFlashLender {
         uint96 expiration;
         address contract_;
         uint256 tokenId;
+        uint256 amount;
         address referrer;
     }
 
