@@ -15,8 +15,8 @@ import {
     OfferItem,
     ConsiderationItem,
     FulfillmentComponent
-} from "seaport/lib/ConsiderationStructs.sol";
-import {ItemType, OrderType} from "seaport/lib/ConsiderationEnums.sol";
+} from "seaport-types/src/conduit/lib/ConduitStructs.sol";
+import {ItemType, OrderType} from "seaport-types/src/lib/ConsiderationEnums.sol";
 import {Rights} from "src/interfaces/IDelegateToken.sol";
 
 import {WrapOfferer, ReceiptFillerType} from "src/WrapOfferer.sol";

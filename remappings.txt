@@ -1,5 +1,3 @@
-@openzeppelin/=lib/seaport/lib/openzeppelin-contracts/
-@rari-capital/solmate/=lib/seaport/lib/solmate/
 delegate-registry/=lib/delegate-registry/
 ds-test/=lib/seaport/lib/ds-test/src/
 erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/

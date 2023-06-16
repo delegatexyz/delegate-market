@@ -19,3 +19,4 @@
 [submodule "lib/delegate-registry"]
 	path = lib/delegate-registry
 	url = https://github.com/delegatecash/delegate-registry
+	branch = v2

@@ -2,9 +2,9 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
-import {ConduitController} from "seaport/conduit/ConduitController.sol";
-import {SeaportInterface} from "seaport/interfaces/SeaportInterface.sol";
-import {Conduit} from "seaport/conduit/Conduit.sol";
+import {ConduitController} from "seaport-core/src/conduit/ConduitController.sol";
+import {SeaportInterface} from "seaport-types/src/interfaces/SeaportInterface.sol";
+import {Conduit} from "seaport-core/src/conduit/Conduit.sol";
 
 import {console2} from "forge-std/console2.sol";
 
