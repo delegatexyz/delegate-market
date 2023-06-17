@@ -20,11 +20,10 @@ import {LibString} from "solady/utils/LibString.sol";
 import {SignatureCheckerLib} from "solady/utils/SignatureCheckerLib.sol";
 import {Owned} from "solmate/auth/Owned.sol";
 
-
 /**
-delegateId needs to be deterministic. hash(tokentype, contractaddress, tokenid, amount, creatoraddress, nonce)
-that points to the data being stored
-and we also prevent delegateId reuse with a simple boolean set membership lookup
+ * delegateId needs to be deterministic. hash(tokentype, contractaddress, tokenid, amount, creatoraddress, nonce)
+ * that points to the data being stored
+ * and we also prevent delegateId reuse with a simple boolean set membership lookup
  */
 
 contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, ERC2981, Owned {
@@ -127,8 +126,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, ERC2981, Owned
         uint256 tokenAmount,
         ExpiryType expiryType,
         uint256 expiryValue
-    ) external payable returns (uint256) {
-    }
+    ) external payable returns (uint256) {}
 
     /**
      * @notice Allows the principal token owner or any approved operator to extend the expiry of the
@@ -240,15 +238,27 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, ERC2981, Owned
 
     /// INTERNAL STORAGE HELPERS
 
-    function _writeRightsInfo(uint256 delegateId, uint256 expiry, uint256 nonce, TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount) internal {
+    function _writeRightsInfo(
+        uint256 delegateId,
+        uint256 expiry,
+        uint256 nonce,
+        TokenType tokenType,
+        address tokenContract,
+        uint256 tokenId,
+        uint256 tokenAmount
+    ) internal {
         if (expiry > type(uint40).max) revert ExpiryTooLarge();
         if (nonce > type(uint48).max) revert NonceTooLarge();
-        rights[delegateId][uint256(StoragePositions.info)] = ((uint256(uint160(tokenContract)) << 96) | (expiry << 56) | (nonce << 48) | (uint256(tokenType));
+        rights[delegateId][uint256(StoragePositions.info)] = (uint256(uint160(tokenContract)) << 96) | (expiry << 56) | (nonce << 48) | (uint256(tokenType));
         rights[delegateId][uint256(StoragePositions.tokenId)] = tokenId;
         rights[delegateId][uint256(StoragePositions.amount)] = tokenAmount;
     }
 
-    function _readRightsInfo(uint256 delegateId) internal view returns (uint256 expiry, uint256 nonce, TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount) {
+    function _readRightsInfo(uint256 delegateId)
+        internal
+        view
+        returns (uint256 expiry, uint256 nonce, TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount)
+    {
         uint256 info = rights[delegateId][uint256(StoragePositions.info)];
         tokenContract = address(uint160((info >> 96)));
         expiry = uint40(info << 160 >> 216);
@@ -276,7 +286,11 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, ERC2981, Owned
         return false;
     }
 
-    function getDelegateId(TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, address creator, uint96 nonce) public pure returns (uint256) {
+    function getDelegateId(TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, address creator, uint96 nonce)
+        public
+        pure
+        returns (uint256)
+    {
         return uint256(keccak256(abi.encode(tokenType, tokenContract, tokenId, tokenAmount, creator, nonce)));
     }
 
@@ -292,10 +306,16 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, ERC2981, Owned
         if (expiry > type(uint40).max) revert ExpiryTooLarge();
     }
 
-    function _create(address delegateRecipient, address principalRecipient, TokenType tokenType, address tokenContract_, uint256 tokenId_, uint256 amount, uint256 expiry_, uint256 nonce)
-        internal
-        returns (uint256 delegateId)
-    {
+    function _create(
+        address delegateRecipient,
+        address principalRecipient,
+        TokenType tokenType,
+        address tokenContract_,
+        uint256 tokenId_,
+        uint256 amount,
+        uint256 expiry_,
+        uint256 nonce
+    ) internal returns (uint256 delegateId) {
         delegateId = getDelegateId(tokenType, tokenContract_, tokenId_, tokenAmount, msg.sender, nonce);
         _writeRightsInfo(delegateId, expiry_, tokenType, tokenContract_, tokenId, tokenAmount);
 

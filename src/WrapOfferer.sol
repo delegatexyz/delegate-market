@@ -28,7 +28,7 @@ contract WrapOfferer is IWrapOfferer {
     address public immutable DELEGATE_TOKEN;
 
     /// @dev Used as transient storage to hold the latest receiptHash
-    uint256 internal validatedReceiptId;
+    uint256 internal transientReceiptId;
 
     error NotSeaport();
     error IncorrectReceived();
@@ -72,15 +72,16 @@ contract WrapOfferer is IWrapOfferer {
         SpentItem spent = maximumSpent[0];
         SpentItem received = minimumReceived[0];
         if (!(spent.itemType == ItemType.ERC721 || spent.ItemType == ItemType.ERC20 || spent.ItemType == ItemType.ERC1155)) revert IncorrectReceived();
-        bytes32 receiptHash = _receiptFromContext(spent, context);
+        bytes32 receiptHash = _parseReceiptHashFromContext(spent, context);
 
         offer = new SpentItem[](1);
-        // The receipt is spoofed, so will always be a 721
+        // The receipt transfer is spoofed, so will always be a 721. Must match the offerer's consideration exactly, which is why receiptHash exact generation matters
         offer[0] = SpentItem({itemType: ItemType.ERC721, token: address(this), identifier: uint256(receiptHash), amount: 1});
 
         consideration = new ReceivedItem[](1);
         // Send the spot asset to the Delegate Token, to use in createUnprotected() in ratifyOrder()
-        consideration[0] = ReceivedItem({itemType: spent.itemType, token: spent.token, identifier: spent.identifier, amount: spent.amount, recipient: payable(DELEGATE_TOKEN)});
+        consideration[0] =
+            ReceivedItem({itemType: spent.itemType, token: spent.token, identifier: spent.identifier, amount: spent.amount, recipient: payable(DELEGATE_TOKEN)});
     }
 
     /// TODO: inheritdoc ContractOffererInterface
@@ -95,9 +96,9 @@ contract WrapOfferer is IWrapOfferer {
     {
         if (minimumReceived.length != 1 || maximumSpent.length != 1) revert NoBatchWrapping();
         (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 amount) = _getTokenFromSpends(maximumSpent);
-        bytes32 receiptHash = _receiptFromContext(tokenContract, tokenId, context);
+        bytes32 receiptHash = _parseReceiptHashFromContext(tokenContract, tokenId, context);
         // Transient storage to ensure one receipt validated at a time
-        validatedReceiptId = uint256(receiptHash);
+        transientReceiptId = uint256(receiptHash);
         return _createReturnItems(minimumReceived.length, receiptHash, tokenContract, tokenId);
     }
 
@@ -110,7 +111,7 @@ contract WrapOfferer is IWrapOfferer {
         returns (bytes4)
     {
         // Remove validated receipt, was already used to verify address(this).transferFrom() after generateOrder() but before ratifyOrder()
-        delete validatedReceiptId;
+        delete transientReceiptId;
 
         (, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient) = decodeContext(context);
 
@@ -135,33 +136,27 @@ contract WrapOfferer is IWrapOfferer {
         return interfaceId == type(ContractOffererInterface).interfaceId || interfaceId == 0x01ffc9a7; // ERC165 Interface ID for ERC165
     }
 
+    function transferFrom(address from, address, uint256 id) public view {
+        if (from != address(this)) revert InvalidReceiptTransfer();
+        if (id == 0 || id != transientReceiptId) revert InvalidReceiptId();
+    }
+
     /**
      * -----------HELPER FUNCTIONS-----------
      */
 
     /// @return receiptHash The receipt hash for a given context to match with the receipt id
-    function _receiptFromContext(SpentItem spotToken, bytes calldata context) internal pure returns (bytes32 receiptHash) {
+    function _parseReceiptHashFromContext(SpentItem spotToken, bytes calldata context) internal pure returns (bytes32 receiptHash) {
         (ReceiptFillerType fillerType, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient) =
             decodeContext(context);
 
-        // TODO: Why is this here?
+        // The receipt hash can have the zero address if the offerer doesn't know who their counterparty will be
         bool delegateSigning = fillerType == ReceiptFillerType.PrincipalOpen || fillerType == ReceiptFillerType.PrincipalClosed;
         bool matchClosed = fillerType == ReceiptFillerType.PrincipalClosed || fillerType == ReceiptFillerType.DelegateClosed;
         if (!(matchClosed || delegateSigning)) delegateRecipient = address(0);
         if (!(matchClosed || !delegateSigning)) principalRecipient = address(0);
 
         receiptHash = getReceiptHash(delegateRecipient, principalRecipient, token, id, expiryType, expiryValue);
-    }
-
-    function _parseSpotToken(SpentItem spotToken) internal pure returns (TokenType tokenType, address tokenAddress, uint256 tokenId, uint256 amount) {
-        tokenAddress = spotToken.token;
-        tokenId = spotToken.identifier;
-        amount = spotToken.amount;
-        if (spotToken.itemType == ItemType.ERC721) {
-            tokenType = TokenType.ERC721;
-        }
-        if (spotToken.amount != 1 || spotToken.itemType != ItemType.ERC721) revert IncorrectReceived();
-        return (spotToken.token, spotToken.identifier);
     }
 
     /// @dev Builds unique ERC-712 struct hash to be passed as context data
@@ -187,11 +182,6 @@ contract WrapOfferer is IWrapOfferer {
         }
 
         receiptHash = keccak256(abi.encode(RECEIPT_TYPE_HASH, token, id, expiryTypeHash, expiryValue, delegateRecipient, principalRecipient));
-    }
-
-    function transferFrom(address from, address, uint256 id) public view {
-        if (from != address(this) || id == EMPTY_RECEIPT_PLACEHOLDER) revert InvalidReceiptTransfer();
-        if (id != validatedReceiptId) revert InvalidReceiptId();
     }
 
     /// @notice Pack information about the Liquid Delegate to be created into a reversible bytes object
