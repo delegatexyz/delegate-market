@@ -121,26 +121,16 @@ contract WrapOfferer is IWrapOfferer {
         // Remove validated receipt, was already used to verify address(this).transferFrom() after generateOrder() but before ratifyOrder()
         delete transientReceiptHash;
 
-        {
-        (, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient, uint96 salt) = decodeContext(context);
+        (, uint256 expiry, address delegateRecipient, address principalRecipient, uint96 salt) = decodeContext(context);
 
         // `DelegateToken.createUnprotected` checks whether the appropriate NFT has been deposited.
         // Address stack-too-deep by caching consideration values in memory
         address considerationToken = consideration[0].token;
         uint256 considerationIdentifier = consideration[0].identifier;
         uint256 considerationAmount = consideration[0].amount;
-        uint256 expiry = getExpiry(expiryType, expiryValue);
         IDelegateToken(DELEGATE_TOKEN).createUnprotected(
-            delegateRecipient,
-            principalRecipient,
-            TokenType.ERC721,
-            considerationToken,
-            considerationIdentifier,
-            considerationAmount,
-            expiry,
-            salt
+            delegateRecipient, principalRecipient, TokenType.ERC721, considerationToken, considerationIdentifier, considerationAmount, expiry, salt
         );
-        }
 
         return this.ratifyOrder.selector;
     }
@@ -177,7 +167,7 @@ contract WrapOfferer is IWrapOfferer {
     /// @return receiptHash The receipt hash for a given context to match with the receipt id
     function _parseReceiptHashFromContext(SpentItem calldata spotToken, bytes calldata context) internal pure returns (uint256 receiptHash) {
         (ReceiptFillerType fillerType, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient, uint96 salt) =
-            decodeContext(context);
+            decodeContextForReceipt(context);
 
         // The receipt hash can have the zero address if the offerer doesn't know who their counterparty will be
         bool delegateSigning = fillerType == ReceiptFillerType.PrincipalOpen || fillerType == ReceiptFillerType.PrincipalClosed;
@@ -185,8 +175,11 @@ contract WrapOfferer is IWrapOfferer {
         if (!(matchClosed || delegateSigning)) delegateRecipient = address(0);
         if (!(matchClosed || !delegateSigning)) principalRecipient = address(0);
 
-        receiptHash =
-            uint256(getReceiptHash(delegateRecipient, principalRecipient, spotToken.token, spotToken.identifier, spotToken.amount, expiryType, expiryValue));
+        // Cache values in memory to avoid stack-too-deep
+        address token = spotToken.token;
+        uint256 identifier = spotToken.identifier;
+        uint256 amount = spotToken.amount;
+        receiptHash = uint256(getReceiptHash(delegateRecipient, principalRecipient, token, identifier, amount, expiryType, expiryValue));
     }
 
     /// @dev Builds unique ERC-712 struct hash to be passed as context data
@@ -221,15 +214,37 @@ contract WrapOfferer is IWrapOfferer {
     }
 
     /// @notice Pack information about the Liquid Delegate to be created into a reversible bytes object
-    function encodeContext(ReceiptFillerType fillerType, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient, address offerer, uint16 salt)
-        public
-        pure
-        returns (bytes memory)
-    {
+    function encodeContext(
+        ReceiptFillerType fillerType,
+        ExpiryType expiryType,
+        uint40 expiryValue,
+        address delegateRecipient,
+        address principalRecipient,
+        address offerer,
+        uint16 salt
+    ) public pure returns (bytes memory) {
         return abi.encodePacked(fillerType, expiryType, expiryValue, delegateRecipient, principalRecipient);
     }
 
     function decodeContext(bytes calldata context)
+        public
+        view
+        returns (ReceiptFillerType fillerType, uint256 expiry, address delegateRecipient, address principalRecipient, uint96 salt)
+    {
+        if (context.length != CONTEXT_SIZE) revert InvalidContext();
+        fillerType = ReceiptFillerType(uint8(context[0]));
+        ExpiryType expiryType = ExpiryType(uint8(context[1]));
+        uint256 expiryValue = uint256(uint40(bytes5(context[2:7])));
+        expiry = getExpiry(expiryType, expiryValue);
+        delegateRecipient = address(bytes20(context[7:27]));
+        principalRecipient = address(bytes20(context[27:47]));
+        // Add tokenAddress, tokenId, tokenAmount
+        // Use unique salt for a unique deterministic ID. Can add offerer address verification if needs be but hopefully won't get there
+        salt = uint96(bytes12(context[47:59]));
+    }
+
+    // Extra func to avoid stack too deep
+    function decodeContextForReceipt(bytes calldata context)
         public
         pure
         returns (ReceiptFillerType fillerType, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient, uint96 salt)
