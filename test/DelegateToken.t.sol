@@ -69,7 +69,7 @@ contract DelegateTokenTest is Test {
         vm.startPrank(tokenOwner);
         token.setApprovalForAll(address(dt), true);
 
-        uint256 delegateId = dt.create(dtTo, principalTo, TokenType.ERC721, address(token), 0, tokenId, expiry, SALT);
+        uint256 delegateId = dt.create(dtTo, principalTo, TokenType.ERC721, address(token), tokenId, 0, expiry, SALT);
 
         vm.stopPrank();
 
@@ -85,9 +85,10 @@ contract DelegateTokenTest is Test {
         vm.assume(to != address(0));
 
         (ExpiryType expiryType, uint256 expiry, uint256 expiryValue) = prepareValidExpiry(expiryTypeRelative, time);
-        token.mint(address(dt), underlyingTokenId);
+        token.mint(address(from), underlyingTokenId);
 
-        vm.prank(from);
+        vm.startPrank(from);
+        token.setApprovalForAll(address(dt), true);
         uint256 delegateId = dt.create(from, from, TokenType.ERC721, address(token), underlyingTokenId, 0, expiry, SALT);
 
         vm.prank(from);
@@ -128,8 +129,7 @@ contract DelegateTokenTest is Test {
 
         token.mint(tokenOwner, tokenId);
         vm.startPrank(tokenOwner);
-        token.transferFrom(tokenOwner, address(dt), tokenId);
-
+        token.setApprovalForAll(address(dt), true);
         uint256 delegateId = dt.create(dtTo, principalTo, TokenType.ERC721, address(token), tokenId, 0, expiry, SALT);
 
         vm.stopPrank();

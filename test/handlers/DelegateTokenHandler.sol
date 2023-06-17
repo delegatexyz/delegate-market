@@ -80,8 +80,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         uint256 amount = 0;
         uint96 salt = 3;
-        uint256 delegateId =
-            delegateToken.create(currentActor, currentActor, TokenType.ERC721, address(token), id, amount, block.timestamp + 1 seconds, salt);
+        uint256 delegateId = delegateToken.create(currentActor, currentActor, TokenType.ERC721, address(token), id, amount, block.timestamp + 1 seconds, salt);
         allDelegateTokens.add(delegateId);
         allPrincipalTokens.add(delegateId);
         existingDelegateTokens.add(delegateId);

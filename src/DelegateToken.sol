@@ -67,7 +67,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
     //////////////////////////////////////////////////////////////*/
 
     /**
-     * @notice Create rights token pair pulling underlying token from caller.
+     * @notice Create rights token pair pulling underlying token from `msg.sender`.
      * @param delegateRecipient Recipient of delegate rights token.
      * @param principalRecipient Recipient of principal rights token.
      * @param tokenContract Address of underlying token contract.
