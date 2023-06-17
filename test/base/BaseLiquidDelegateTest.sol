@@ -14,8 +14,8 @@ contract BaseLiquidDelegateTest is Test {
     PrincipalToken internal principal;
     DelegateToken internal dt;
 
-    address internal dtDeployer = makeAddr("LD_CORE_DEPLOYER");
-    address internal dtOwner = makeAddr("LD_OWNER");
+    address internal dtDeployer = makeAddr("DT_CORE_DEPLOYER");
+    address internal dtOwner = makeAddr("DT_OWNER");
 
     constructor() {
         registry = new DelegateRegistry();

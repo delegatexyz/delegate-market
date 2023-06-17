@@ -226,10 +226,9 @@ contract WrapOfferer is IWrapOfferer {
         uint40 expiryValue,
         address delegateRecipient,
         address principalRecipient,
-        address offerer,
-        uint16 salt
+        uint96 salt
     ) public pure returns (bytes memory) {
-        return abi.encodePacked(fillerType, expiryType, expiryValue, delegateRecipient, principalRecipient);
+        return abi.encodePacked(fillerType, expiryType, expiryValue, delegateRecipient, principalRecipient, salt);
     }
 
     function decodeContext(bytes calldata context)
