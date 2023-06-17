@@ -17,7 +17,6 @@ import {PrincipalToken} from "./PrincipalToken.sol";
 import {Base64} from "solady/utils/Base64.sol";
 import {EIP712} from "solady/utils/EIP712.sol";
 import {LibString} from "solady/utils/LibString.sol";
-import {SignatureCheckerLib} from "solady/utils/SignatureCheckerLib.sol";
 import {Owned} from "solmate/auth/Owned.sol";
 
 /**
@@ -36,17 +35,22 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, ERC2981, Owned
     /// @dev Does not require nonce/salt as every rights ID is unique and can only be burnt once.
     bytes32 internal constant BURN_PERMIT_TYPE_HASH = keccak256("BurnPermit(uint256 rightsTokenId)");
 
+    /// @notice The v2 delegate registry
     address public immutable override DELEGATE_REGISTRY;
+
+    /// @notice The principal token deployed in tandem with this delegate token
     address public immutable override PRINCIPAL_TOKEN;
+
+    /// @notice Image metadata location, but attributes are stored onchain
+    string public baseURI;
+
+    /// @dev delegateId, a hash of (tokenType, tokenContract, tokenId, tokenAmount, creator, nonce), points a unique id to the StoragePosition
+    mapping(uint256 delegateId => uint256[3] delegateInfo) public rights;
 
     /// @dev Store all previously created delegateIds to prevent double-creation and griefing
     mapping(uint256 delegateId => bool used) internal _used;
 
-    /// @dev delegateId points a unique id to the StoragePosition
-    mapping(uint256 delegateId => uint256[3] delegateInfo) public rights;
-
-    string public baseURI;
-
+    // TODO: do we need to store the nonce? just used for creating delegateId
     enum StoragePositions {
         info, // PACKED (address tokenContract, uint40 expiry, uint48 nonce, uint8 tokenType)
         tokenId,
@@ -150,22 +154,6 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, ERC2981, Owned
      */
     function burn(uint256 delegateId) external {
         _burnAuth(msg.sender, delegateId);
-    }
-
-    /**
-     * @notice Allows the delegate owner or any approved operator to rescind their right early
-     * similar to `burn`, allowing the principal rights owner to redeem the underlying token early.
-     * Spender is authenticated via their signature `sig`.
-     * @param spender Address of the account approving the burn.
-     * @param delegateId ID of the delegate right to be burnt.
-     * @param sig Signature from `spender` approving the burn. For ECDSA signatures the expected
-     * format is `abi.encodePacked(r, s, v)`. ERC-1271 signatures are also accepted.
-     */
-    function burnWithPermit(address spender, uint256 delegateId, bytes calldata sig) external {
-        if (!SignatureCheckerLib.isValidSignatureNowCalldata(spender, _hashTypedData(keccak256(abi.encode(BURN_PERMIT_TYPE_HASH, delegateId))), sig)) {
-            revert InvalidSignature();
-        }
-        _burnAuth(spender, delegateId);
     }
 
     /**
