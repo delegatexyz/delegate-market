@@ -88,7 +88,7 @@ contract DelegateTokenTest is Test {
         token.mint(address(dt), underlyingTokenId);
 
         vm.prank(from);
-        uint256 delegateId = dt.createUnprotected(from, from, TokenType.ERC721, address(token), underlyingTokenId, 0, expiry, SALT);
+        uint256 delegateId = dt.create(from, from, TokenType.ERC721, address(token), underlyingTokenId, 0, expiry, SALT);
 
         vm.prank(from);
         dt.transferFrom(from, to, delegateId);
@@ -130,7 +130,7 @@ contract DelegateTokenTest is Test {
         vm.startPrank(tokenOwner);
         token.transferFrom(tokenOwner, address(dt), tokenId);
 
-        uint256 delegateId = dt.createUnprotected(dtTo, principalTo, TokenType.ERC721, address(token), tokenId, 0, expiry, SALT);
+        uint256 delegateId = dt.create(dtTo, principalTo, TokenType.ERC721, address(token), tokenId, 0, expiry, SALT);
 
         vm.stopPrank();
 
@@ -152,7 +152,7 @@ contract DelegateTokenTest is Test {
         address attacker = makeAddr("attacker");
         vm.prank(attacker);
         vm.expectRevert();
-        dt.createUnprotected(attacker, attacker, TokenType.ERC721, address(token), tokenId, 0, block.timestamp + 5 days, SALT);
+        dt.create(attacker, attacker, TokenType.ERC721, address(token), tokenId, 0, block.timestamp + 10 days, SALT);
     }
 
     function test_fuzzingCannotCreateWithNonexistentContract(address minter, address tokenContract, uint256 tokenId, bool expiryTypeRelative, uint256 time)
@@ -172,9 +172,10 @@ contract DelegateTokenTest is Test {
     function testTokenURI() public {
         uint256 id = 9827;
         address user = makeAddr("user");
-        token.mint(address(dt), id);
-        vm.prank(user);
-        uint256 delegateId = dt.createUnprotected(user, user, TokenType.ERC721, address(token), id, 0, block.timestamp + 10 seconds, SALT);
+        token.mint(address(user), id);
+        vm.startPrank(user);
+        token.setApprovalForAll(address(dt), true);
+        uint256 delegateId = dt.create(user, user, TokenType.ERC721, address(token), id, 0, block.timestamp + 10 seconds, SALT);
 
         vm.prank(dtOwner);
         dt.setBaseURI("https://test-uri.com/");

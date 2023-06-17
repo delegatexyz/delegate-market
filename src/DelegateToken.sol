@@ -103,27 +103,6 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
     }
 
     /**
-     * @notice Creates rights token pair if token has already been deposited. **Do not** attempt to use as normal wallet.
-     * @param delegateRecipient Recipient of delegate rights token
-     * @param principalRecipient Recipient of principal rights token
-     * @param tokenContract Address of underlying token contract
-     * @param tokenId Token ID of underlying token to be escrowed
-     * @param expiry The absolute expiry timestamp
-     * @return delegateId New rights ID that is also the token ID of both the newly created principal and
-     * delegate tokens.
-     */
-    function createUnprotected(
-        address delegateRecipient,
-        address principalRecipient,
-        TokenType tokenType,
-        address tokenContract,
-        uint256 tokenId,
-        uint256 tokenAmount,
-        uint256 expiry,
-        uint96 salt
-    ) external payable returns (uint256 delegateId) {}
-
-    /**
      * @notice Allows the principal token owner or any approved operator to extend the expiry of the
      * delegation rights.
      * @param delegateId The ID of the rights being extended.

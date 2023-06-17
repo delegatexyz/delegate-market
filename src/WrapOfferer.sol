@@ -9,6 +9,10 @@ import {ItemType} from "seaport-types/src/lib/ConsiderationEnums.sol";
 
 import {IDelegateToken, ExpiryType, TokenType} from "./interfaces/IDelegateToken.sol";
 
+import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
+import {IERC1155} from "openzeppelin-contracts/contracts/token/ERC1155/IERC1155.sol";
+
 /// @notice A Seaport ContractOfferer
 contract WrapOfferer is IWrapOfferer {
     using LibBitmap for LibBitmap.Bitmap;
@@ -77,9 +81,9 @@ contract WrapOfferer is IWrapOfferer {
         offer[0] = SpentItem({itemType: ItemType.ERC721, token: address(this), identifier: receiptHash, amount: 1});
 
         consideration = new ReceivedItem[](1);
-        // Send the spot asset to the Delegate Token, to use in createUnprotected() in ratifyOrder()
+        // Send the spot asset to the Delegate Token, to use in create() in ratifyOrder()
         consideration[0] =
-            ReceivedItem({itemType: spent.itemType, token: spent.token, identifier: spent.identifier, amount: spent.amount, recipient: payable(DELEGATE_TOKEN)});
+            ReceivedItem({itemType: spent.itemType, token: spent.token, identifier: spent.identifier, amount: spent.amount, recipient: payable(address(this))});
     }
 
     /// TODO: inheritdoc ContractOffererInterface
@@ -103,9 +107,9 @@ contract WrapOfferer is IWrapOfferer {
         offer[0] = SpentItem({itemType: ItemType.ERC721, token: address(this), identifier: receiptHash, amount: 1});
 
         consideration = new ReceivedItem[](1);
-        // Send the spot asset to the Delegate Token, to use in createUnprotected() in ratifyOrder()
+        // Send the spot asset to the Delegate Token, to use in create() in ratifyOrder()
         consideration[0] =
-            ReceivedItem({itemType: spent.itemType, token: spent.token, identifier: spent.identifier, amount: spent.amount, recipient: payable(DELEGATE_TOKEN)});
+            ReceivedItem({itemType: spent.itemType, token: spent.token, identifier: spent.identifier, amount: spent.amount, recipient: payable(address(this))});
 
         transientReceiptHash = receiptHash;
     }
@@ -128,7 +132,9 @@ contract WrapOfferer is IWrapOfferer {
         address considerationToken = consideration[0].token;
         uint256 considerationIdentifier = consideration[0].identifier;
         uint256 considerationAmount = consideration[0].amount;
-        IDelegateToken(DELEGATE_TOKEN).createUnprotected(
+        IERC721(considerationToken).setApprovalForAll(address(DELEGATE_TOKEN), true);
+        // Can't do createUnprotected because no way to distinguish among fungible tokens
+        IDelegateToken(DELEGATE_TOKEN).create(
             delegateRecipient, principalRecipient, TokenType.ERC721, considerationToken, considerationIdentifier, considerationAmount, expiry, salt
         );
 

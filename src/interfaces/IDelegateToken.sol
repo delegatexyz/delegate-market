@@ -65,17 +65,6 @@ interface IDelegateTokenBase {
                          CREATE METHODS
     //////////////////////////////////////////////////////////////*/
 
-    function createUnprotected(
-        address ldRecipient,
-        address principalRecipient,
-        TokenType tokenType,
-        address tokenContract,
-        uint256 tokenId,
-        uint256 tokenAmount,
-        uint256 expiry,
-        uint96 nonce
-    ) external payable returns (uint256);
-
     function create(
         address ldRecipient,
         address principalRecipient,
