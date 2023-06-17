@@ -6,7 +6,6 @@ import {StdInvariant} from "forge-std/StdInvariant.sol";
 import {BaseLiquidDelegateTest} from "./base/BaseLiquidDelegateTest.sol";
 
 import {DelegateTokenHandler} from "./handlers/DelegateTokenHandler.sol";
-import {ViewRights} from "src/DelegateToken.sol";
 
 import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
 

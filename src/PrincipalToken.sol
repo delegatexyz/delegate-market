@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.20;
 
-import {IDelegateToken, ViewRights} from "./interfaces/IDelegateToken.sol";
+import {IDelegateToken, TokenType} from "./interfaces/IDelegateToken.sol";
 
 import {LibString} from "solady/utils/LibString.sol";
 import {Base64} from "solady/utils/Base64.sol";
@@ -47,9 +47,9 @@ contract PrincipalToken is BaseERC721("Principal Token", "PT") {
 
         IDelegateToken dt = IDelegateToken(DELEGATE_TOKEN);
 
-        (,, ViewRights memory rights) = dt.getRights(id);
+        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry, uint256 nonce) = dt.getRightsInfo(id);
 
-        string memory idstr = rights.tokenId.toString();
+        string memory idstr = tokenId.toString();
         string memory imageUrl = string.concat(dt.baseURI(), "principal/", idstr);
 
         address rightsOwner;
@@ -58,17 +58,17 @@ contract PrincipalToken is BaseERC721("Principal Token", "PT") {
         } catch {}
 
         string memory rightsOwnerStr = rightsOwner == address(0) ? "N/A" : rightsOwner.toHexStringChecksummed();
-        string memory status = rightsOwner == address(0) || rights.expiry <= block.timestamp ? "Unlocked" : "Locked";
+        string memory status = rightsOwner == address(0) || expiry <= block.timestamp ? "Unlocked" : "Locked";
 
         string memory metadataStringPart1 = string.concat(
             '{"name":"',
             string.concat(name, " #", idstr),
             '","description":"LiquidDelegate lets you escrow your token for a chosen timeperiod and receive a liquid NFT representing the associated delegation rights. This collection represents the principal i.e. the future right to claim the underlying token once the associated delegate token expires.","attributes":[{"trait_type":"Collection Address","value":"',
-            rights.tokenContract.toHexStringChecksummed(),
+            tokenContract.toHexStringChecksummed(),
             '"},{"trait_type":"Token ID","value":"',
             idstr,
             '"},{"trait_type":"Unlocks At","display_type":"date","value":',
-            uint256(rights.expiry).toString()
+            expiry.toString()
         );
         string memory metadataStringPart2 = string.concat(
             '},{"trait_type":"Delegate Owner Address","value":"',
