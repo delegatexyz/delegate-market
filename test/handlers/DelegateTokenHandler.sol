@@ -79,9 +79,9 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         MockERC721(token).approve(address(delegateToken), id);
 
         uint256 amount = 0;
-        uint96 nonce = 3;
+        uint96 salt = 3;
         uint256 delegateId =
-            delegateToken.create(currentActor, currentActor, TokenType.ERC721, address(token), id, amount, ExpiryType.RELATIVE, 1 seconds, nonce);
+            delegateToken.create(currentActor, currentActor, TokenType.ERC721, address(token), id, amount, block.timestamp + 1 seconds, salt);
         allDelegateTokens.add(delegateId);
         allPrincipalTokens.add(delegateId);
         existingDelegateTokens.add(delegateId);
@@ -109,8 +109,8 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
             MockERC721(token).approve(address(delegateToken), id);
 
             uint256 amount = 0;
-            uint96 nonce = 3;
-            delegateId = delegateToken.create(to, currentActor, TokenType.ERC721, address(token), id, amount, ExpiryType.RELATIVE, 1 seconds, nonce);
+            uint96 salt = 3;
+            delegateId = delegateToken.create(to, currentActor, TokenType.ERC721, address(token), id, amount, block.timestamp + 1 seconds, salt);
 
             allDelegateTokens.add(delegateId);
             allPrincipalTokens.add(delegateId);
@@ -202,7 +202,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         address owner = principal.ownerOf(prId);
         vm.prank(owner);
-        delegateToken.extend(prId, expiryType, expiryValue);
+        delegateToken.extend(prId, expiry);
     }
 
     function callSummary() external view {
