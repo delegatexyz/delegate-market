@@ -21,7 +21,7 @@ contract WrapOfferer is IWrapOfferer {
     bytes32 internal constant ABSOLUTE_EXPIRY_TYPE_HASH = keccak256("Absolute");
     bytes32 internal constant RECEIPT_TYPE_HASH =
         keccak256("WrapReceipt(address token,uint256 id,string expiryType,uint256 expiryTime,address delegateRecipient,address principalRecipient)");
-    uint256 internal constant CONTEXT_SIZE = 69;
+    uint256 internal constant CONTEXT_SIZE = 59;
 
     /// @notice Address for Seaport 1.5
     address public immutable SEAPORT;

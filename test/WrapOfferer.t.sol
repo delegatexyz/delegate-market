@@ -23,6 +23,8 @@ import {WrapOfferer, ReceiptFillerType} from "src/WrapOfferer.sol";
 import {MockERC721} from "./mock/MockERC721.sol";
 import {WETH} from "./mock/WETH.sol";
 
+import {console2} from "forge-std/console2.sol";
+
 contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, SeaportHelpers {
     WrapOfferer wofferer;
     MockERC721 token;
@@ -61,8 +63,10 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         uint256 tokenId = 69;
         token.mint(seller.addr, tokenId);
         // 2. Create and sign wrap receipt
-        bytes32 receiptHash = wofferer.getReceiptHash(address(0), seller.addr, address(token), tokenId, 0, expiryType, expiryValue);
-        // 3. Buidt Order
+        bytes32 receiptHash = wofferer.getReceiptHash(address(0), seller.addr, address(token), tokenId, 1, expiryType, expiryValue);
+        console2.log("receiptHash");
+        console2.log(uint256(receiptHash));
+        // 3. Build Order
         orders[0] = _createSellerOrder(seller, tokenId, uint256(receiptHash), expectedETH, false);
 
         // ============== Create Wrap Order ==============
@@ -79,7 +83,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         // Fulfillments tells Seaport how to match the different order components to ensure
         // everyone's conditions are satisfied.
         Fulfillment[] memory fulfillments = new Fulfillment[](3);
-        // Seller NFT => Liquid Delegate V2
+        // Seller NFT => WrapReceipt
         fulfillments[0] = _constructFulfillment(0, 0, 1, 0);
         // Wrap Receipt => Seller
         fulfillments[1] = _constructFulfillment(1, 0, 0, 1);
@@ -93,7 +97,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
 
         // =========== Verify Correct Receipt ===========
         assertEq(seller.addr.balance, expectedETH);
-        uint256 delegateId = dt.getDelegateId(TokenType.ERC721, address(token), tokenId, 0, address(wofferer), SALT);
+        uint256 delegateId = dt.getDelegateId(TokenType.ERC721, address(token), tokenId, 1, address(wofferer), SALT);
         (TokenType tokenType_, address tokenContract_, uint256 tokenId_, uint256 tokenAmount_, uint256 expiry_) = dt.getRightsInfo(delegateId);
         assertEq(dt.ownerOf(delegateId), buyerAddr);
         assertEq(principal.ownerOf(delegateId), sellerAddr);
@@ -150,7 +154,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         token.mint(seller.addr, tokenId);
 
         // 2. Create and sign wrap receipt
-        bytes32 receiptHash = wofferer.getReceiptHash(buyer.addr, address(0), address(token), tokenId, 0, expiryType, expiryValue);
+        bytes32 receiptHash = wofferer.getReceiptHash(buyer.addr, address(0), address(token), tokenId, 1, expiryType, expiryValue);
 
         // 3. Buidt Order
         orders[0] = _createBuyerOrder(buyer, uint256(receiptHash), expectedETH, false);
