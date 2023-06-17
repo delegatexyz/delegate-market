@@ -13,14 +13,12 @@ import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
 import {IERC1155} from "openzeppelin-contracts/contracts/token/ERC1155/IERC1155.sol";
 
+import {console2} from "forge-std/console2.sol";
+
 /// @notice A Seaport ContractOfferer
 contract WrapOfferer is IWrapOfferer {
     using LibBitmap for LibBitmap.Bitmap;
 
-    bytes32 internal constant RELATIVE_EXPIRY_TYPE_HASH = keccak256("Relative");
-    bytes32 internal constant ABSOLUTE_EXPIRY_TYPE_HASH = keccak256("Absolute");
-    bytes32 internal constant RECEIPT_TYPE_HASH =
-        keccak256("WrapReceipt(address token,uint256 id,string expiryType,uint256 expiryTime,address delegateRecipient,address principalRecipient)");
     uint256 internal constant CONTEXT_SIZE = 59;
 
     /// @notice Address for Seaport 1.5
@@ -101,6 +99,8 @@ contract WrapOfferer is IWrapOfferer {
         SpentItem calldata received = minimumReceived[0];
         if (!(spent.itemType == ItemType.ERC721 || spent.itemType == ItemType.ERC20 || spent.itemType == ItemType.ERC1155)) revert IncorrectReceived();
         uint256 receiptHash = _parseReceiptHashFromContext(spent, context);
+        console2.log("actualReceiptHash");
+        console2.log(receiptHash);
 
         offer = new SpentItem[](1);
         // The receipt transfer is spoofed, so will always be a 721. Must match the offerer's consideration exactly, which is why receiptHash exact generation matters
@@ -205,18 +205,7 @@ contract WrapOfferer is IWrapOfferer {
         ExpiryType expiryType,
         uint256 expiryValue
     ) public pure returns (bytes32 receiptHash) {
-        bytes32 expiryTypeHash;
-        if (expiryType == ExpiryType.RELATIVE) {
-            expiryTypeHash = RELATIVE_EXPIRY_TYPE_HASH;
-        } else if (expiryType == ExpiryType.ABSOLUTE) {
-            expiryTypeHash = ABSOLUTE_EXPIRY_TYPE_HASH;
-        } else {
-            // Revert if invalid enum types used
-            revert InvalidExpiryType();
-        }
-
-        receiptHash =
-            keccak256(abi.encode(RECEIPT_TYPE_HASH, tokenAddress, tokenId, tokenAmount, expiryTypeHash, expiryValue, delegateRecipient, principalRecipient));
+        receiptHash = keccak256(abi.encode(tokenAddress, tokenId, tokenAmount, uint8(expiryType), delegateRecipient, principalRecipient));
     }
 
     /// @notice Pack information about the Liquid Delegate to be created into a reversible bytes object

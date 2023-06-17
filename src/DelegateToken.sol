@@ -295,6 +295,8 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
         _burn(delegateId);
     }
 
+    ////////// METADATA ////////
+
     function setBaseURI(string memory baseURI_) external onlyOwner {
         baseURI = baseURI_;
     }

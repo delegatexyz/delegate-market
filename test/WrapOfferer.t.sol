@@ -83,11 +83,11 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         // Fulfillments tells Seaport how to match the different order components to ensure
         // everyone's conditions are satisfied.
         Fulfillment[] memory fulfillments = new Fulfillment[](3);
-        // Seller NFT => WrapReceipt
+        // Seller NFT => WrapReceipt, black line, order 0 offer item 0 matches with order 1 consideration item 0
         fulfillments[0] = _constructFulfillment(0, 0, 1, 0);
-        // Wrap Receipt => Seller
+        // Wrap Receipt => Seller, red line, order 1 offer item 0 matches with order 0 consideration item 1
         fulfillments[1] = _constructFulfillment(1, 0, 0, 1);
-        // Buyer ETH => Seller
+        // Buyer ETH => Seller, blue line, order 2 offer item 0 matches with order 0 consideration item 0
         // offer: (2, 0); consideration: (0, 0); (orderIndex, itemIndex)
         fulfillments[2] = _constructFulfillment(2, 0, 0, 0);
 
@@ -188,7 +188,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         // =========== Verify Correct Receival ===========
         assertEq(weth.balanceOf(seller.addr), expectedETH);
         uint256 delegateId = dt.getDelegateId(TokenType.ERC721, address(token), tokenId, 0, address(wofferer), SALT);
-        (, , , , uint256 expiry_) = dt.getRightsInfo(delegateId);
+        (,,,, uint256 expiry_) = dt.getRightsInfo(delegateId);
         assertEq(dt.ownerOf(delegateId), buyer.addr);
         assertEq(principal.ownerOf(delegateId), seller.addr);
         assertEq(expiry_, expiryValue);
@@ -230,7 +230,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
             startTime: 0,
             endTime: block.timestamp + 3 days,
             zoneHash: bytes32(0),
-            salt: 1,
+            salt: SALT,
             conduitKey: conduitKey,
             totalOriginalConsiderationItems: totalConsiders
         });
