@@ -5,28 +5,26 @@ import {IDelegateTokenBase, ExpiryType, ViewRights, TokenType} from "./interface
 import {INFTFlashBorrower} from "./interfaces/INFTFlashBorrower.sol";
 
 import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
+
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
 import {IERC1155} from "openzeppelin-contracts/contracts/token/ERC1155/IERC1155.sol";
+import {ERC2981} from "openzeppelin-contracts/contracts/token/common/ERC2981.sol";
 
-import {SignatureCheckerLib} from "solady/utils/SignatureCheckerLib.sol";
-
-import {BaseERC721, ERC721} from "./BaseERC721.sol";
+import {BaseERC721} from "./BaseERC721.sol";
 import {PrincipalToken} from "./PrincipalToken.sol";
 
+import {Base64} from "solady/utils/Base64.sol";
 import {EIP712} from "solady/utils/EIP712.sol";
-
-import {ERC2981} from "openzeppelin-contracts/contracts/token/common/ERC2981.sol";
+import {LibString} from "solady/utils/LibString.sol";
+import {SignatureCheckerLib} from "solady/utils/SignatureCheckerLib.sol";
 import {Owned} from "solmate/auth/Owned.sol";
 
-import {LibString} from "solady/utils/LibString.sol";
-import {Base64} from "solady/utils/Base64.sol";
 
 /**
 delegateId needs to be deterministic. hash(tokentype, contractaddress, tokenid, amount, creatoraddress, nonce)
 that points to the data being stored
 and we also prevent delegateId reuse with a simple boolean set membership lookup
-
  */
 
 contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, ERC2981, Owned {
@@ -130,13 +128,6 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, ERC2981, Owned
         ExpiryType expiryType,
         uint256 expiryValue
     ) external payable returns (uint256) {
-        if (tokenType == TokenType.ERC721) {
-            if (IERC721(tokenContract).ownerOf(tokenId) != address(this)) revert UnderlyingMissing();
-        } else {
-            revert InvalidTokenType();
-        }        
-        uint256 expiry = getExpiry(expiryType, expiryValue);
-        return _create(delegateRecipient, principalRecipient, tokenType, tokenContract, tokenId, tokenAmount, expiry);
     }
 
     /**
@@ -280,17 +271,13 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, ERC2981, Owned
         return _buildTokenURI(tokenContract, rights[delegateId][uint256(StoragePositions.tokenId)], expiry, principalTokenOwner);
     }
 
-    function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC2981) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view override(BaseERC721, ERC2981) returns (bool) {
         // TODO: Hardcode these
         return false;
     }
 
     function getDelegateId(TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, address creator, uint96 nonce) public pure returns (uint256) {
         return uint256(keccak256(abi.encode(tokenType, tokenContract, tokenId, tokenAmount, creator, nonce)));
-    }
-
-    function getBaseDelegateId(uint256 nonce, TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount) public pure returns (uint256) {
-        return uint256(keccak256(abi.encode(nonce, tokenType, tokenContract, tokenId, tokenAmount))) & BASE_RIGHTS_ID_MASK;
     }
 
     function getExpiry(ExpiryType expiryType, uint256 expiryValue) public view returns (uint256 expiry) {

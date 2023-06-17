@@ -11,8 +11,8 @@ import {BaseERC721} from "./BaseERC721.sol";
 /// @notice A simple NFT that doesn't store any user data itself, being tightly linked to the more stateful Delegate Token.
 /// @notice The holder of the PT is eligible to reclaim the escrowed NFT when the DT expires or is burned.
 contract PrincipalToken is BaseERC721("Principal Token", "PT") {
-    using LibString for uint256;
     using LibString for address;
+    using LibString for uint256;
 
     address public immutable DELEGATE_TOKEN;
 
