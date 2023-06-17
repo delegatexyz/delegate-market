@@ -19,7 +19,7 @@ import {LibString} from "solady/utils/LibString.sol";
 import {Owned} from "solmate/auth/Owned.sol";
 
 /**
- * delegateId needs to be deterministic. hash(tokentype, contractaddress, tokenid, amount, creatoraddress, nonce)
+ * delegateId needs to be deterministic. hash(tokentype, contractaddress, tokenid, amount, creatoraddress, salt)
  * that points to the data being stored
  * and we also prevent delegateId reuse with a simple boolean set membership lookup
  */
@@ -40,15 +40,15 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
     /// @notice Image metadata location, but attributes are stored onchain
     string public baseURI;
 
-    /// @dev delegateId, a hash of (tokenType, tokenContract, tokenId, tokenAmount, creator, nonce), points a unique id to the StoragePosition
+    /// @dev delegateId, a hash of (tokenType, tokenContract, tokenId, tokenAmount, msg.sender, salt), points a unique id to the StoragePosition
     mapping(uint256 delegateId => uint256[3] delegateInfo) public rights;
 
     /// @dev Store all previously created delegateIds to prevent double-creation and griefing
     mapping(uint256 delegateId => bool used) internal _used;
 
-    // TODO: do we need to store the nonce? just used for creating delegateId
+    // TODO: do we need to store the salt? just used for creating delegateId
     enum StoragePositions {
-        info, // PACKED (address tokenContract, uint40 expiry, uint48 nonce, uint8 tokenType)
+        info, // PACKED (address tokenContract, uint40 expiry, uint48 salt, uint8 tokenType)
         tokenId,
         amount
     }
@@ -72,9 +72,8 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
      * @param principalRecipient Recipient of principal rights token.
      * @param tokenContract Address of underlying token contract.
      * @param tokenId Token ID of underlying token to be escrowed.
-     * @param expiryType Whether the `expiryValue` indicates an absolute timestamp or the time to
-     * expiry once the transaction is mined.
-     * @param expiryValue The timestamp of the expiry, relative/absolute according to `expiryType`.
+     * @param expiry The absolute timestamp of the expiry
+     * @param salt A randomly chosen value, never repeated, to generate unique delegateIds even on fungibles. Not stored since random choice will avoid collisions
      * @return delegateId New rights ID that is also the token ID of both the newly created principal and
      * delegate tokens.
      */
@@ -85,10 +84,11 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
         address tokenContract,
         uint256 tokenId,
         uint256 tokenAmount,
-        ExpiryType expiryType,
-        uint256 expiryValue,
-        uint96 nonce
+        uint256 expiry,
+        uint96 salt
     ) external payable returns (uint256 delegateId) {
+        if (expiry <= block.timestamp) revert ExpiryTimeNotInFuture();
+        if (expiry > type(uint40).max) revert ExpiryTooLarge();
         if (tokenType == TokenType.ERC721) {
             IERC721(tokenContract).transferFrom(msg.sender, address(this), tokenId);
             tokenAmount = 0;
@@ -99,8 +99,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
         } else if (tokenType == TokenType.ERC1155) {
             IERC1155(tokenContract).safeTransferFrom(msg.sender, address(this), tokenId, tokenAmount, "");
         }
-        uint256 expiry = getExpiry(expiryType, expiryValue);
-        return _createWithoutValidation(delegateRecipient, principalRecipient, tokenType, tokenContract, tokenId, tokenAmount, expiry, nonce);
+        return _createWithoutValidation(delegateRecipient, principalRecipient, tokenType, tokenContract, tokenId, tokenAmount, expiry, salt);
     }
 
     /**
@@ -109,9 +108,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
      * @param principalRecipient Recipient of principal rights token
      * @param tokenContract Address of underlying token contract
      * @param tokenId Token ID of underlying token to be escrowed
-     * @param expiryType Whether the `expiryValue` indicates an absolute timestamp or the time to
-     * expiry once the transaction is mined
-     * @param expiryValue The timestamp value relative/absolute according to `expiryType`
+     * @param expiry The absolute expiry timestamp
      * @return delegateId New rights ID that is also the token ID of both the newly created principal and
      * delegate tokens.
      */
@@ -122,22 +119,18 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
         address tokenContract,
         uint256 tokenId,
         uint256 tokenAmount,
-        ExpiryType expiryType,
-        uint256 expiryValue,
-        uint96 nonce
+        uint256 expiry,
+        uint96 salt
     ) external payable returns (uint256 delegateId) {}
 
     /**
      * @notice Allows the principal token owner or any approved operator to extend the expiry of the
      * delegation rights.
      * @param delegateId The ID of the rights being extended.
-     * @param expiryType Whether the `expiryValue` indicates an absolute timestamp or the time to
-     * expiry once the transaction is mined.
-     * @param expiryValue The timestamp value by which to extend / set the expiry.
+     * @param newExpiry The absolute timestamp to set the expiry
      */
-    function extend(uint256 delegateId, ExpiryType expiryType, uint256 expiryValue) external {
+    function extend(uint256 delegateId, uint256 newExpiry) external {
         if (!PrincipalToken(PRINCIPAL_TOKEN).isApprovedOrOwner(msg.sender, delegateId)) revert NotAuthorized();
-        uint256 newExpiry = getExpiry(expiryType, expiryValue);
         (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 currentExpiry) = getRightsInfo(delegateId);
         if (newExpiry <= currentExpiry) revert NotExtending();
         _writeRightsInfo(delegateId, tokenType, tokenContract, tokenId, tokenAmount, newExpiry);
@@ -185,7 +178,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
         if (tokenType == TokenType.ERC721) {
             IERC721(tokenContract).transferFrom(address(this), to, tokenId);
         } else if (tokenType == TokenType.ERC20) {
-            IERC20(tokenContract).transfer(to, tokenId);
+            IERC20(tokenContract).transfer(to, tokenAmount);
         } else if (tokenType == TokenType.ERC1155) {
             IERC1155(tokenContract).safeTransferFrom(address(this), to, tokenId, tokenAmount, "");
         }
@@ -236,10 +229,10 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
     /// INTERNAL STORAGE HELPERS
 
     function _writeRightsInfo(uint256 delegateId, TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry) internal {
-        uint256 nonce = 0;
+        uint256 salt = 0;
         if (expiry > type(uint40).max) revert ExpiryTooLarge();
-        if (nonce > type(uint48).max) revert NonceTooLarge();
-        rights[delegateId][uint256(StoragePositions.info)] = (uint256(uint160(tokenContract)) << 96) | (expiry << 56) | (nonce << 48) | (uint256(tokenType));
+        if (salt > type(uint48).max) revert NonceTooLarge();
+        rights[delegateId][uint256(StoragePositions.info)] = (uint256(uint160(tokenContract)) << 96) | (expiry << 56) | (salt << 48) | (uint256(tokenType));
         rights[delegateId][uint256(StoragePositions.tokenId)] = tokenId;
         rights[delegateId][uint256(StoragePositions.amount)] = tokenAmount;
     }
@@ -252,7 +245,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
         uint256 info = rights[delegateId][uint256(StoragePositions.info)];
         tokenContract = address(uint160((info >> 96)));
         expiry = uint40(info << 160 >> 216);
-        // nonce = uint56(info << 200 >> 208);
+        // salt = uint56(info << 200 >> 208);
         // TODO: double-check this bitshift
         tokenType = TokenType(uint8(info << 248 >> 248));
         tokenId = rights[delegateId][uint256(StoragePositions.tokenId)];
@@ -276,24 +269,15 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
         return false;
     }
 
-    function getDelegateId(TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, address creator, uint96 nonce)
+    /// @notice Deterministic function for generating a delegateId
+    /// @dev Because msg.sender is fixed in addition to the freely chosen salt, addresses cannot grief each other
+    /// @dev The WrapOfferer is a special case, but trivial to regenerate a unique salt via order extraData on the frontend
+    function getDelegateId(TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, address creator, uint96 salt)
         public
         pure
         returns (uint256)
     {
-        return uint256(keccak256(abi.encode(tokenType, tokenContract, tokenId, tokenAmount, creator, nonce)));
-    }
-
-    function getExpiry(ExpiryType expiryType, uint256 expiryValue) public view returns (uint256 expiry) {
-        if (expiryType == ExpiryType.RELATIVE) {
-            expiry = block.timestamp + expiryValue;
-        } else if (expiryType == ExpiryType.ABSOLUTE) {
-            expiry = expiryValue;
-        } else {
-            revert InvalidExpiryType();
-        }
-        if (expiry <= block.timestamp) revert ExpiryTimeNotInFuture();
-        if (expiry > type(uint40).max) revert ExpiryTooLarge();
+        return uint256(keccak256(abi.encode(tokenType, tokenContract, tokenId, tokenAmount, creator, salt)));
     }
 
     function _createWithoutValidation(
@@ -304,9 +288,9 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
         uint256 tokenId_,
         uint256 tokenAmount_,
         uint256 expiry_,
-        uint96 nonce
+        uint96 salt
     ) internal returns (uint256 delegateId) {
-        delegateId = getDelegateId(tokenType, tokenContract_, tokenId_, tokenAmount_, msg.sender, nonce);
+        delegateId = getDelegateId(tokenType, tokenContract_, tokenId_, tokenAmount_, msg.sender, salt);
         _writeRightsInfo(delegateId, tokenType, tokenContract_, tokenId_, tokenAmount_, expiry_);
 
         _mint(delegateRecipient, delegateId);

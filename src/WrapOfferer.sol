@@ -17,9 +17,7 @@ contract WrapOfferer is IWrapOfferer {
     bytes32 internal constant ABSOLUTE_EXPIRY_TYPE_HASH = keccak256("Absolute");
     bytes32 internal constant RECEIPT_TYPE_HASH =
         keccak256("WrapReceipt(address token,uint256 id,string expiryType,uint256 expiryTime,address delegateRecipient,address principalRecipient)");
-
-    /// @dev 20 * 2 (addresses) + 1 * 2 (enums) + 5 * 1 (uint40) = 47
-    uint256 internal constant CONTEXT_SIZE = 47;
+    uint256 internal constant CONTEXT_SIZE = 69;
 
     /// @notice Address for Seaport 1.5
     address public immutable SEAPORT;
@@ -123,15 +121,15 @@ contract WrapOfferer is IWrapOfferer {
         // Remove validated receipt, was already used to verify address(this).transferFrom() after generateOrder() but before ratifyOrder()
         delete transientReceiptHash;
 
-        (, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient) = decodeContext(context);
+        {
+        (, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient, uint96 salt) = decodeContext(context);
 
         // `DelegateToken.createUnprotected` checks whether the appropriate NFT has been deposited.
         // Address stack-too-deep by caching consideration values in memory
         address considerationToken = consideration[0].token;
         uint256 considerationIdentifier = consideration[0].identifier;
         uint256 considerationAmount = consideration[0].amount;
-        // TODO: use better nonce
-        uint96 nonce = 3;
+        uint256 expiry = getExpiry(expiryType, expiryValue);
         IDelegateToken(DELEGATE_TOKEN).createUnprotected(
             delegateRecipient,
             principalRecipient,
@@ -139,10 +137,10 @@ contract WrapOfferer is IWrapOfferer {
             considerationToken,
             considerationIdentifier,
             considerationAmount,
-            expiryType,
-            expiryValue,
-            nonce
+            expiry,
+            salt
         );
+        }
 
         return this.ratifyOrder.selector;
     }
@@ -166,9 +164,19 @@ contract WrapOfferer is IWrapOfferer {
      * -----------HELPER FUNCTIONS-----------
      */
 
+    function getExpiry(ExpiryType expiryType, uint256 expiryValue) public view returns (uint256 expiry) {
+        if (expiryType == ExpiryType.RELATIVE) {
+            expiry = block.timestamp + expiryValue;
+        } else if (expiryType == ExpiryType.ABSOLUTE) {
+            expiry = expiryValue;
+        } else {
+            revert InvalidExpiryType();
+        }
+    }
+
     /// @return receiptHash The receipt hash for a given context to match with the receipt id
     function _parseReceiptHashFromContext(SpentItem calldata spotToken, bytes calldata context) internal pure returns (uint256 receiptHash) {
-        (ReceiptFillerType fillerType, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient) =
+        (ReceiptFillerType fillerType, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient, uint96 salt) =
             decodeContext(context);
 
         // The receipt hash can have the zero address if the offerer doesn't know who their counterparty will be
@@ -213,7 +221,7 @@ contract WrapOfferer is IWrapOfferer {
     }
 
     /// @notice Pack information about the Liquid Delegate to be created into a reversible bytes object
-    function encodeContext(ReceiptFillerType fillerType, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient)
+    function encodeContext(ReceiptFillerType fillerType, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient, address offerer, uint16 salt)
         public
         pure
         returns (bytes memory)
@@ -224,7 +232,7 @@ contract WrapOfferer is IWrapOfferer {
     function decodeContext(bytes calldata context)
         public
         pure
-        returns (ReceiptFillerType fillerType, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient)
+        returns (ReceiptFillerType fillerType, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient, uint96 salt)
     {
         if (context.length != CONTEXT_SIZE) revert InvalidContext();
         fillerType = ReceiptFillerType(uint8(context[0]));
@@ -233,5 +241,7 @@ contract WrapOfferer is IWrapOfferer {
         delegateRecipient = address(bytes20(context[7:27]));
         principalRecipient = address(bytes20(context[27:47]));
         // Add tokenAddress, tokenId, tokenAmount
+        // Use unique salt for a unique deterministic ID. Can add offerer address verification if needs be but hopefully won't get there
+        salt = uint96(bytes12(context[47:59]));
     }
 }

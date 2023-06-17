@@ -31,8 +31,6 @@ interface IDelegateTokenBase {
     //////////////////////////////////////////////////////////////*/
 
     error InvalidSignature();
-    error InvalidExpiryType();
-    error ExpiryTimeNotInFuture();
     error WithdrawNotAvailable();
     error UnderlyingMissing();
     error NotExtending();
@@ -40,9 +38,10 @@ interface IDelegateTokenBase {
     error NotContract();
     error InvalidFlashloan();
     error NonceTooLarge();
-    error ExpiryTooLarge();
     error InvalidTokenType();
     error ZeroAmount();
+    error ExpiryTimeNotInFuture();
+    error ExpiryTooLarge();
 
     /*//////////////////////////////////////////////////////////////
                              EVENTS
@@ -56,8 +55,6 @@ interface IDelegateTokenBase {
 
     function DELEGATE_REGISTRY() external view returns (address);
     function PRINCIPAL_TOKEN() external view returns (address);
-
-    function getExpiry(ExpiryType expiryType, uint256 expiryValue) external view returns (uint256);
 
     function getRightsInfo(uint256 delegateId)
         external
@@ -75,8 +72,7 @@ interface IDelegateTokenBase {
         address tokenContract,
         uint256 tokenId,
         uint256 tokenAmount,
-        ExpiryType expiryType,
-        uint256 expiryValue,
+        uint256 expiry,
         uint96 nonce
     ) external payable returns (uint256);
 
@@ -87,12 +83,11 @@ interface IDelegateTokenBase {
         address tokenContract,
         uint256 tokenId,
         uint256 tokenAmount,
-        ExpiryType expiryType,
-        uint256 expiryValue,
+        uint256 expiry,
         uint96 nonce
     ) external payable returns (uint256);
 
-    function extend(uint256 delegateId, ExpiryType expiryType, uint256 expiryValue) external;
+    function extend(uint256 delegateId, uint256 expiryValue) external;
 
     function withdrawTo(address to, uint256 delegateId) external;
 

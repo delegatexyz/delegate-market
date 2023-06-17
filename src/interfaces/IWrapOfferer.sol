@@ -23,14 +23,4 @@ interface IWrapOfferer is ContractOffererInterface {
         ExpiryType expiryType,
         uint256 expiryValue
     ) external view returns (bytes32 receiptHash);
-
-    function encodeContext(ReceiptFillerType fillerType, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient)
-        external
-        view
-        returns (bytes memory);
-
-    function decodeContext(bytes calldata context)
-        external
-        view
-        returns (ReceiptFillerType fillerType, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient);
 }
