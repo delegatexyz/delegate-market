@@ -38,7 +38,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
     TokenSet internal allTokens;
     TokenSet internal depositedTokens;
-    mapping(address => UintSet) internal ownedLDTokens;
+    mapping(address => UintSet) internal ownedDTTokens;
     mapping(address => UintSet) internal ownedPrTokens;
 
     UintSet internal allDelegateTokens;
@@ -71,7 +71,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         }
     }
 
-    function createLDToken(uint256 tokenSeed) public createActor countCall("create_dt") {
+    function createDTToken(uint256 tokenSeed) public createActor countCall("create_dt") {
         (address token, uint256 id) = _mintToken(tokenSeed, currentActor);
 
         vm.startPrank(currentActor);
@@ -85,13 +85,13 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         allPrincipalTokens.add(delegateId);
         existingDelegateTokens.add(delegateId);
         existingPrincipalTokens.add(delegateId);
-        ownedLDTokens[currentActor].add(delegateId);
+        ownedDTTokens[currentActor].add(delegateId);
         ownedPrTokens[currentActor].add(delegateId);
 
         vm.stopPrank();
     }
 
-    function transferLDToken(uint256 fromSeed, uint256 toSeed, uint256 rightsSeed, uint256 backupTokenSeed)
+    function transferDTToken(uint256 fromSeed, uint256 toSeed, uint256 rightsSeed, uint256 backupTokenSeed)
         public
         useActor(fromSeed)
         countCall("dt_transfer")
@@ -100,7 +100,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         if (to == address(0)) to = currentActor;
 
         // Select random token from actor owns.
-        uint256 delegateId = ownedLDTokens[currentActor].get(rightsSeed);
+        uint256 delegateId = ownedDTTokens[currentActor].get(rightsSeed);
         // If they don't have tokens create new one.
         vm.startPrank(currentActor);
         if (delegateId == 0) {
@@ -117,22 +117,22 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
             existingPrincipalTokens.add(delegateId);
             ownedPrTokens[currentActor].add(delegateId);
         } else {
-            ownedLDTokens[currentActor].remove(delegateId);
+            ownedDTTokens[currentActor].remove(delegateId);
             delegateToken.transferFrom(currentActor, to, delegateId);
         }
 
         vm.stopPrank();
-        ownedLDTokens[to].add(delegateId);
+        ownedDTTokens[to].add(delegateId);
     }
 
-    function burnLDToken(uint256 actorSeed, uint256 rightsSeed) public useActor(actorSeed) countCall("dt_burn") {
-        uint256 delegateId = ownedLDTokens[currentActor].get(rightsSeed);
+    function burnDTToken(uint256 actorSeed, uint256 rightsSeed) public useActor(actorSeed) countCall("dt_burn") {
+        uint256 delegateId = ownedDTTokens[currentActor].get(rightsSeed);
 
         if (delegateId != 0) {
             vm.startPrank(currentActor);
 
             delegateToken.burn(delegateId);
-            ownedLDTokens[currentActor].remove(delegateId);
+            ownedDTTokens[currentActor].remove(delegateId);
             existingDelegateTokens.remove(delegateId);
 
             vm.stopPrank();
@@ -144,7 +144,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         if (prId == 0) return;
 
-        address dtOwner = _getLDOwner(prId);
+        address dtOwner = _getDTOwner(prId);
 
         (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry) = delegateToken.getRightsInfo(prId);
         vm.warp(expiry);
@@ -158,7 +158,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         if (dtOwner != address(0)) {
             existingDelegateTokens.remove(prId);
-            ownedLDTokens[dtOwner].remove(prId);
+            ownedDTTokens[dtOwner].remove(prId);
         }
     }
 
@@ -166,13 +166,13 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         uint256 prId = ownedPrTokens[currentActor].get(prSeed);
         if (prId == 0) return;
 
-        address dtOwner = _getLDOwner(prId);
+        address dtOwner = _getDTOwner(prId);
         if (dtOwner != address(0)) {
             vm.prank(dtOwner);
             delegateToken.burn(prId);
 
             existingDelegateTokens.remove(prId);
-            ownedLDTokens[dtOwner].remove(prId);
+            ownedDTTokens[dtOwner].remove(prId);
         }
 
         (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry) = delegateToken.getRightsInfo(prId);
@@ -224,14 +224,14 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         id = MockERC721(token).mintNext(recipient);
     }
 
-    function _getLDOwner(uint256 dtId) internal view returns (address owner) {
+    function _getDTOwner(uint256 dtId) internal view returns (address owner) {
         try delegateToken.ownerOf(dtId) returns (address retrievedOwner) {
             owner = retrievedOwner;
         } catch {}
     }
 
-    function _getPrOwner(uint256 prId) internal view returns (address owner) {
-        try principal.ownerOf(prId) returns (address retrievedOwner) {
+    function _getPTOwner(uint256 ptId) internal view returns (address owner) {
+        try principal.ownerOf(ptId) returns (address retrievedOwner) {
             owner = retrievedOwner;
         } catch {}
     }

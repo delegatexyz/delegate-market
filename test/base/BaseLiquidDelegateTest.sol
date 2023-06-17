@@ -12,22 +12,22 @@ import {DelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
 contract BaseLiquidDelegateTest is Test {
     DelegateRegistry internal registry;
     PrincipalToken internal principal;
-    DelegateToken internal ld;
+    DelegateToken internal dt;
 
-    address internal ldDeployer = makeAddr("LD_CORE_DEPLOYER");
-    address internal ldOwner = makeAddr("LD_OWNER");
+    address internal dtDeployer = makeAddr("LD_CORE_DEPLOYER");
+    address internal dtOwner = makeAddr("LD_OWNER");
 
     constructor() {
         registry = new DelegateRegistry();
 
-        vm.startPrank(ldDeployer);
-        ld = new DelegateToken(
+        vm.startPrank(dtDeployer);
+        dt = new DelegateToken(
             address(registry),
-            LibRLP.computeAddress(ldDeployer, vm.getNonce(ldDeployer) + 1),
+            LibRLP.computeAddress(dtDeployer, vm.getNonce(dtDeployer) + 1),
             "",
-            ldOwner
+            dtOwner
         );
-        principal = new PrincipalToken(address(ld));
+        principal = new PrincipalToken(address(dt));
         vm.stopPrank();
     }
 }
