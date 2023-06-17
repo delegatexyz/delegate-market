@@ -48,7 +48,6 @@ interface IDelegateTokenBase {
                              EVENTS
     //////////////////////////////////////////////////////////////*/
 
-
     /*//////////////////////////////////////////////////////////////
                       VIEW & INTROSPECTION
     //////////////////////////////////////////////////////////////*/
@@ -60,7 +59,10 @@ interface IDelegateTokenBase {
 
     function getExpiry(ExpiryType expiryType, uint256 expiryValue) external view returns (uint256);
 
-    function getRightsInfo(uint256 delegateId) external view returns (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry, uint256 nonce);
+    function getRightsInfo(uint256 delegateId)
+        external
+        view
+        returns (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry, uint256 nonce);
 
     /*//////////////////////////////////////////////////////////////
                          CREATE METHODS
@@ -92,12 +94,13 @@ interface IDelegateTokenBase {
 
     function extend(uint256 delegateId, ExpiryType expiryType, uint256 expiryValue) external;
 
+    function withdrawTo(address to, uint256 delegateId) external;
+
     /*//////////////////////////////////////////////////////////////
                          REDEEM METHODS
     //////////////////////////////////////////////////////////////*/
 
     function burn(uint256 delegateId) external;
-    function burnWithPermit(address from, uint256 delegateId, bytes calldata sig) external;
 
     /*//////////////////////////////////////////////////////////////
                        FLASHLOAN METHODS

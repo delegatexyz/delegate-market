@@ -104,7 +104,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, ERC2981, Owned
             IERC1155(tokenContract).safeTransferFrom(msg.sender, address(this), tokenId, tokenAmount, "");
         }
         uint256 expiry = getExpiry(expiryType, expiryValue);
-        return _create(delegateRecipient, principalRecipient, tokenType, tokenContract, tokenId, tokenAmount, expiry, nonce);
+        return _createWithoutValidation(delegateRecipient, principalRecipient, tokenType, tokenContract, tokenId, tokenAmount, expiry, nonce);
     }
 
     /**
@@ -153,7 +153,13 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, ERC2981, Owned
      * @param delegateId ID of the delegate right to be burnt.
      */
     function burn(uint256 delegateId) external {
-        _burnAuth(msg.sender, delegateId);
+        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry, uint256 nonce) = getRightsInfo(delegateId);
+        (bool approvedOrOwner, address owner) = _isApprovedOrOwner(msg.sender, delegateId);
+        if (block.timestamp >= expiry || approvedOrOwner) {
+            _burnWithoutValidation(owner, delegateId);
+        } else {
+            revert NotAuthorized();
+        }
     }
 
     /**
@@ -176,7 +182,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, ERC2981, Owned
             if (block.timestamp < expiry && owner != msg.sender) {
                 revert WithdrawNotAvailable();
             }
-            _burn(owner, delegateId);
+            _burnWithoutValidation(owner, delegateId);
         }
         // TODO: Should we clear old data when withdrawing?
         _writeRightsInfo(delegateId, tokenType, tokenContract, tokenId, tokenAmount, expiry, nonce);
@@ -205,7 +211,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, ERC2981, Owned
     }
 
     /**
-     * @inheritdoc BaseERC721
+     * @inheritdoc ERC721
      */
     function transferFrom(address from, address to, uint256 id) public override {
         super.transferFrom(from, to, id);
@@ -288,7 +294,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, ERC2981, Owned
         if (expiry > type(uint40).max) revert ExpiryTooLarge();
     }
 
-    function _create(
+    function _createWithoutValidation(
         address delegateRecipient,
         address principalRecipient,
         TokenType tokenType,
@@ -317,17 +323,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, EIP712, ERC2981, Owned
         PrincipalToken(PRINCIPAL_TOKEN).mint(principalRecipient, delegateId);
     }
 
-    function _burnAuth(address spender, uint256 delegateId) internal {
-        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry, uint256 nonce) = getRightsInfo(delegateId);
-        (bool approvedOrOwner, address owner) = _isApprovedOrOwner(spender, delegateId);
-        if (block.timestamp >= expiry || approvedOrOwner) {
-            _burn(owner, delegateId);
-        } else {
-            revert NotAuthorized();
-        }
-    }
-
-    function _burn(address owner, uint256 delegateId) internal {
+    function _burnWithoutValidation(address owner, uint256 delegateId) internal {
         (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry, uint256 nonce) = getRightsInfo(delegateId);
         IDelegateRegistry(DELEGATE_REGISTRY).delegateERC721(owner, tokenContract, rights[delegateId][uint256(StoragePositions.tokenId)], "", false);
 

@@ -129,8 +129,19 @@ contract WrapOfferer is IWrapOfferer {
         // Address stack-too-deep by caching consideration values in memory
         address considerationToken = consideration[0].token;
         uint256 considerationIdentifier = consideration[0].identifier;
+        uint256 considerationAmount = consideration[0].amount;
+        // TODO: use better nonce
+        uint96 nonce = 3;
         IDelegateToken(DELEGATE_TOKEN).createUnprotected(
-            delegateRecipient, principalRecipient, considerationToken, TokenType.ERC721, considerationIdentifier, expiryType, expiryValue
+            delegateRecipient,
+            principalRecipient,
+            TokenType.ERC721,
+            considerationToken,
+            considerationIdentifier,
+            considerationAmount,
+            expiryType,
+            expiryValue,
+            nonce
         );
 
         return this.ratifyOrder.selector;
@@ -166,7 +177,8 @@ contract WrapOfferer is IWrapOfferer {
         if (!(matchClosed || delegateSigning)) delegateRecipient = address(0);
         if (!(matchClosed || !delegateSigning)) principalRecipient = address(0);
 
-        receiptHash = uint256(getReceiptHash(delegateRecipient, principalRecipient, spotToken.token, spotToken.identifier, spotToken.amount, expiryType, expiryValue));
+        receiptHash =
+            uint256(getReceiptHash(delegateRecipient, principalRecipient, spotToken.token, spotToken.identifier, spotToken.amount, expiryType, expiryValue));
     }
 
     /// @dev Builds unique ERC-712 struct hash to be passed as context data
@@ -177,11 +189,15 @@ contract WrapOfferer is IWrapOfferer {
     /// @param tokenAmount The token amount
     /// @param expiryType Whether expiration is an absolute timestamp or relative offset from order fulfillment
     /// @param expiryValue The expiration absolute timestamp or relative offset, in UTC seconds
-    function getReceiptHash(address delegateRecipient, address principalRecipient, address tokenAddress, uint256 tokenId, uint256 tokenAmount, ExpiryType expiryType, uint256 expiryValue)
-        public
-        pure
-        returns (bytes32 receiptHash)
-    {
+    function getReceiptHash(
+        address delegateRecipient,
+        address principalRecipient,
+        address tokenAddress,
+        uint256 tokenId,
+        uint256 tokenAmount,
+        ExpiryType expiryType,
+        uint256 expiryValue
+    ) public pure returns (bytes32 receiptHash) {
         bytes32 expiryTypeHash;
         if (expiryType == ExpiryType.RELATIVE) {
             expiryTypeHash = RELATIVE_EXPIRY_TYPE_HASH;
@@ -192,7 +208,8 @@ contract WrapOfferer is IWrapOfferer {
             revert InvalidExpiryType();
         }
 
-        receiptHash = keccak256(abi.encode(RECEIPT_TYPE_HASH, tokenAddress, tokenId, tokenAmount, expiryTypeHash, expiryValue, delegateRecipient, principalRecipient));
+        receiptHash =
+            keccak256(abi.encode(RECEIPT_TYPE_HASH, tokenAddress, tokenId, tokenAmount, expiryTypeHash, expiryValue, delegateRecipient, principalRecipient));
     }
 
     /// @notice Pack information about the Liquid Delegate to be created into a reversible bytes object
