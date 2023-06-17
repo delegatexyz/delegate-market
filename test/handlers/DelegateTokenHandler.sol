@@ -147,7 +147,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         address dtOwner = _getLDOwner(prId);
 
-        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry, uint256 nonce) = delegateToken.getRightsInfo(prId);
+        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry) = delegateToken.getRightsInfo(prId);
         vm.warp(expiry);
         vm.startPrank(currentActor);
         delegateToken.withdrawTo(currentActor, prId);
@@ -176,7 +176,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
             ownedLDTokens[dtOwner].remove(prId);
         }
 
-        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry, uint256 nonce) = delegateToken.getRightsInfo(prId);
+        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry) = delegateToken.getRightsInfo(prId);
         vm.prank(currentActor);
         delegateToken.withdrawTo(currentActor, prId);
 
@@ -189,7 +189,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         uint256 prId = existingPrincipalTokens.get(prSeed);
         if (prId == 0) return;
 
-        (,,,, uint256 expiry,) = delegateToken.getRightsInfo(prId);
+        (,,,, uint256 expiry) = delegateToken.getRightsInfo(prId);
 
         ExpiryType expiryType = ExpiryType(bound(rawExpiryType, uint256(type(ExpiryType).min), uint256(type(ExpiryType).max)).toUint8());
 

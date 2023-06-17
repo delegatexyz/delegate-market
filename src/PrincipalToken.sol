@@ -47,7 +47,7 @@ contract PrincipalToken is BaseERC721("Principal Token", "PT") {
 
         IDelegateToken dt = IDelegateToken(DELEGATE_TOKEN);
 
-        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry, uint256 nonce) = dt.getRightsInfo(id);
+        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry) = dt.getRightsInfo(id);
 
         string memory idstr = tokenId.toString();
         string memory imageUrl = string.concat(dt.baseURI(), "principal/", idstr);

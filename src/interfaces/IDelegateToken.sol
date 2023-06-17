@@ -62,7 +62,7 @@ interface IDelegateTokenBase {
     function getRightsInfo(uint256 delegateId)
         external
         view
-        returns (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry, uint256 nonce);
+        returns (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry);
 
     /*//////////////////////////////////////////////////////////////
                          CREATE METHODS
