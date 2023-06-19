@@ -17,15 +17,15 @@ enum TokenType {
     ERC1155
 }
 
-// For returning data only, do not store with this
-struct ViewRights {
-    address tokenContract;
-    uint256 expiry;
-    uint256 nonce;
-    uint256 tokenId;
-}
+// struct DelegateInfo {
+//     TokenType type_;
+//     uint40 expiry;
+//     address token;
+//     uint256 id;
+//     uint256 amount;
+// }
 
-interface IDelegateTokenBase {
+interface IDelegateToken is IERC721 {
     /*//////////////////////////////////////////////////////////////
                              ERRORS
     //////////////////////////////////////////////////////////////*/
@@ -56,7 +56,7 @@ interface IDelegateTokenBase {
     function DELEGATE_REGISTRY() external view returns (address);
     function PRINCIPAL_TOKEN() external view returns (address);
 
-    function getRightsInfo(uint256 delegateId)
+    function getDelegateInfo(uint256 delegateId)
         external
         view
         returns (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry);
@@ -92,5 +92,3 @@ interface IDelegateTokenBase {
 
     function flashLoan(address receiver, uint256 delegateId, bytes calldata data) external payable;
 }
-
-interface IDelegateToken is IERC721, IDelegateTokenBase {}

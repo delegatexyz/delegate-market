@@ -11,7 +11,7 @@ import {MockERC721} from "../mock/MockERC721.sol";
 import {LibString} from "solady/utils/LibString.sol";
 import {SafeCastLib} from "solady/utils/SafeCastLib.sol";
 
-import {IDelegateToken, ExpiryType, ViewRights, TokenType} from "src/interfaces/IDelegateToken.sol";
+import {IDelegateToken, ExpiryType, TokenType} from "src/interfaces/IDelegateToken.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 
 contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
@@ -146,7 +146,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         address dtOwner = _getDTOwner(prId);
 
-        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry) = delegateToken.getRightsInfo(prId);
+        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry) = delegateToken.getDelegateInfo(prId);
         vm.warp(expiry);
         vm.startPrank(currentActor);
         delegateToken.withdrawTo(currentActor, prId);
@@ -175,7 +175,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
             ownedDTTokens[dtOwner].remove(prId);
         }
 
-        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry) = delegateToken.getRightsInfo(prId);
+        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry) = delegateToken.getDelegateInfo(prId);
         vm.prank(currentActor);
         delegateToken.withdrawTo(currentActor, prId);
 
@@ -188,7 +188,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         uint256 prId = existingPrincipalTokens.get(prSeed);
         if (prId == 0) return;
 
-        (,,,, uint256 expiry) = delegateToken.getRightsInfo(prId);
+        (,,,, uint256 expiry) = delegateToken.getDelegateInfo(prId);
 
         ExpiryType expiryType = ExpiryType(bound(rawExpiryType, uint256(type(ExpiryType).min), uint256(type(ExpiryType).max)).toUint8());
 
