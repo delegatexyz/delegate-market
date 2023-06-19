@@ -117,20 +117,33 @@ contract WrapOfferer is IWrapOfferer {
         returns (bytes4)
     {
         // Remove validated receipt, was already used to verify address(this).transferFrom() after generateOrder() but before ratifyOrder()
-        delete transientReceiptHash;
+        // delete transientReceiptHash;
 
-        (, uint256 expiry, address delegateRecipient, address principalRecipient, uint96 salt) = decodeContext(context);
-
-        // `DelegateToken.createUnprotected` checks whether the appropriate NFT has been deposited.
         // Address stack-too-deep by caching consideration values in memory
+        ItemType itemType = consideration[0].itemType;
         address considerationToken = consideration[0].token;
         uint256 considerationIdentifier = consideration[0].identifier;
         uint256 considerationAmount = consideration[0].amount;
-        IERC721(considerationToken).setApprovalForAll(address(DELEGATE_TOKEN), true);
-        // Can't do createUnprotected because no way to distinguish among fungible tokens
-        uint256 delegateId = IDelegateToken(DELEGATE_TOKEN).create(
-            delegateRecipient, principalRecipient, TokenType.ERC721, considerationToken, considerationIdentifier, considerationAmount, expiry, salt
-        );
+        if (itemType == ItemType.ERC721) {
+            (, uint256 expiry, address delegateRecipient, address principalRecipient, uint96 salt) = decodeContext(context);
+            IERC721(considerationToken).setApprovalForAll(address(DELEGATE_TOKEN), true);
+            uint256 delegateId = IDelegateToken(DELEGATE_TOKEN).create(
+                delegateRecipient, principalRecipient, TokenType.ERC721, considerationToken, considerationIdentifier, considerationAmount, expiry, salt
+            );
+        } else if (itemType == ItemType.ERC20) {
+            (, uint256 expiry, address delegateRecipient, address principalRecipient, uint96 salt) = decodeContext(context);
+            IERC20(considerationToken).approve(address(DELEGATE_TOKEN), considerationAmount);
+            uint256 delegateId = IDelegateToken(DELEGATE_TOKEN).create(
+                delegateRecipient, principalRecipient, TokenType.ERC20, considerationToken, considerationIdentifier, considerationAmount, expiry, salt
+            );
+        } else if (itemType == ItemType.ERC1155) {
+            (, uint256 expiry, address delegateRecipient, address principalRecipient, uint96 salt) = decodeContext(context);
+            IERC1155(considerationToken).setApprovalForAll(address(DELEGATE_TOKEN), true);
+            uint256 delegateId = IDelegateToken(DELEGATE_TOKEN).create(
+                delegateRecipient, principalRecipient, TokenType.ERC1155, considerationToken, considerationIdentifier, considerationAmount, expiry, salt
+            );
+        }
+
 
         return this.ratifyOrder.selector;
     }
