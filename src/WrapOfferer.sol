@@ -144,7 +144,6 @@ contract WrapOfferer is IWrapOfferer {
             );
         }
 
-
         return this.ratifyOrder.selector;
     }
 

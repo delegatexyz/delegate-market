@@ -245,8 +245,10 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
     }
 
     function supportsInterface(bytes4 interfaceId) public pure override(ERC721, ERC2981) returns (bool) {
-        // TODO: Hardcode these
-        return false;
+        return interfaceId == 0x2a55205a // ERC165 Interface ID for ERC2981
+            || interfaceId == 0x01ffc9a7 // ERC165 Interface ID for ERC165
+            || interfaceId == 0x80ac58cd // ERC165 Interface ID for ERC721
+            || interfaceId == 0x5b5e139f; // ERC165 Interface ID for ERC721Metadata
     }
 
     /// @notice Deterministic function for generating a delegateId
