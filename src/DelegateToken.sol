@@ -91,7 +91,8 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
         if (expiry > type(uint40).max) revert ExpiryTooLarge();
         if (tokenType == TokenType.ERC721) {
             IERC721(tokenContract).transferFrom(msg.sender, address(this), tokenId);
-            tokenAmount = 0;
+            // We make a standardization choice to have this always be 1 for an ERC721
+            tokenAmount = 1;
         } else if (tokenType == TokenType.ERC20) {
             // TODO: Handle nonstandard tokens like USDT and BNB
             IERC20(tokenContract).transferFrom(msg.sender, address(this), tokenAmount);
@@ -256,6 +257,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
         pure
         returns (uint256)
     {
+        if (tokenAmount == 0) revert WrongAmount();
         return uint256(keccak256(abi.encode(tokenType, tokenContract, tokenId, tokenAmount, creator, salt)));
     }
 
@@ -274,12 +276,13 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
 
         _mint(delegateRecipient, delegateId);
         if (tokenType == TokenType.ERC721) {
+            if (tokenAmount_ != 1) revert WrongAmount();
             IDelegateRegistry(DELEGATE_REGISTRY).delegateERC721(delegateRecipient, tokenContract_, tokenId_, "", true);
         } else if (tokenType == TokenType.ERC20) {
-            if (tokenAmount_ == 0) revert ZeroAmount();
+            if (tokenAmount_ == 0) revert WrongAmount();
             IDelegateRegistry(DELEGATE_REGISTRY).delegateERC20(delegateRecipient, tokenContract_, tokenAmount_, "", true);
         } else if (tokenType == TokenType.ERC1155) {
-            if (tokenAmount_ == 0) revert ZeroAmount();
+            if (tokenAmount_ == 0) revert WrongAmount();
             IDelegateRegistry(DELEGATE_REGISTRY).delegateERC1155(delegateRecipient, tokenContract_, tokenId_, tokenAmount_, "", true);
         } else {
             revert InvalidTokenType();

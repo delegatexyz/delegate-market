@@ -122,6 +122,10 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         // =========== Verify Correct Receipt ===========
         assertEq(seller.addr.balance, expectedETH);
         uint256 delegateId = dt.getDelegateId(TokenType.ERC721, address(token), tokenId, 1, address(wofferer), SALT);
+        console2.log("expected salt");
+        console2.log(SALT);
+        console2.log("expected delegateId");
+        console2.log(delegateId);
         (TokenType tokenType_, address tokenContract_, uint256 tokenId_, uint256 tokenAmount_, uint256 expiry_) = dt.getRightsInfo(delegateId);
         assertEq(dt.ownerOf(delegateId), buyerAddr);
         assertEq(principal.ownerOf(delegateId), sellerAddr);
@@ -211,7 +215,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
 
         // =========== Verify Correct Receival ===========
         assertEq(weth.balanceOf(seller.addr), expectedETH);
-        uint256 delegateId = dt.getDelegateId(TokenType.ERC721, address(token), tokenId, 0, address(wofferer), SALT);
+        uint256 delegateId = dt.getDelegateId(TokenType.ERC721, address(token), tokenId, 1, address(wofferer), SALT);
         (,,,, uint256 expiry_) = dt.getRightsInfo(delegateId);
         assertEq(dt.ownerOf(delegateId), buyer.addr);
         assertEq(principal.ownerOf(delegateId), seller.addr);

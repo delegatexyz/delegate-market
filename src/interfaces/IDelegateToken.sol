@@ -39,7 +39,7 @@ interface IDelegateTokenBase {
     error InvalidFlashloan();
     error NonceTooLarge();
     error InvalidTokenType();
-    error ZeroAmount();
+    error WrongAmount();
     error ExpiryTimeNotInFuture();
     error ExpiryTooLarge();
 

@@ -140,6 +140,9 @@ contract WrapOfferer is IWrapOfferer {
             delegateRecipient, principalRecipient, TokenType.ERC721, considerationToken, considerationIdentifier, considerationAmount, expiry, salt
         );
 
+        console2.log("salt");
+        console2.log(salt);
+
         console2.log("delegateId");
         console2.log(delegateId);
         console2.log("reached end of ratifyOrder()");
