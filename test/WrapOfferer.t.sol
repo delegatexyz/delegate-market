@@ -65,8 +65,6 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         token.mint(seller.addr, tokenId);
         // 2. Create and sign wrap receipt
         bytes32 receiptHash = wofferer.getReceiptHash(address(0), seller.addr, address(token), tokenId, 1, expiryType, expiryValue);
-        console2.log("receiptHash");
-        console2.log(uint256(receiptHash));
         // 3. Build Order
         orders[0] = _createSellerOrder(seller, tokenId, uint256(receiptHash), expectedETH, false);
 
@@ -74,9 +72,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         address buyerAddr = buyer.addr;
         address sellerAddr = seller.addr;
         bytes memory context = wofferer.encodeContext(ReceiptFillerType.DelegateOpen, expiryType, uint40(expiryValue), buyerAddr, sellerAddr, SALT);
-        orders[1] = _createWrapContractOrder(
-            tokenId, uint256(receiptHash), context
-        );
+        orders[1] = _createWrapContractOrder(tokenId, uint256(receiptHash), context);
 
         // ========== Create Buy Delegate Order ==========
         orders[2] = _createBuyerOrder(buyer, 0, expectedETH, true);
@@ -96,23 +92,12 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         // =============== Execute Orders ================
 
         {
-        // Sanity check that the contract offerer previewOrder succeeds first
-        SpentItem[] memory minimumReceived = new SpentItem[](1);
-        minimumReceived[0] = SpentItem({
-            itemType: ItemType.ERC721,
-            token: address(wofferer),
-            identifier: uint256(receiptHash),
-            amount: 1
-        });
-        SpentItem[] memory maximumSpent = new SpentItem[](1);
-        maximumSpent[0] = SpentItem({
-            itemType: ItemType.ERC721,
-            token: address(token),
-            identifier: tokenId,
-            amount: 1
-        });
-        wofferer.previewOrder(address(seaport), address(0), minimumReceived, maximumSpent, context);
-        console2.log("previewOrder succeeded");
+            // Sanity check that the contract offerer previewOrder succeeds first
+            SpentItem[] memory minimumReceived = new SpentItem[](1);
+            minimumReceived[0] = SpentItem({itemType: ItemType.ERC721, token: address(wofferer), identifier: uint256(receiptHash), amount: 1});
+            SpentItem[] memory maximumSpent = new SpentItem[](1);
+            maximumSpent[0] = SpentItem({itemType: ItemType.ERC721, token: address(token), identifier: tokenId, amount: 1});
+            wofferer.previewOrder(address(seaport), address(0), minimumReceived, maximumSpent, context);
         }
 
         // Then match the orders for real
@@ -122,10 +107,6 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         // =========== Verify Correct Receipt ===========
         assertEq(seller.addr.balance, expectedETH);
         uint256 delegateId = dt.getDelegateId(TokenType.ERC721, address(token), tokenId, 1, address(wofferer), SALT);
-        console2.log("expected salt");
-        console2.log(SALT);
-        console2.log("expected delegateId");
-        console2.log(delegateId);
         (TokenType tokenType_, address tokenContract_, uint256 tokenId_, uint256 tokenAmount_, uint256 expiry_) = dt.getRightsInfo(delegateId);
         assertEq(dt.ownerOf(delegateId), buyerAddr);
         assertEq(principal.ownerOf(delegateId), sellerAddr);

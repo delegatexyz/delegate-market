@@ -12,8 +12,6 @@ import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
 import {IERC1155} from "openzeppelin-contracts/contracts/token/ERC1155/IERC1155.sol";
 
-import {console2} from "forge-std/console2.sol";
-
 /// @notice A Seaport ContractOfferer
 contract WrapOfferer is IWrapOfferer {
     uint256 internal constant CONTEXT_SIZE = 59;
@@ -96,8 +94,6 @@ contract WrapOfferer is IWrapOfferer {
         SpentItem calldata received = minimumReceived[0];
         if (!(spent.itemType == ItemType.ERC721 || spent.itemType == ItemType.ERC20 || spent.itemType == ItemType.ERC1155)) revert IncorrectReceived();
         uint256 receiptHash = _parseReceiptHashFromContext(spent, context);
-        console2.log("actualReceiptHash");
-        console2.log(receiptHash);
 
         offer = new SpentItem[](1);
         // The receipt transfer is spoofed, so will always be a 721. Must match the offerer's consideration exactly, which is why receiptHash exact generation matters
@@ -110,8 +106,6 @@ contract WrapOfferer is IWrapOfferer {
             ReceivedItem({itemType: spent.itemType, token: spent.token, identifier: spent.identifier, amount: spent.amount, recipient: payable(address(this))});
 
         transientReceiptHash = receiptHash;
-
-        console2.log("reached end of generateOrder()");
     }
 
     /// TODO: inheritdoc ContractOffererInterface
@@ -125,8 +119,6 @@ contract WrapOfferer is IWrapOfferer {
         // Remove validated receipt, was already used to verify address(this).transferFrom() after generateOrder() but before ratifyOrder()
         delete transientReceiptHash;
 
-        console2.log("reached beginning of ratifyOrder()");
-
         (, uint256 expiry, address delegateRecipient, address principalRecipient, uint96 salt) = decodeContext(context);
 
         // `DelegateToken.createUnprotected` checks whether the appropriate NFT has been deposited.
@@ -139,13 +131,6 @@ contract WrapOfferer is IWrapOfferer {
         uint256 delegateId = IDelegateToken(DELEGATE_TOKEN).create(
             delegateRecipient, principalRecipient, TokenType.ERC721, considerationToken, considerationIdentifier, considerationAmount, expiry, salt
         );
-
-        console2.log("salt");
-        console2.log(salt);
-
-        console2.log("delegateId");
-        console2.log(delegateId);
-        console2.log("reached end of ratifyOrder()");
 
         return this.ratifyOrder.selector;
     }
