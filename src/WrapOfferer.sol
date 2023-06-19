@@ -3,7 +3,6 @@ pragma solidity ^0.8.20;
 
 import {ContractOffererInterface, IWrapOfferer, ReceiptFillerType} from "./interfaces/IWrapOfferer.sol";
 
-import {LibBitmap} from "solady/utils/LibBitmap.sol";
 import {ReceivedItem, SpentItem, Schema} from "seaport-types/src/interfaces/ContractOffererInterface.sol";
 import {ItemType} from "seaport-types/src/lib/ConsiderationEnums.sol";
 
@@ -17,8 +16,6 @@ import {console2} from "forge-std/console2.sol";
 
 /// @notice A Seaport ContractOfferer
 contract WrapOfferer is IWrapOfferer {
-    using LibBitmap for LibBitmap.Bitmap;
-
     uint256 internal constant CONTEXT_SIZE = 59;
 
     /// @notice Address for Seaport 1.5
@@ -108,10 +105,13 @@ contract WrapOfferer is IWrapOfferer {
 
         consideration = new ReceivedItem[](1);
         // Send the spot asset to the Delegate Token, to use in create() in ratifyOrder()
+        // TODO: remove amount 0, just relaxing considerations
         consideration[0] =
             ReceivedItem({itemType: spent.itemType, token: spent.token, identifier: spent.identifier, amount: spent.amount, recipient: payable(address(this))});
 
         transientReceiptHash = receiptHash;
+
+        console2.log("reached end of generateOrder()");
     }
 
     /// TODO: inheritdoc ContractOffererInterface
@@ -125,6 +125,8 @@ contract WrapOfferer is IWrapOfferer {
         // Remove validated receipt, was already used to verify address(this).transferFrom() after generateOrder() but before ratifyOrder()
         delete transientReceiptHash;
 
+        console2.log("reached beginning of ratifyOrder()");
+
         (, uint256 expiry, address delegateRecipient, address principalRecipient, uint96 salt) = decodeContext(context);
 
         // `DelegateToken.createUnprotected` checks whether the appropriate NFT has been deposited.
@@ -134,9 +136,13 @@ contract WrapOfferer is IWrapOfferer {
         uint256 considerationAmount = consideration[0].amount;
         IERC721(considerationToken).setApprovalForAll(address(DELEGATE_TOKEN), true);
         // Can't do createUnprotected because no way to distinguish among fungible tokens
-        IDelegateToken(DELEGATE_TOKEN).create(
+        uint256 delegateId = IDelegateToken(DELEGATE_TOKEN).create(
             delegateRecipient, principalRecipient, TokenType.ERC721, considerationToken, considerationIdentifier, considerationAmount, expiry, salt
         );
+
+        console2.log("delegateId");
+        console2.log(delegateId);
+        console2.log("reached end of ratifyOrder()");
 
         return this.ratifyOrder.selector;
     }

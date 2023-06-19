@@ -17,6 +17,7 @@ import {
     FulfillmentComponent
 } from "seaport-types/src/lib/ConsiderationStructs.sol";
 import {ItemType, OrderType} from "seaport-types/src/lib/ConsiderationEnums.sol";
+import {SpentItem} from "seaport-types/src/interfaces/ContractOffererInterface.sol";
 import {ViewRights} from "src/interfaces/IDelegateToken.sol";
 
 import {WrapOfferer, ReceiptFillerType} from "src/WrapOfferer.sol";
@@ -72,8 +73,9 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         // ============== Create Wrap Order ==============
         address buyerAddr = buyer.addr;
         address sellerAddr = seller.addr;
+        bytes memory context = wofferer.encodeContext(ReceiptFillerType.DelegateOpen, expiryType, uint40(expiryValue), buyerAddr, sellerAddr, SALT);
         orders[1] = _createWrapContractOrder(
-            tokenId, uint256(receiptHash), wofferer.encodeContext(ReceiptFillerType.DelegateOpen, expiryType, uint40(expiryValue), buyerAddr, sellerAddr, SALT)
+            tokenId, uint256(receiptHash), context
         );
 
         // ========== Create Buy Delegate Order ==========
@@ -92,7 +94,29 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         fulfillments[2] = _constructFulfillment(2, 0, 0, 0);
 
         // =============== Execute Orders ================
-        vm.prank(buyerAddr);
+
+        {
+        // Sanity check that the contract offerer previewOrder succeeds first
+        SpentItem[] memory minimumReceived = new SpentItem[](1);
+        minimumReceived[0] = SpentItem({
+            itemType: ItemType.ERC721,
+            token: address(wofferer),
+            identifier: uint256(receiptHash),
+            amount: 1
+        });
+        SpentItem[] memory maximumSpent = new SpentItem[](1);
+        maximumSpent[0] = SpentItem({
+            itemType: ItemType.ERC721,
+            token: address(token),
+            identifier: tokenId,
+            amount: 1
+        });
+        wofferer.previewOrder(address(seaport), address(0), minimumReceived, maximumSpent, context);
+        console2.log("previewOrder succeeded");
+        }
+
+        // Then match the orders for real
+        vm.startPrank(buyerAddr);
         seaport.matchAdvancedOrders{value: expectedETH}(orders, new CriteriaResolver[](0), fulfillments, buyerAddr);
 
         // =========== Verify Correct Receipt ===========
@@ -156,7 +180,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         // 2. Create and sign wrap receipt
         bytes32 receiptHash = wofferer.getReceiptHash(buyer.addr, address(0), address(token), tokenId, 1, expiryType, expiryValue);
 
-        // 3. Buidt Order
+        // 3. Build Order
         orders[0] = _createBuyerOrder(buyer, uint256(receiptHash), expectedETH, false);
 
         // ============== Create Wrap Order ==============
@@ -258,7 +282,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
             identifierOrCriteria: tokenId,
             startAmount: 1,
             endAmount: 1,
-            recipient: payable(address(dt))
+            recipient: payable(address(wofferer))
         });
         OrderParameters memory orderParams = OrderParameters({
             offerer: address(wofferer),
