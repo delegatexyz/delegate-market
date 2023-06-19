@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {Test} from "forge-std/Test.sol";
 import {LibRLP} from "solady/utils/LibRLP.sol";
 import {LibString} from "solady/utils/LibString.sol";
-import {DelegateToken, ExpiryType, Rights} from "src/DelegateToken.sol";
+import {DelegateToken, ExpiryType, TokenType} from "src/DelegateToken.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 import {DelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
 import {MockERC721} from "./mock/MockERC721.sol";
@@ -14,29 +14,31 @@ contract DelegateTokenTest is Test {
 
     // Environment contracts.
     DelegateRegistry registry;
-    DelegateToken ld;
+    DelegateToken dt;
     PrincipalToken principal;
     MockERC721 token;
 
     // Test actors.
     address coreDeployer = makeAddr("coreDeployer");
-    address ldOwner = makeAddr("ldOwner");
+    address dtOwner = makeAddr("dtOwner");
 
     uint256 internal constant TOTAL_USERS = 100;
     address[TOTAL_USERS] internal users;
+
+    uint96 internal constant SALT = 7;
 
     function setUp() public {
         registry = new DelegateRegistry();
 
         vm.startPrank(coreDeployer);
-        ld = new DelegateToken(
+        dt = new DelegateToken(
             address(registry),
             LibRLP.computeAddress(coreDeployer, vm.getNonce(coreDeployer) + 1),
             "",
-            ldOwner
+            dtOwner
         );
         principal = new PrincipalToken(
-            address(ld)
+            address(dt)
         );
         vm.stopPrank();
 
@@ -49,7 +51,7 @@ contract DelegateTokenTest is Test {
 
     function test_fuzzingCreateRights(
         address tokenOwner,
-        address ldTo,
+        address dtTo,
         address notLdTo,
         address principalTo,
         uint256 tokenId,
@@ -57,69 +59,61 @@ contract DelegateTokenTest is Test {
         uint256 time
     ) public {
         vm.assume(tokenOwner != address(0));
-        vm.assume(ldTo != address(0));
+        vm.assume(dtTo != address(0));
         vm.assume(principalTo != address(0));
-        vm.assume(notLdTo != ldTo);
+        vm.assume(notLdTo != dtTo);
 
         (ExpiryType expiryType, uint256 expiry, uint256 expiryValue) = prepareValidExpiry(expiryTypeRelative, time);
 
         token.mint(tokenOwner, tokenId);
         vm.startPrank(tokenOwner);
-        token.setApprovalForAll(address(ld), true);
+        token.setApprovalForAll(address(dt), true);
 
-        uint256 delegateId = ld.create(ldTo, principalTo, address(token), tokenId, expiryType, expiryValue);
+        uint256 delegateId = dt.create(dtTo, principalTo, TokenType.ERC721, address(token), tokenId, 0, expiry, SALT);
 
         vm.stopPrank();
 
-        assertEq(ld.ownerOf(delegateId), ldTo);
+        assertEq(dt.ownerOf(delegateId), dtTo);
         assertEq(principal.ownerOf(delegateId), principalTo);
 
-        (uint256 baseDelegateId, uint256 activeDelegateId, Rights memory rights) = ld.getRights(delegateId);
-        assertEq(activeDelegateId, delegateId);
-        assertEq(baseDelegateId, ld.getBaseDelegateId(address(token), tokenId));
-        assertEq(uint256(bytes32(bytes25(bytes32(delegateId)))), baseDelegateId);
-        assertEq(rights.nonce, 0);
-        assertEq(rights.tokenContract, address(token));
-        assertEq(rights.tokenId, tokenId);
-        assertEq(rights.expiry, expiry);
-
-        assertTrue(registry.checkDelegateForERC721(ldTo, address(ld), address(token), tokenId, ""));
-        assertFalse(registry.checkDelegateForERC721(notLdTo, address(ld), address(token), tokenId, ""));
+        assertTrue(registry.checkDelegateForERC721(dtTo, address(dt), address(token), tokenId, ""));
+        assertFalse(registry.checkDelegateForERC721(notLdTo, address(dt), address(token), tokenId, ""));
     }
 
     function test_fuzzingTransferDelegation(address from, address to, uint256 underlyingTokenId, bool expiryTypeRelative, uint256 time) public {
         vm.assume(from != address(0));
         vm.assume(to != address(0));
 
-        (ExpiryType expiryType,, uint256 expiryValue) = prepareValidExpiry(expiryTypeRelative, time);
-        token.mint(address(ld), underlyingTokenId);
+        (ExpiryType expiryType, uint256 expiry, uint256 expiryValue) = prepareValidExpiry(expiryTypeRelative, time);
+        token.mint(address(from), underlyingTokenId);
+
+        vm.startPrank(from);
+        token.setApprovalForAll(address(dt), true);
+        uint256 delegateId = dt.create(from, from, TokenType.ERC721, address(token), underlyingTokenId, 0, expiry, SALT);
 
         vm.prank(from);
-        uint256 delegateId = ld.createUnprotected(from, from, address(token), underlyingTokenId, expiryType, expiryValue);
+        dt.transferFrom(from, to, delegateId);
 
-        vm.prank(from);
-        ld.transferFrom(from, to, delegateId);
-
-        assertTrue(registry.checkDelegateForERC721(to, address(ld), address(token), underlyingTokenId, ""));
+        assertTrue(registry.checkDelegateForERC721(to, address(dt), address(token), underlyingTokenId, ""));
 
         if (from != to) {
-            assertFalse(registry.checkDelegateForERC721(from, address(ld), address(token), underlyingTokenId, ""));
+            assertFalse(registry.checkDelegateForERC721(from, address(dt), address(token), underlyingTokenId, ""));
         }
     }
 
     function test_fuzzingCannotCreateWithoutToken(address minter, uint256 tokenId, bool expiryTypeRelative, uint256 time) public {
         vm.assume(minter != address(0));
-        (ExpiryType expiryType,, uint256 expiryValue) = prepareValidExpiry(expiryTypeRelative, time);
+        (ExpiryType expiryType, uint256 expiry, uint256 expiryValue) = prepareValidExpiry(expiryTypeRelative, time);
 
         vm.startPrank(minter);
         vm.expectRevert();
-        ld.create(minter, minter, address(token), tokenId, expiryType, expiryValue);
+        dt.create(minter, minter, TokenType.ERC721, address(token), tokenId, 0, expiry, SALT);
         vm.stopPrank();
     }
 
     function test_fuzzingMintRights(
         address tokenOwner,
-        address ldTo,
+        address dtTo,
         address notLdTo,
         address principalTo,
         uint256 tokenId,
@@ -127,48 +121,38 @@ contract DelegateTokenTest is Test {
         uint256 time
     ) public {
         vm.assume(tokenOwner != address(0));
-        vm.assume(ldTo != address(0));
+        vm.assume(dtTo != address(0));
         vm.assume(principalTo != address(0));
-        vm.assume(notLdTo != ldTo);
+        vm.assume(notLdTo != dtTo);
 
         (ExpiryType expiryType, uint256 expiry, uint256 expiryValue) = prepareValidExpiry(expiryTypeRelative, time);
 
         token.mint(tokenOwner, tokenId);
         vm.startPrank(tokenOwner);
-        token.transferFrom(tokenOwner, address(ld), tokenId);
-
-        uint256 delegateId = ld.createUnprotected(ldTo, principalTo, address(token), tokenId, expiryType, expiryValue);
+        token.setApprovalForAll(address(dt), true);
+        uint256 delegateId = dt.create(dtTo, principalTo, TokenType.ERC721, address(token), tokenId, 0, expiry, SALT);
 
         vm.stopPrank();
 
-        assertEq(ld.ownerOf(delegateId), ldTo);
+        assertEq(dt.ownerOf(delegateId), dtTo);
         assertEq(principal.ownerOf(delegateId), principalTo);
 
-        (uint256 baseDelegateId, uint256 activeDelegateId, Rights memory rights) = ld.getRights(delegateId);
-        assertEq(activeDelegateId, delegateId);
-        assertEq(baseDelegateId, ld.getBaseDelegateId(address(token), tokenId));
-        assertEq(uint256(bytes32(bytes25(bytes32(delegateId)))), baseDelegateId);
-        assertEq(rights.nonce, 0);
-        assertEq(rights.tokenContract, address(token));
-        assertEq(rights.tokenId, tokenId);
-        assertEq(rights.expiry, expiry);
-
-        assertTrue(registry.checkDelegateForERC721(ldTo, address(ld), address(token), tokenId, ""));
-        assertFalse(registry.checkDelegateForERC721(notLdTo, address(ld), address(token), tokenId, ""));
+        assertTrue(registry.checkDelegateForERC721(dtTo, address(dt), address(token), tokenId, ""));
+        assertFalse(registry.checkDelegateForERC721(notLdTo, address(dt), address(token), tokenId, ""));
     }
 
     function testCannotMintWithExisting() public {
         address tokenOwner = makeAddr("tokenOwner");
         uint256 tokenId = token.mintNext(tokenOwner);
         vm.startPrank(tokenOwner);
-        token.setApprovalForAll(address(ld), true);
-        ld.create(tokenOwner, tokenOwner, address(token), tokenId, ExpiryType.RELATIVE, 10 days);
+        token.setApprovalForAll(address(dt), true);
+        dt.create(tokenOwner, tokenOwner, TokenType.ERC721, address(token), tokenId, 0, block.timestamp + 10 days, SALT);
         vm.stopPrank();
 
         address attacker = makeAddr("attacker");
         vm.prank(attacker);
         vm.expectRevert();
-        ld.createUnprotected(attacker, attacker, address(token), tokenId, ExpiryType.RELATIVE, 5 days);
+        dt.create(attacker, attacker, TokenType.ERC721, address(token), tokenId, 0, block.timestamp + 10 days, SALT);
     }
 
     function test_fuzzingCannotCreateWithNonexistentContract(address minter, address tokenContract, uint256 tokenId, bool expiryTypeRelative, uint256 time)
@@ -177,43 +161,26 @@ contract DelegateTokenTest is Test {
         vm.assume(minter != address(0));
         vm.assume(tokenContract.code.length == 0);
 
-        (ExpiryType expiryType,, uint256 expiryValue) = prepareValidExpiry(expiryTypeRelative, time);
+        (ExpiryType expiryType, uint256 expiry, uint256 expiryValue) = prepareValidExpiry(expiryTypeRelative, time);
 
         vm.startPrank(minter);
         vm.expectRevert();
-        ld.create(minter, minter, tokenContract, tokenId, expiryType, expiryValue);
+        dt.create(minter, minter, TokenType.ERC721, tokenContract, tokenId, 0, expiry, SALT);
         vm.stopPrank();
-    }
-
-    function testStaticMetadata() public {
-        assertEq(ld.name(), "Delegate Token");
-        assertEq(ld.symbol(), "DT");
-        assertEq(ld.version(), "1");
-        assertEq(
-            ld.DOMAIN_SEPARATOR(),
-            keccak256(
-                abi.encode(
-                    keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                    keccak256(bytes(ld.name())),
-                    keccak256(bytes(ld.version())),
-                    block.chainid,
-                    address(ld)
-                )
-            )
-        );
     }
 
     function testTokenURI() public {
         uint256 id = 9827;
         address user = makeAddr("user");
-        token.mint(address(ld), id);
-        vm.prank(user);
-        uint256 delegateId = ld.createUnprotected(user, user, address(token), id, ExpiryType.RELATIVE, 10 seconds);
+        token.mint(address(user), id);
+        vm.startPrank(user);
+        token.setApprovalForAll(address(dt), true);
+        uint256 delegateId = dt.create(user, user, TokenType.ERC721, address(token), id, 0, block.timestamp + 10 seconds, SALT);
 
-        vm.prank(ldOwner);
-        ld.setBaseURI("https://test-uri.com/");
+        vm.prank(dtOwner);
+        dt.setBaseURI("https://test-uri.com/");
 
-        emit log_named_string("delegate tokenURI:", ld.tokenURI(delegateId));
+        emit log_named_string("delegate tokenURI:", dt.tokenURI(delegateId));
         emit log_named_string("principal tokenURI:", principal.tokenURI(delegateId));
     }
 

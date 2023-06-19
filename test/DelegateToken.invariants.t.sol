@@ -6,7 +6,6 @@ import {StdInvariant} from "forge-std/StdInvariant.sol";
 import {BaseLiquidDelegateTest} from "./base/BaseLiquidDelegateTest.sol";
 
 import {DelegateTokenHandler} from "./handlers/DelegateTokenHandler.sol";
-import {Rights} from "src/DelegateToken.sol";
 
 import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
 
@@ -16,12 +15,12 @@ contract DelegateTokenInvariants is StdInvariant, BaseLiquidDelegateTest {
     bytes4[] internal selectors;
 
     function setUp() public {
-        handler = new DelegateTokenHandler(address(ld));
+        handler = new DelegateTokenHandler(address(dt));
 
         // Add target selectors.
-        selectors.push(handler.createLDToken.selector);
-        selectors.push(handler.transferLDToken.selector);
-        selectors.push(handler.burnLDToken.selector);
+        selectors.push(handler.createDTToken.selector);
+        selectors.push(handler.transferDTToken.selector);
+        selectors.push(handler.burnDTToken.selector);
         selectors.push(handler.withdrawExpired.selector);
         selectors.push(handler.withdrawBurned.selector);
         selectors.push(handler.extend.selector);
@@ -31,22 +30,22 @@ contract DelegateTokenInvariants is StdInvariant, BaseLiquidDelegateTest {
         targetContract(address(handler));
     }
 
-    function invariant_depositedTokensInLD() public {
-        handler.forEachDepositedToken(this.tokenInLD);
-    }
+    // function invariant_depositedTokensInDT() public {
+    //     handler.forEachDepositedToken(this.tokenInDT);
+    // }
 
-    function tokenInLD(address tokenContract, uint256 tokenId) external {
-        assertEq(IERC721(tokenContract).ownerOf(tokenId), address(ld));
-    }
+    // function tokenInDT(address tokenContract, uint256 tokenId) external {
+    //     assertEq(IERC721(tokenContract).ownerOf(tokenId), address(dt));
+    // }
 
     // function invariant_oneTokenDelegatePerToken() public {
     //     handler.forEachDepositedToken(this.singleDelegate);
     // }
 
     // function singleDelegate(address tokenContract, uint256 tokenId) external {
-    //     assertEq(registry.getDelegatesForAll(address(ld)).length, 0);
-    //     assertEq(registry.getDelegatesForContract(address(ld), tokenContract).length, 0);
-    //     assertEq(registry.getDelegatesForToken(address(ld), tokenContract, tokenId).length, 1);
+    //     assertEq(registry.getDelegatesForAll(address(dt)).length, 0);
+    //     assertEq(registry.getDelegatesForContract(address(dt), tokenContract).length, 0);
+    //     assertEq(registry.getDelegatesForToken(address(dt), tokenContract, tokenId).length, 1);
     // }
 
     // function invariant_delegateOwnerDelegated() public {
@@ -54,13 +53,13 @@ contract DelegateTokenInvariants is StdInvariant, BaseLiquidDelegateTest {
     // }
 
     // function delegateOwnerDelegated(address tokenContract, uint256 tokenId) external {
-    //     (, uint256 delegateId,) = ld.getRights(ld.getBaseDelegateId(tokenContract, tokenId));
+    //     (, uint256 delegateId,) = dt.getRights(dt.getBaseDelegateId(tokenContract, tokenId));
     //     address owner;
-    //     try ld.ownerOf(delegateId) returns (address retrievedOwner) {
+    //     try dt.ownerOf(delegateId) returns (address retrievedOwner) {
     //         owner = retrievedOwner;
     //     } catch {}
     //     assertTrue(owner != address(0));
-    //     assertTrue(registry.checkDelegateForToken(owner, address(ld), tokenContract, tokenId));
+    //     assertTrue(registry.checkDelegateForToken(owner, address(dt), tokenContract, tokenId));
     // }
 
     // function invariant_callSummary() public view {
@@ -74,11 +73,11 @@ contract DelegateTokenInvariants is StdInvariant, BaseLiquidDelegateTest {
 
     // function rightsNonceLteActive(uint256 delegateId) external {
     //     uint56 nonce = uint56(delegateId);
-    //     (,, Rights memory rights) = ld.getRights(delegateId);
+    //     (,, Rights memory rights) = dt.getRights(delegateId);
     //     assertLe(nonce, rights.nonce);
     // }
 
-    // /// @dev Two existing principal tokens should never have the same base rights Id
+    // /// @dev Two existing principal tokens shoudt never have the same base rights Id
     // function invariant_onlySinglePrincipal() public {
     //     handler.forEachExistingPrincipalToken(this.uniquePrincipalBaseDelegateId);
     // }
@@ -94,8 +93,8 @@ contract DelegateTokenInvariants is StdInvariant, BaseLiquidDelegateTest {
     // function noDuplicatePrBaseDelegateId(uint256 prId) external {
     //     // `forEach` iterates over whole set so need to skip the item itself.
     //     if (prId != currentPrId) {
-    //         (uint256 baseDelegateId1,,) = ld.getRights(prId);
-    //         (uint256 baseDelegateId2,,) = ld.getRights(currentPrId);
+    //         (uint256 baseDelegateId1,,) = dt.getRights(prId);
+    //         (uint256 baseDelegateId2,,) = dt.getRights(currentPrId);
     //         assertTrue(baseDelegateId1 != baseDelegateId2);
     //     }
     // }

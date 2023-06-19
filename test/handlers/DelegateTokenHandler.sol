@@ -11,7 +11,7 @@ import {MockERC721} from "../mock/MockERC721.sol";
 import {LibString} from "solady/utils/LibString.sol";
 import {SafeCastLib} from "solady/utils/SafeCastLib.sol";
 
-import {IDelegateToken, ExpiryType, Rights} from "src/interfaces/IDelegateToken.sol";
+import {IDelegateToken, ExpiryType, ViewRights, TokenType} from "src/interfaces/IDelegateToken.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 
 contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
@@ -24,7 +24,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
     using SafeCastLib for uint256;
 
-    IDelegateToken public immutable liquidDelegate;
+    IDelegateToken public immutable delegateToken;
     PrincipalToken public immutable principal;
     uint256 internal constant TOTAL_TOKENS = 10;
 
@@ -38,7 +38,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
     TokenSet internal allTokens;
     TokenSet internal depositedTokens;
-    mapping(address => UintSet) internal ownedLDTokens;
+    mapping(address => UintSet) internal ownedDTTokens;
     mapping(address => UintSet) internal ownedPrTokens;
 
     UintSet internal allDelegateTokens;
@@ -63,49 +63,53 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         _;
     }
 
-    constructor(address ld) {
-        liquidDelegate = IDelegateToken(ld);
-        principal = PrincipalToken(IDelegateToken(ld).PRINCIPAL_TOKEN());
+    constructor(address dt) {
+        delegateToken = IDelegateToken(dt);
+        principal = PrincipalToken(IDelegateToken(dt).PRINCIPAL_TOKEN());
         for (uint256 i; i < TOTAL_TOKENS; i++) {
             tokenContracts.add(address(new MockERC721(uint(keccak256(abi.encode("start_id", i))))));
         }
     }
 
-    function createLDToken(uint256 tokenSeed) public createActor countCall("create_ld") {
+    function createDTToken(uint256 tokenSeed) public createActor countCall("create_dt") {
         (address token, uint256 id) = _mintToken(tokenSeed, currentActor);
 
         vm.startPrank(currentActor);
 
-        MockERC721(token).approve(address(liquidDelegate), id);
+        MockERC721(token).approve(address(delegateToken), id);
 
-        uint256 delegateId = liquidDelegate.create(currentActor, currentActor, address(token), id, ExpiryType.RELATIVE, 1 seconds);
+        uint256 amount = 0;
+        uint96 salt = 3;
+        uint256 delegateId = delegateToken.create(currentActor, currentActor, TokenType.ERC721, address(token), id, amount, block.timestamp + 1 seconds, salt);
         allDelegateTokens.add(delegateId);
         allPrincipalTokens.add(delegateId);
         existingDelegateTokens.add(delegateId);
         existingPrincipalTokens.add(delegateId);
-        ownedLDTokens[currentActor].add(delegateId);
+        ownedDTTokens[currentActor].add(delegateId);
         ownedPrTokens[currentActor].add(delegateId);
 
         vm.stopPrank();
     }
 
-    function transferLDToken(uint256 fromSeed, uint256 toSeed, uint256 rightsSeed, uint256 backupTokenSeed)
+    function transferDTToken(uint256 fromSeed, uint256 toSeed, uint256 rightsSeed, uint256 backupTokenSeed)
         public
         useActor(fromSeed)
-        countCall("ld_transfer")
+        countCall("dt_transfer")
     {
         address to = actors.get(toSeed);
         if (to == address(0)) to = currentActor;
 
         // Select random token from actor owns.
-        uint256 delegateId = ownedLDTokens[currentActor].get(rightsSeed);
+        uint256 delegateId = ownedDTTokens[currentActor].get(rightsSeed);
         // If they don't have tokens create new one.
         vm.startPrank(currentActor);
         if (delegateId == 0) {
             (address token, uint256 id) = _mintToken(backupTokenSeed, currentActor);
-            MockERC721(token).approve(address(liquidDelegate), id);
+            MockERC721(token).approve(address(delegateToken), id);
 
-            delegateId = liquidDelegate.create(to, currentActor, address(token), id, ExpiryType.RELATIVE, 1 seconds);
+            uint256 amount = 0;
+            uint96 salt = 3;
+            delegateId = delegateToken.create(to, currentActor, TokenType.ERC721, address(token), id, amount, block.timestamp + 1 seconds, salt);
 
             allDelegateTokens.add(delegateId);
             allPrincipalTokens.add(delegateId);
@@ -113,22 +117,22 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
             existingPrincipalTokens.add(delegateId);
             ownedPrTokens[currentActor].add(delegateId);
         } else {
-            ownedLDTokens[currentActor].remove(delegateId);
-            liquidDelegate.transferFrom(currentActor, to, delegateId);
+            ownedDTTokens[currentActor].remove(delegateId);
+            delegateToken.transferFrom(currentActor, to, delegateId);
         }
 
         vm.stopPrank();
-        ownedLDTokens[to].add(delegateId);
+        ownedDTTokens[to].add(delegateId);
     }
 
-    function burnLDToken(uint256 actorSeed, uint256 rightsSeed) public useActor(actorSeed) countCall("ld_burn") {
-        uint256 delegateId = ownedLDTokens[currentActor].get(rightsSeed);
+    function burnDTToken(uint256 actorSeed, uint256 rightsSeed) public useActor(actorSeed) countCall("dt_burn") {
+        uint256 delegateId = ownedDTTokens[currentActor].get(rightsSeed);
 
         if (delegateId != 0) {
             vm.startPrank(currentActor);
 
-            liquidDelegate.burn(delegateId);
-            ownedLDTokens[currentActor].remove(delegateId);
+            delegateToken.burn(delegateId);
+            ownedDTTokens[currentActor].remove(delegateId);
             existingDelegateTokens.remove(delegateId);
 
             vm.stopPrank();
@@ -140,21 +144,21 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         if (prId == 0) return;
 
-        address ldOwner = _getLDOwner(prId);
+        address dtOwner = _getDTOwner(prId);
 
-        (,, Rights memory rights) = liquidDelegate.getRights(prId);
-        vm.warp(rights.expiry);
+        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry) = delegateToken.getRightsInfo(prId);
+        vm.warp(expiry);
         vm.startPrank(currentActor);
-        liquidDelegate.withdrawTo(currentActor, rights.tokenContract, rights.tokenId);
+        delegateToken.withdrawTo(currentActor, prId);
         vm.stopPrank();
 
         existingPrincipalTokens.remove(prId);
         ownedPrTokens[currentActor].remove(prId);
-        depositedTokens.remove(rights.tokenContract, rights.tokenId);
+        depositedTokens.remove(tokenContract, tokenId);
 
-        if (ldOwner != address(0)) {
+        if (dtOwner != address(0)) {
             existingDelegateTokens.remove(prId);
-            ownedLDTokens[ldOwner].remove(prId);
+            ownedDTTokens[dtOwner].remove(prId);
         }
     }
 
@@ -162,33 +166,33 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         uint256 prId = ownedPrTokens[currentActor].get(prSeed);
         if (prId == 0) return;
 
-        address ldOwner = _getLDOwner(prId);
-        if (ldOwner != address(0)) {
-            vm.prank(ldOwner);
-            liquidDelegate.burn(prId);
+        address dtOwner = _getDTOwner(prId);
+        if (dtOwner != address(0)) {
+            vm.prank(dtOwner);
+            delegateToken.burn(prId);
 
             existingDelegateTokens.remove(prId);
-            ownedLDTokens[ldOwner].remove(prId);
+            ownedDTTokens[dtOwner].remove(prId);
         }
 
-        (,, Rights memory rights) = liquidDelegate.getRights(prId);
+        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry) = delegateToken.getRightsInfo(prId);
         vm.prank(currentActor);
-        liquidDelegate.withdrawTo(currentActor, rights.tokenContract, rights.tokenId);
+        delegateToken.withdrawTo(currentActor, prId);
 
         existingPrincipalTokens.remove(prId);
         ownedPrTokens[currentActor].remove(prId);
-        depositedTokens.remove(rights.tokenContract, rights.tokenId);
+        depositedTokens.remove(tokenContract, tokenId);
     }
 
     function extend(uint256 prSeed, uint8 rawExpiryType, uint40 expiryValue) public countCall("extend") {
         uint256 prId = existingPrincipalTokens.get(prSeed);
         if (prId == 0) return;
 
-        (,, Rights memory rights) = liquidDelegate.getRights(prId);
+        (,,,, uint256 expiry) = delegateToken.getRightsInfo(prId);
 
         ExpiryType expiryType = ExpiryType(bound(rawExpiryType, uint256(type(ExpiryType).min), uint256(type(ExpiryType).max)).toUint8());
 
-        uint256 minTime = (rights.expiry > block.timestamp ? rights.expiry : block.timestamp) + 1;
+        uint256 minTime = (expiry > block.timestamp ? expiry : block.timestamp) + 1;
         uint256 maxTime = expiryType == ExpiryType.RELATIVE ? type(uint40).max - block.timestamp : type(uint40).max;
         // No possible extension
         if (maxTime < minTime) return;
@@ -197,15 +201,15 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         address owner = principal.ownerOf(prId);
         vm.prank(owner);
-        liquidDelegate.extend(prId, expiryType, expiryValue);
+        delegateToken.extend(prId, expiry);
     }
 
     function callSummary() external view {
         console.log("Call summary:");
         console.log("------------------");
-        console.log("create_ld", calls["create_ld"]);
-        console.log("ld_transfer", calls["ld_transfer"]);
-        console.log("ld_burn", calls["ld_burn"]);
+        console.log("create_dt", calls["create_dt"]);
+        console.log("dt_transfer", calls["dt_transfer"]);
+        console.log("dt_burn", calls["dt_burn"]);
         console.log("withdraw_expired", calls["withdraw_expired"]);
         console.log("withdraw_burned", calls["withdraw_burned"]);
         console.log("extend", calls["extend"]);
@@ -220,14 +224,14 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         id = MockERC721(token).mintNext(recipient);
     }
 
-    function _getLDOwner(uint256 ldId) internal view returns (address owner) {
-        try liquidDelegate.ownerOf(ldId) returns (address retrievedOwner) {
+    function _getDTOwner(uint256 dtId) internal view returns (address owner) {
+        try delegateToken.ownerOf(dtId) returns (address retrievedOwner) {
             owner = retrievedOwner;
         } catch {}
     }
 
-    function _getPrOwner(uint256 prId) internal view returns (address owner) {
-        try principal.ownerOf(prId) returns (address retrievedOwner) {
+    function _getPTOwner(uint256 ptId) internal view returns (address owner) {
+        try principal.ownerOf(ptId) returns (address retrievedOwner) {
             owner = retrievedOwner;
         } catch {}
     }
