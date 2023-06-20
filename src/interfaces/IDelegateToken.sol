@@ -60,7 +60,7 @@ interface IDelegateTokenBase {
     function getDelegateInfo(uint256 delegateId)
         external
         view
-        returns (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry);
+        returns (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, bytes32 rights, uint256 expiry);
 
     /*//////////////////////////////////////////////////////////////
                          CREATE METHODS
@@ -73,6 +73,7 @@ interface IDelegateTokenBase {
         address tokenContract,
         uint256 tokenId,
         uint256 tokenAmount,
+        bytes32 rights,
         uint256 expiry,
         uint96 nonce
     ) external payable returns (uint256);

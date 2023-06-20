@@ -128,19 +128,19 @@ contract WrapOfferer is IWrapOfferer {
             (, uint256 expiry, address delegateRecipient, address principalRecipient, uint96 salt) = decodeContext(context);
             IERC721(considerationToken).setApprovalForAll(address(DELEGATE_TOKEN), true);
             uint256 delegateId = IDelegateToken(DELEGATE_TOKEN).create(
-                delegateRecipient, principalRecipient, TokenType.ERC721, considerationToken, considerationIdentifier, considerationAmount, expiry, salt
+                delegateRecipient, principalRecipient, TokenType.ERC721, considerationToken, considerationIdentifier, considerationAmount, "", expiry, salt
             );
         } else if (itemType == ItemType.ERC20) {
             (, uint256 expiry, address delegateRecipient, address principalRecipient, uint96 salt) = decodeContext(context);
             IERC20(considerationToken).approve(address(DELEGATE_TOKEN), considerationAmount);
             uint256 delegateId = IDelegateToken(DELEGATE_TOKEN).create(
-                delegateRecipient, principalRecipient, TokenType.ERC20, considerationToken, considerationIdentifier, considerationAmount, expiry, salt
+                delegateRecipient, principalRecipient, TokenType.ERC20, considerationToken, considerationIdentifier, considerationAmount, "", expiry, salt
             );
         } else if (itemType == ItemType.ERC1155) {
             (, uint256 expiry, address delegateRecipient, address principalRecipient, uint96 salt) = decodeContext(context);
             IERC1155(considerationToken).setApprovalForAll(address(DELEGATE_TOKEN), true);
             uint256 delegateId = IDelegateToken(DELEGATE_TOKEN).create(
-                delegateRecipient, principalRecipient, TokenType.ERC1155, considerationToken, considerationIdentifier, considerationAmount, expiry, salt
+                delegateRecipient, principalRecipient, TokenType.ERC1155, considerationToken, considerationIdentifier, considerationAmount, "", expiry, salt
             );
         }
 
