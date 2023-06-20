@@ -174,8 +174,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
     function flashLoan(address receiver, uint256 delegateId, bytes calldata data) external payable {
         if (!isApprovedOrOwner(msg.sender, delegateId)) revert NotAuthorized();
         (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry) = getDelegateInfo(delegateId);
-        // TODO: Check delegateId not expired
-        // TODO: Limit to ERC721s, fungibles are weirder
+        if (tokenType != TokenType.ERC721) revert InvalidFlashloan();
         IERC721(tokenContract).transferFrom(address(this), receiver, tokenId);
 
         if (INFTFlashBorrower(receiver).onFlashLoan{value: msg.value}(msg.sender, tokenContract, tokenId, data) != FLASHLOAN_CALLBACK_SUCCESS) {
@@ -274,6 +273,8 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
         uint96 salt
     ) internal returns (uint256 delegateId) {
         delegateId = getDelegateId(tokenType, tokenContract_, tokenId_, tokenAmount_, msg.sender, salt);
+        if (_used[delegateId]) revert AlreadyExisted();
+        _used[delegateId] = true;
         _writeRightsInfo(delegateId, tokenType, tokenContract_, tokenId_, tokenAmount_, expiry_);
 
         _mint(delegateRecipient, delegateId);

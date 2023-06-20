@@ -42,6 +42,7 @@ interface IDelegateTokenBase {
     error WrongAmount();
     error ExpiryTimeNotInFuture();
     error ExpiryTooLarge();
+    error AlreadyExisted();
 
     /*//////////////////////////////////////////////////////////////
                              EVENTS
