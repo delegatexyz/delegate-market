@@ -100,7 +100,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
         } else if (tokenType == TokenType.ERC1155) {
             IERC1155(tokenContract).safeTransferFrom(msg.sender, address(this), tokenId, tokenAmount, "");
         }
-        return _createWithoutValidation(delegateRecipient, principalRecipient, tokenType, tokenContract, tokenId, tokenAmount, expiry, salt);
+        return _createWithoutValidation(delegateRecipient, principalRecipient, tokenType, tokenContract, tokenId, tokenAmount, "", expiry, salt);
     }
 
     /**
@@ -269,6 +269,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
         address tokenContract_,
         uint256 tokenId_,
         uint256 tokenAmount_,
+        bytes32 rights,
         uint256 expiry_,
         uint96 salt
     ) internal returns (uint256 delegateId) {
@@ -280,13 +281,13 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
         _mint(delegateRecipient, delegateId);
         if (tokenType == TokenType.ERC721) {
             if (tokenAmount_ != 1) revert WrongAmount();
-            IDelegateRegistry(DELEGATE_REGISTRY).delegateERC721(delegateRecipient, tokenContract_, tokenId_, "", true);
+            IDelegateRegistry(DELEGATE_REGISTRY).delegateERC721(delegateRecipient, tokenContract_, tokenId_, rights, true);
         } else if (tokenType == TokenType.ERC20) {
             if (tokenAmount_ == 0) revert WrongAmount();
-            IDelegateRegistry(DELEGATE_REGISTRY).delegateERC20(delegateRecipient, tokenContract_, tokenAmount_, "", true);
+            IDelegateRegistry(DELEGATE_REGISTRY).delegateERC20(delegateRecipient, tokenContract_, tokenAmount_, rights, true);
         } else if (tokenType == TokenType.ERC1155) {
             if (tokenAmount_ == 0) revert WrongAmount();
-            IDelegateRegistry(DELEGATE_REGISTRY).delegateERC1155(delegateRecipient, tokenContract_, tokenId_, tokenAmount_, "", true);
+            IDelegateRegistry(DELEGATE_REGISTRY).delegateERC1155(delegateRecipient, tokenContract_, tokenId_, tokenAmount_, rights, true);
         } else {
             revert InvalidTokenType();
         }
