@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.20;
 
-import {IDelegateToken, ExpiryType, TokenType} from "./interfaces/IDelegateToken.sol";
+import {IDelegateTokenBase, ExpiryType, TokenType} from "./interfaces/IDelegateToken.sol";
 import {INFTFlashBorrower} from "./interfaces/INFTFlashBorrower.sol";
 
 import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
@@ -25,7 +25,7 @@ import {Owned} from "solmate/auth/Owned.sol";
  * and we also prevent delegateId reuse with a simple boolean set membership lookup
  */
 
-contract DelegateToken is IDelegateToken, BaseERC721, ERC2981, Owned {
+contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
     using LibString for address;
     using LibString for uint256;
     using SafeERC20 for IERC20;

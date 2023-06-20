@@ -25,7 +25,7 @@ enum TokenType {
 //     uint256 amount;
 // }
 
-interface IDelegateToken is IERC721 {
+interface IDelegateTokenBase {
     /*//////////////////////////////////////////////////////////////
                              ERRORS
     //////////////////////////////////////////////////////////////*/
@@ -92,3 +92,5 @@ interface IDelegateToken is IERC721 {
 
     function flashLoan(address receiver, uint256 delegateId, bytes calldata data) external payable;
 }
+
+interface IDelegateToken is IDelegateTokenBase, IERC721 {}
