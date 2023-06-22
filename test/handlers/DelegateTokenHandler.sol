@@ -11,8 +11,10 @@ import {MockERC721} from "../mock/MockERC721.sol";
 import {LibString} from "solady/utils/LibString.sol";
 import {SafeCastLib} from "solady/utils/SafeCastLib.sol";
 
-import {IDelegateToken, ExpiryType, TokenType} from "src/interfaces/IDelegateToken.sol";
+import {IDelegateToken, TokenType} from "src/interfaces/IDelegateToken.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
+
+import {ExpiryType} from "src/interfaces/IWrapOfferer.sol";
 
 contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
     using LibString for address;

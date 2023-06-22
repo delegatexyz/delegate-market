@@ -3,13 +3,6 @@ pragma solidity ^0.8.20;
 
 import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
 
-enum ExpiryType
-// NONE,
-{
-    RELATIVE,
-    ABSOLUTE
-}
-
 enum TokenType {
     NONE,
     ERC721,

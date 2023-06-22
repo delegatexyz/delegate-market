@@ -6,7 +6,7 @@ import {BaseSeaportTest} from "./base/BaseSeaportTest.sol";
 import {BaseLiquidDelegateTest} from "./base/BaseLiquidDelegateTest.sol";
 import {SeaportHelpers, User} from "./utils/SeaportHelpers.sol";
 
-import {ExpiryType, TokenType} from "src/interfaces/IDelegateToken.sol";
+import {TokenType} from "src/interfaces/IDelegateToken.sol";
 import {
     AdvancedOrder,
     OrderParameters,
@@ -20,6 +20,7 @@ import {ItemType, OrderType} from "seaport-types/src/lib/ConsiderationEnums.sol"
 import {SpentItem} from "seaport-types/src/interfaces/ContractOffererInterface.sol";
 
 import {WrapOfferer, ReceiptFillerType} from "src/WrapOfferer.sol";
+import {ExpiryType} from "src/interfaces/IWrapOfferer.sol";
 import {MockERC721} from "./mock/MockERC721.sol";
 import {WETH} from "./mock/WETH.sol";
 

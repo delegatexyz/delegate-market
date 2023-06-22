@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.20;
 
-import {ContractOffererInterface, IWrapOfferer, ReceiptFillerType} from "./interfaces/IWrapOfferer.sol";
+import {ContractOffererInterface, IWrapOfferer, ReceiptFillerType, ExpiryType} from "./interfaces/IWrapOfferer.sol";
 
 import {ReceivedItem, SpentItem, Schema} from "seaport-types/src/interfaces/ContractOffererInterface.sol";
 import {ItemType} from "seaport-types/src/lib/ConsiderationEnums.sol";
 
-import {IDelegateToken, ExpiryType, TokenType} from "./interfaces/IDelegateToken.sol";
+import {IDelegateToken, TokenType} from "./interfaces/IDelegateToken.sol";
 
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
