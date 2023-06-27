@@ -3,13 +3,6 @@ pragma solidity ^0.8.20;
 
 import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
 
-enum ExpiryType
-// NONE,
-{
-    RELATIVE,
-    ABSOLUTE
-}
-
 enum TokenType {
     NONE,
     ERC721,
@@ -60,7 +53,7 @@ interface IDelegateTokenBase {
     function getDelegateInfo(uint256 delegateId)
         external
         view
-        returns (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry);
+        returns (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, bytes32 rights, uint256 expiry);
 
     /*//////////////////////////////////////////////////////////////
                          CREATE METHODS
@@ -73,6 +66,7 @@ interface IDelegateTokenBase {
         address tokenContract,
         uint256 tokenId,
         uint256 tokenAmount,
+        bytes32 rights,
         uint256 expiry,
         uint96 nonce
     ) external payable returns (uint256);

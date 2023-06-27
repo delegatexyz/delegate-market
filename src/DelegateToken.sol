@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.20;
 
-import {IDelegateTokenBase, ExpiryType, TokenType} from "./interfaces/IDelegateToken.sol";
+import {IDelegateTokenBase, TokenType} from "./interfaces/IDelegateToken.sol";
 import {INFTFlashBorrower} from "./interfaces/INFTFlashBorrower.sol";
 
 import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
@@ -43,7 +43,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
     string public baseURI;
 
     /// @dev delegateId, a hash of (tokenType, tokenContract, tokenId, tokenAmount, msg.sender, salt), points a unique id to the StoragePosition
-    mapping(uint256 delegateId => uint256[3] delegateInfo) public rights;
+    mapping(uint256 delegateId => uint256[4] delegateInfo) public delegateInfo;
 
     /// @dev Store all previously created delegateIds to prevent double-creation and griefing
     mapping(uint256 delegateId => bool used) internal _used;
@@ -52,7 +52,8 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
     enum StoragePositions {
         info, // PACKED (address tokenContract, uint40 expiry, uint48 salt, uint8 tokenType)
         tokenId,
-        amount
+        amount,
+        rights
     }
 
     constructor(address _DELEGATE_REGISTRY, address _PRINCIPAL_TOKEN, string memory baseURI_, address initialMetadataOwner)
@@ -86,6 +87,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
         address tokenContract,
         uint256 tokenId,
         uint256 tokenAmount,
+        bytes32 rights,
         uint256 expiry,
         uint96 salt
     ) external payable returns (uint256 delegateId) {
@@ -100,7 +102,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
         } else if (tokenType == TokenType.ERC1155) {
             IERC1155(tokenContract).safeTransferFrom(msg.sender, address(this), tokenId, tokenAmount, "");
         }
-        return _createWithoutValidation(delegateRecipient, principalRecipient, tokenType, tokenContract, tokenId, tokenAmount, expiry, salt);
+        return _createWithoutValidation(delegateRecipient, principalRecipient, tokenType, tokenContract, tokenId, tokenAmount, rights, expiry, salt);
     }
 
     /**
@@ -111,9 +113,9 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
      */
     function extend(uint256 delegateId, uint256 newExpiry) external {
         if (!PrincipalToken(PRINCIPAL_TOKEN).isApprovedOrOwner(msg.sender, delegateId)) revert NotAuthorized();
-        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 currentExpiry) = getDelegateInfo(delegateId);
+        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, bytes32 rights, uint256 currentExpiry) = getDelegateInfo(delegateId);
         if (newExpiry <= currentExpiry) revert NotExtending();
-        _writeRightsInfo(delegateId, tokenType, tokenContract, tokenId, tokenAmount, newExpiry);
+        _writeRightsInfo(delegateId, tokenType, tokenContract, tokenId, tokenAmount, rights, newExpiry);
     }
 
     /**
@@ -122,7 +124,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
      * @param delegateId ID of the delegate right to be burnt.
      */
     function burn(uint256 delegateId) external {
-        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry) = getDelegateInfo(delegateId);
+        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, bytes32 rights, uint256 expiry) = getDelegateInfo(delegateId);
         (bool approvedOrOwner, address owner) = _isApprovedOrOwner(msg.sender, delegateId);
         if (block.timestamp >= expiry || approvedOrOwner) {
             _burnWithoutValidation(owner, delegateId);
@@ -141,7 +143,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
      * @param delegateId ID of the delegate right to be withdrawn.
      */
     function withdrawTo(address to, uint256 delegateId) external {
-        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry) = getDelegateInfo(delegateId);
+        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, bytes32 rights, uint256 expiry) = getDelegateInfo(delegateId);
         PrincipalToken(PRINCIPAL_TOKEN).burnIfAuthorized(msg.sender, delegateId);
 
         // Check whether the delegate token still exists.
@@ -154,7 +156,7 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
             _burnWithoutValidation(owner, delegateId);
         }
         // TODO: Should we clear old data when withdrawing?
-        _writeRightsInfo(delegateId, tokenType, tokenContract, tokenId, tokenAmount, expiry);
+        _writeRightsInfo(delegateId, tokenType, tokenContract, tokenId, tokenAmount, rights, expiry);
         if (tokenType == TokenType.ERC721) {
             IERC721(tokenContract).transferFrom(address(this), to, tokenId);
         } else if (tokenType == TokenType.ERC20) {
@@ -173,8 +175,8 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
      */
     function flashLoan(address receiver, uint256 delegateId, bytes calldata data) external payable {
         if (!isApprovedOrOwner(msg.sender, delegateId)) revert NotAuthorized();
-        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry) = getDelegateInfo(delegateId);
-        if (tokenType != TokenType.ERC721) revert InvalidFlashloan();
+        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, bytes32 rights, uint256 expiry) = getDelegateInfo(delegateId);
+        if (!(tokenType == TokenType.ERC721 && rights == "")) revert InvalidFlashloan();
         IERC721(tokenContract).transferFrom(address(this), receiver, tokenId);
 
         if (INFTFlashBorrower(receiver).onFlashLoan{value: msg.value}(msg.sender, tokenContract, tokenId, data) != FLASHLOAN_CALLBACK_SUCCESS) {
@@ -191,44 +193,54 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
     function transferFrom(address from, address to, uint256 id) public override {
         super.transferFrom(from, to, id);
 
-        // Load info from storage
-        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry) = getDelegateInfo(id);
+        // Load delegateInfo from storage
+        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, bytes32 rights, uint256 expiry) = getDelegateInfo(id);
         if (tokenType == TokenType.ERC721) {
-            IDelegateRegistry(DELEGATE_REGISTRY).delegateERC721(from, tokenContract, tokenId, "", false);
-            IDelegateRegistry(DELEGATE_REGISTRY).delegateERC721(to, tokenContract, tokenId, "", true);
+            IDelegateRegistry(DELEGATE_REGISTRY).delegateERC721(from, tokenContract, tokenId, rights, false);
+            IDelegateRegistry(DELEGATE_REGISTRY).delegateERC721(to, tokenContract, tokenId, rights, true);
         } else if (tokenType == TokenType.ERC20) {
-            IDelegateRegistry(DELEGATE_REGISTRY).delegateERC20(from, tokenContract, 0, "", false);
-            IDelegateRegistry(DELEGATE_REGISTRY).delegateERC20(to, tokenContract, tokenAmount, "", true);
+            IDelegateRegistry(DELEGATE_REGISTRY).delegateERC20(from, tokenContract, 0, rights, false);
+            IDelegateRegistry(DELEGATE_REGISTRY).delegateERC20(to, tokenContract, tokenAmount, rights, true);
         } else if (tokenType == TokenType.ERC1155) {
-            IDelegateRegistry(DELEGATE_REGISTRY).delegateERC1155(from, tokenContract, tokenId, 0, "", false);
-            IDelegateRegistry(DELEGATE_REGISTRY).delegateERC1155(from, tokenContract, tokenId, tokenAmount, "", true);
+            IDelegateRegistry(DELEGATE_REGISTRY).delegateERC1155(from, tokenContract, tokenId, 0, rights, false);
+            IDelegateRegistry(DELEGATE_REGISTRY).delegateERC1155(from, tokenContract, tokenId, tokenAmount, rights, true);
         }
     }
 
     /// INTERNAL STORAGE HELPERS
 
-    function _writeRightsInfo(uint256 delegateId, TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry) internal {
+    function _writeRightsInfo(
+        uint256 delegateId,
+        TokenType tokenType,
+        address tokenContract,
+        uint256 tokenId,
+        uint256 tokenAmount,
+        bytes32 rights,
+        uint256 expiry
+    ) internal {
         uint256 salt = 0;
         if (expiry > type(uint40).max) revert ExpiryTooLarge();
         if (salt > type(uint48).max) revert NonceTooLarge();
-        rights[delegateId][uint256(StoragePositions.info)] = (uint256(uint160(tokenContract)) << 96) | (expiry << 56) | (salt << 48) | (uint256(tokenType));
-        rights[delegateId][uint256(StoragePositions.tokenId)] = tokenId;
-        rights[delegateId][uint256(StoragePositions.amount)] = tokenAmount;
+        delegateInfo[delegateId][uint256(StoragePositions.info)] =
+            (uint256(uint160(tokenContract)) << 96) | (expiry << 56) | (salt << 48) | (uint256(tokenType));
+        delegateInfo[delegateId][uint256(StoragePositions.tokenId)] = tokenId;
+        delegateInfo[delegateId][uint256(StoragePositions.amount)] = tokenAmount;
+        delegateInfo[delegateId][uint256(StoragePositions.rights)] = uint256(rights);
     }
 
     function getDelegateInfo(uint256 delegateId)
         public
         view
-        returns (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry)
+        returns (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, bytes32 rights, uint256 expiry)
     {
-        uint256 info = rights[delegateId][uint256(StoragePositions.info)];
+        uint256 info = delegateInfo[delegateId][uint256(StoragePositions.info)];
         tokenContract = address(uint160((info >> 96)));
         expiry = uint40(info << 160 >> 216);
-        // salt = uint56(info << 200 >> 208);
         // TODO: double-check this bitshift
         tokenType = TokenType(uint8(info << 248 >> 248));
-        tokenId = rights[delegateId][uint256(StoragePositions.tokenId)];
-        tokenAmount = rights[delegateId][uint256(StoragePositions.amount)];
+        tokenId = delegateInfo[delegateId][uint256(StoragePositions.tokenId)];
+        tokenAmount = delegateInfo[delegateId][uint256(StoragePositions.amount)];
+        rights = bytes32(delegateInfo[delegateId][uint256(StoragePositions.rights)]);
     }
 
     function tokenURI(uint256 delegateId) public view override returns (string memory) {
@@ -237,10 +249,9 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
         // When the principal token is redeemed, the delegate token is burned. So we can query this with no try-catch
         address principalTokenOwner = PrincipalToken(PRINCIPAL_TOKEN).ownerOf(delegateId);
 
-        // Load info
-        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry) = getDelegateInfo(delegateId);
+        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, bytes32 rights, uint256 expiry) = getDelegateInfo(delegateId);
 
-        return _buildTokenURI(tokenContract, rights[delegateId][uint256(StoragePositions.tokenId)], expiry, principalTokenOwner);
+        return _buildTokenURI(tokenContract, delegateInfo[delegateId][uint256(StoragePositions.tokenId)], expiry, principalTokenOwner);
     }
 
     function supportsInterface(bytes4 interfaceId) public pure override(ERC721, ERC2981) returns (bool) {
@@ -269,24 +280,25 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
         address tokenContract_,
         uint256 tokenId_,
         uint256 tokenAmount_,
+        bytes32 rights,
         uint256 expiry_,
         uint96 salt
     ) internal returns (uint256 delegateId) {
         delegateId = getDelegateId(tokenType, tokenContract_, tokenId_, tokenAmount_, msg.sender, salt);
         if (_used[delegateId]) revert AlreadyExisted();
         _used[delegateId] = true;
-        _writeRightsInfo(delegateId, tokenType, tokenContract_, tokenId_, tokenAmount_, expiry_);
+        _writeRightsInfo(delegateId, tokenType, tokenContract_, tokenId_, tokenAmount_, rights, expiry_);
 
         _mint(delegateRecipient, delegateId);
         if (tokenType == TokenType.ERC721) {
             if (tokenAmount_ != 1) revert WrongAmount();
-            IDelegateRegistry(DELEGATE_REGISTRY).delegateERC721(delegateRecipient, tokenContract_, tokenId_, "", true);
+            IDelegateRegistry(DELEGATE_REGISTRY).delegateERC721(delegateRecipient, tokenContract_, tokenId_, rights, true);
         } else if (tokenType == TokenType.ERC20) {
             if (tokenAmount_ == 0) revert WrongAmount();
-            IDelegateRegistry(DELEGATE_REGISTRY).delegateERC20(delegateRecipient, tokenContract_, tokenAmount_, "", true);
+            IDelegateRegistry(DELEGATE_REGISTRY).delegateERC20(delegateRecipient, tokenContract_, tokenAmount_, rights, true);
         } else if (tokenType == TokenType.ERC1155) {
             if (tokenAmount_ == 0) revert WrongAmount();
-            IDelegateRegistry(DELEGATE_REGISTRY).delegateERC1155(delegateRecipient, tokenContract_, tokenId_, tokenAmount_, "", true);
+            IDelegateRegistry(DELEGATE_REGISTRY).delegateERC1155(delegateRecipient, tokenContract_, tokenId_, tokenAmount_, rights, true);
         } else {
             revert InvalidTokenType();
         }
@@ -295,8 +307,8 @@ contract DelegateToken is IDelegateTokenBase, BaseERC721, ERC2981, Owned {
     }
 
     function _burnWithoutValidation(address owner, uint256 delegateId) internal {
-        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, uint256 expiry) = getDelegateInfo(delegateId);
-        IDelegateRegistry(DELEGATE_REGISTRY).delegateERC721(owner, tokenContract, rights[delegateId][uint256(StoragePositions.tokenId)], "", false);
+        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, bytes32 rights, uint256 expiry) = getDelegateInfo(delegateId);
+        IDelegateRegistry(DELEGATE_REGISTRY).delegateERC721(owner, tokenContract, delegateInfo[delegateId][uint256(StoragePositions.tokenId)], rights, false);
 
         _burn(delegateId);
     }

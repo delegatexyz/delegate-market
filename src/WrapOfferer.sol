@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.20;
 
-import {ContractOffererInterface, IWrapOfferer, ReceiptFillerType} from "./interfaces/IWrapOfferer.sol";
+import {ContractOffererInterface, IWrapOfferer, ReceiptFillerType, ExpiryType} from "./interfaces/IWrapOfferer.sol";
 
 import {ReceivedItem, SpentItem, Schema} from "seaport-types/src/interfaces/ContractOffererInterface.sol";
 import {ItemType} from "seaport-types/src/lib/ConsiderationEnums.sol";
 
-import {IDelegateToken, ExpiryType, TokenType} from "./interfaces/IDelegateToken.sol";
+import {IDelegateToken, TokenType} from "./interfaces/IDelegateToken.sol";
 
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
@@ -128,19 +128,19 @@ contract WrapOfferer is IWrapOfferer {
             (, uint256 expiry, address delegateRecipient, address principalRecipient, uint96 salt) = decodeContext(context);
             IERC721(considerationToken).setApprovalForAll(address(DELEGATE_TOKEN), true);
             uint256 delegateId = IDelegateToken(DELEGATE_TOKEN).create(
-                delegateRecipient, principalRecipient, TokenType.ERC721, considerationToken, considerationIdentifier, considerationAmount, expiry, salt
+                delegateRecipient, principalRecipient, TokenType.ERC721, considerationToken, considerationIdentifier, considerationAmount, "", expiry, salt
             );
         } else if (itemType == ItemType.ERC20) {
             (, uint256 expiry, address delegateRecipient, address principalRecipient, uint96 salt) = decodeContext(context);
             IERC20(considerationToken).approve(address(DELEGATE_TOKEN), considerationAmount);
             uint256 delegateId = IDelegateToken(DELEGATE_TOKEN).create(
-                delegateRecipient, principalRecipient, TokenType.ERC20, considerationToken, considerationIdentifier, considerationAmount, expiry, salt
+                delegateRecipient, principalRecipient, TokenType.ERC20, considerationToken, considerationIdentifier, considerationAmount, "", expiry, salt
             );
         } else if (itemType == ItemType.ERC1155) {
             (, uint256 expiry, address delegateRecipient, address principalRecipient, uint96 salt) = decodeContext(context);
             IERC1155(considerationToken).setApprovalForAll(address(DELEGATE_TOKEN), true);
             uint256 delegateId = IDelegateToken(DELEGATE_TOKEN).create(
-                delegateRecipient, principalRecipient, TokenType.ERC1155, considerationToken, considerationIdentifier, considerationAmount, expiry, salt
+                delegateRecipient, principalRecipient, TokenType.ERC1155, considerationToken, considerationIdentifier, considerationAmount, "", expiry, salt
             );
         }
 

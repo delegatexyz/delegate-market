@@ -4,7 +4,8 @@ pragma solidity ^0.8.20;
 import {Test} from "forge-std/Test.sol";
 import {LibRLP} from "solady/utils/LibRLP.sol";
 import {LibString} from "solady/utils/LibString.sol";
-import {DelegateToken, ExpiryType, TokenType} from "src/DelegateToken.sol";
+import {DelegateToken, TokenType} from "src/DelegateToken.sol";
+import {ExpiryType} from "src/interfaces/IWrapOfferer.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 import {DelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
 import {MockERC721} from "./mock/MockERC721.sol";
@@ -69,7 +70,7 @@ contract DelegateTokenTest is Test {
         vm.startPrank(tokenOwner);
         token.setApprovalForAll(address(dt), true);
 
-        uint256 delegateId = dt.create(dtTo, principalTo, TokenType.ERC721, address(token), tokenId, 0, expiry, SALT);
+        uint256 delegateId = dt.create(dtTo, principalTo, TokenType.ERC721, address(token), tokenId, 0, "", expiry, SALT);
 
         vm.stopPrank();
 
@@ -89,7 +90,7 @@ contract DelegateTokenTest is Test {
 
         vm.startPrank(from);
         token.setApprovalForAll(address(dt), true);
-        uint256 delegateId = dt.create(from, from, TokenType.ERC721, address(token), underlyingTokenId, 0, expiry, SALT);
+        uint256 delegateId = dt.create(from, from, TokenType.ERC721, address(token), underlyingTokenId, 0, "", expiry, SALT);
 
         vm.prank(from);
         dt.transferFrom(from, to, delegateId);
@@ -107,7 +108,7 @@ contract DelegateTokenTest is Test {
 
         vm.startPrank(minter);
         vm.expectRevert();
-        dt.create(minter, minter, TokenType.ERC721, address(token), tokenId, 0, expiry, SALT);
+        dt.create(minter, minter, TokenType.ERC721, address(token), tokenId, 0, "", expiry, SALT);
         vm.stopPrank();
     }
 
@@ -130,7 +131,7 @@ contract DelegateTokenTest is Test {
         token.mint(tokenOwner, tokenId);
         vm.startPrank(tokenOwner);
         token.setApprovalForAll(address(dt), true);
-        uint256 delegateId = dt.create(dtTo, principalTo, TokenType.ERC721, address(token), tokenId, 0, expiry, SALT);
+        uint256 delegateId = dt.create(dtTo, principalTo, TokenType.ERC721, address(token), tokenId, 0, "", expiry, SALT);
 
         vm.stopPrank();
 
@@ -146,13 +147,13 @@ contract DelegateTokenTest is Test {
         uint256 tokenId = token.mintNext(tokenOwner);
         vm.startPrank(tokenOwner);
         token.setApprovalForAll(address(dt), true);
-        dt.create(tokenOwner, tokenOwner, TokenType.ERC721, address(token), tokenId, 0, block.timestamp + 10 days, SALT);
+        dt.create(tokenOwner, tokenOwner, TokenType.ERC721, address(token), tokenId, 0, "", block.timestamp + 10 days, SALT);
         vm.stopPrank();
 
         address attacker = makeAddr("attacker");
         vm.prank(attacker);
         vm.expectRevert();
-        dt.create(attacker, attacker, TokenType.ERC721, address(token), tokenId, 0, block.timestamp + 10 days, SALT);
+        dt.create(attacker, attacker, TokenType.ERC721, address(token), tokenId, 0, "", block.timestamp + 10 days, SALT);
     }
 
     function test_fuzzingCannotCreateWithNonexistentContract(address minter, address tokenContract, uint256 tokenId, bool expiryTypeRelative, uint256 time)
@@ -165,7 +166,7 @@ contract DelegateTokenTest is Test {
 
         vm.startPrank(minter);
         vm.expectRevert();
-        dt.create(minter, minter, TokenType.ERC721, tokenContract, tokenId, 0, expiry, SALT);
+        dt.create(minter, minter, TokenType.ERC721, tokenContract, tokenId, 0, "", expiry, SALT);
         vm.stopPrank();
     }
 
@@ -175,7 +176,7 @@ contract DelegateTokenTest is Test {
         token.mint(address(user), id);
         vm.startPrank(user);
         token.setApprovalForAll(address(dt), true);
-        uint256 delegateId = dt.create(user, user, TokenType.ERC721, address(token), id, 0, block.timestamp + 10 seconds, SALT);
+        uint256 delegateId = dt.create(user, user, TokenType.ERC721, address(token), id, 0, "", block.timestamp + 10 seconds, SALT);
 
         vm.prank(dtOwner);
         dt.setBaseURI("https://test-uri.com/");

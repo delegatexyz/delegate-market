@@ -6,7 +6,7 @@ import {BaseSeaportTest} from "./base/BaseSeaportTest.sol";
 import {BaseLiquidDelegateTest} from "./base/BaseLiquidDelegateTest.sol";
 import {SeaportHelpers, User} from "./utils/SeaportHelpers.sol";
 
-import {ExpiryType, TokenType} from "src/interfaces/IDelegateToken.sol";
+import {TokenType} from "src/interfaces/IDelegateToken.sol";
 import {
     AdvancedOrder,
     OrderParameters,
@@ -20,6 +20,7 @@ import {ItemType, OrderType} from "seaport-types/src/lib/ConsiderationEnums.sol"
 import {SpentItem} from "seaport-types/src/interfaces/ContractOffererInterface.sol";
 
 import {WrapOfferer, ReceiptFillerType} from "src/WrapOfferer.sol";
+import {ExpiryType} from "src/interfaces/IWrapOfferer.sol";
 import {MockERC721} from "./mock/MockERC721.sol";
 import {WETH} from "./mock/WETH.sol";
 
@@ -106,7 +107,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         // =========== Verify Correct Receipt ===========
         assertEq(seller.addr.balance, expectedETH);
         uint256 delegateId = dt.getDelegateId(TokenType.ERC721, address(token), tokenId, 1, address(wofferer), SALT);
-        (TokenType tokenType_, address tokenContract_, uint256 tokenId_, uint256 tokenAmount_, uint256 expiry_) = dt.getDelegateInfo(delegateId);
+        (TokenType tokenType_, address tokenContract_, uint256 tokenId_, uint256 tokenAmount_,, uint256 expiry_) = dt.getDelegateInfo(delegateId);
         assertEq(dt.ownerOf(delegateId), buyerAddr);
         assertEq(principal.ownerOf(delegateId), sellerAddr);
         assertEq(expiry_, block.timestamp + expiryValue);
@@ -196,7 +197,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         // =========== Verify Correct Receival ===========
         assertEq(weth.balanceOf(seller.addr), expectedETH);
         uint256 delegateId = dt.getDelegateId(TokenType.ERC721, address(token), tokenId, 1, address(wofferer), SALT);
-        (,,,, uint256 expiry_) = dt.getDelegateInfo(delegateId);
+        (,,,,, uint256 expiry_) = dt.getDelegateInfo(delegateId);
         assertEq(dt.ownerOf(delegateId), buyer.addr);
         assertEq(principal.ownerOf(delegateId), seller.addr);
         assertEq(expiry_, expiryValue);

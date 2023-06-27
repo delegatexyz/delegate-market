@@ -2,7 +2,11 @@
 pragma solidity ^0.8.20;
 
 import {ContractOffererInterface} from "seaport-types/src/interfaces/ContractOffererInterface.sol";
-import {ExpiryType} from "./IDelegateToken.sol";
+
+enum ExpiryType {
+    RELATIVE,
+    ABSOLUTE
+}
 
 enum ReceiptFillerType {
     DelegateOpen,
