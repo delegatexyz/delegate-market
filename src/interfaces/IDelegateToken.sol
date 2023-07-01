@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.20;
 
-import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
+import {IERC721} from "lib/openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
+
+import {IDelegateRegistry} from "./IDelegateRegistry.sol";
 
 enum TokenType {
     NONE,
@@ -47,8 +49,8 @@ interface IDelegateTokenBase {
 
     function baseURI() external view returns (string memory);
 
-    function DELEGATE_REGISTRY() external view returns (address);
-    function PRINCIPAL_TOKEN() external view returns (address);
+    function delegateRegistry() external view returns (IDelegateRegistry);
+    function principalToken() external view returns (address);
 
     function getDelegateInfo(uint256 delegateId)
         external

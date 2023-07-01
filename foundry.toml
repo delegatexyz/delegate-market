@@ -1,7 +1,12 @@
 [profile.default]
 src = 'src'
 out = 'out'
+test = 'test'
 libs = ['lib']
+cache = true
+cache_path = 'cache'
+force = false
+ffi = true
 solc_version = "0.8.20"
 # EVM version must be Paris not Shanghai to prevent PUSH0 incompatibility with other EVM L1s
 evm_version = "paris"

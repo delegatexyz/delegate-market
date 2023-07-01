@@ -67,7 +67,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
     constructor(address dt) {
         delegateToken = IDelegateToken(dt);
-        principal = PrincipalToken(IDelegateToken(dt).PRINCIPAL_TOKEN());
+        principal = PrincipalToken(IDelegateToken(dt).principalToken());
         for (uint256 i; i < TOTAL_TOKENS; i++) {
             tokenContracts.add(address(new MockERC721(uint(keccak256(abi.encode("start_id", i))))));
         }

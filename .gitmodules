@@ -16,7 +16,3 @@
 [submodule "lib/seaport"]
 	path = lib/seaport
 	url = https://github.com/projectopensea/seaport
-[submodule "lib/delegate-registry"]
-	path = lib/delegate-registry
-	url = https://github.com/delegatecash/delegate-registry
-	branch = v2

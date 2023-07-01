@@ -1,0 +1,107 @@
+No files changed, compilation skipped
+
+Running 3 tests for test/WrapOfferer.t.sol:WrapOffererTest
+[32m[PASS][0m testWrapOrderFilledByBuyer() (gas: 799370)
+[32m[PASS][0m testWrapOrderFilledBySeller() (gas: 834463)
+[32m[PASS][0m test_fuzzingContextEncodingReversible(uint8,uint8,uint40,address,address) (runs: 256, μ: 17975, ~: 18248)
+Test result: [32mok[0m. 3 passed; 0 failed; finished in 101.51ms
+
+Running 7 tests for test/DelegateToken.t.sol:DelegateTokenTest
+[32m[PASS][0m testCannotMintWithExisting() (gas: 456705)
+[32m[PASS][0m testTokenURI() (gas: 648130)
+[32m[PASS][0m test_fuzzingCannotCreateWithNonexistentContract(address,address,uint256,bool,uint256) (runs: 256, μ: 18305, ~: 18272)
+[32m[PASS][0m test_fuzzingCannotCreateWithoutToken(address,uint256,bool,uint256) (runs: 256, μ: 22797, ~: 22992)
+[32m[PASS][0m test_fuzzingCreateRights(address,address,address,address,uint256,bool,uint256) (runs: 256, μ: 495860, ~: 498198)
+[32m[PASS][0m test_fuzzingMintRights(address,address,address,address,uint256,bool,uint256) (runs: 256, μ: 496662, ~: 498218)
+[32m[PASS][0m test_fuzzingTransferDelegation(address,address,uint256,bool,uint256) (runs: 256, μ: 603620, ~: 605471)
+Test result: [32mok[0m. 7 passed; 0 failed; finished in 101.47ms
+| lib/delegate-registry/src/DelegateRegistry.sol:DelegateRegistry contract |                 |        |        |        |         |
+|--------------------------------------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                                                          | Deployment Size |        |        |        |         |
+| 1730020                                                                  | 8673            |        |        |        |         |
+| Function Name                                                            | min             | avg    | median | max    | # calls |
+| checkDelegateForERC721                                                   | 6982            | 7656   | 6998   | 8982   | 6       |
+| delegateERC721                                                           | 3691            | 156875 | 181249 | 181249 | 9       |
+
+
+| lib/seaport/lib/seaport-core/src/conduit/Conduit.sol:Conduit contract |                 |       |        |       |         |
+|-----------------------------------------------------------------------|-----------------|-------|--------|-------|---------|
+| Deployment Cost                                                       | Deployment Size |       |        |       |         |
+| 658115                                                                | 3335            |       |        |       |         |
+| Function Name                                                         | min             | avg   | median | max   | # calls |
+| execute                                                               | 27129           | 37619 | 37619  | 48110 | 2       |
+| updateChannel                                                         | 24300           | 24300 | 24300  | 24300 | 3       |
+
+
+| lib/seaport/lib/seaport-core/src/conduit/ConduitController.sol:ConduitController contract |                 |        |        |        |         |
+|-------------------------------------------------------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                                                                           | Deployment Size |        |        |        |         |
+| 2364890                                                                                   | 11902           |        |        |        |         |
+| Function Name                                                                             | min             | avg    | median | max    | # calls |
+| createConduit                                                                             | 742439          | 742439 | 742439 | 742439 | 3       |
+| getConduitCodeHashes                                                                      | 241             | 241    | 241    | 241    | 3       |
+| updateChannel                                                                             | 92494           | 92494  | 92494  | 92494  | 3       |
+
+
+| src/DelegateToken.sol:DelegateToken contract |                 |        |        |        |         |
+|----------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                              | Deployment Size |        |        |        |         |
+| 3852580                                      | 20120           |        |        |        |         |
+| Function Name                                | min             | avg    | median | max    | # calls |
+| baseURI                                      | 1294            | 1294   | 1294   | 1294   | 1       |
+| create                                       | 1120            | 263851 | 379808 | 381808 | 10      |
+| getDelegateId                                | 1176            | 1176   | 1176   | 1176   | 2       |
+| getDelegateInfo                              | 1262            | 1262   | 1262   | 1262   | 3       |
+| ownerOf                                      | 554             | 554    | 554    | 554    | 5       |
+| setBaseURI                                   | 25206           | 25206  | 25206  | 25206  | 1       |
+| tokenURI                                     | 54190           | 54190  | 54190  | 54190  | 1       |
+| transferFrom                                 | 154776          | 154776 | 154776 | 154776 | 1       |
+
+
+| src/PrincipalToken.sol:PrincipalToken contract |                 |       |        |       |         |
+|------------------------------------------------|-----------------|-------|--------|-------|---------|
+| Deployment Cost                                | Deployment Size |       |        |       |         |
+| 1951029                                        | 10197           |       |        |       |         |
+| Function Name                                  | min             | avg   | median | max   | # calls |
+| mint                                           | 46963           | 46963 | 46963  | 46963 | 7       |
+| ownerOf                                        | 554             | 554   | 554    | 554   | 5       |
+| tokenURI                                       | 64955           | 64955 | 64955  | 64955 | 1       |
+
+
+| src/WrapOfferer.sol:WrapOfferer contract |                 |        |        |        |         |
+|------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                          | Deployment Size |        |        |        |         |
+| 1749771                                  | 9063            |        |        |        |         |
+| Function Name                            | min             | avg    | median | max    | # calls |
+| decodeContextForReceipt                  | 1896            | 1896   | 1896   | 1896   | 1       |
+| encodeContext                            | 1458            | 1458   | 1458   | 1458   | 3       |
+| generateOrder                            | 27685           | 27703  | 27703  | 27722  | 2       |
+| getReceiptHash                           | 1107            | 1107   | 1107   | 1107   | 2       |
+| previewOrder                             | 5660            | 5660   | 5660   | 5660   | 1       |
+| ratifyOrder                              | 411201          | 411213 | 411213 | 411226 | 2       |
+| transferFrom                             | 656             | 656    | 656    | 656    | 2       |
+
+
+| test/mock/MockERC721.sol:MockERC721 contract |                 |       |        |       |         |
+|----------------------------------------------|-----------------|-------|--------|-------|---------|
+| Deployment Cost                              | Deployment Size |       |        |       |         |
+| 1007062                                      | 5397            |       |        |       |         |
+| Function Name                                | min             | avg   | median | max   | # calls |
+| mint                                         | 46919           | 46919 | 46919  | 46919 | 6       |
+| mintNext                                     | 69103           | 69103 | 69103  | 69103 | 1       |
+| setApprovalForAll                            | 24480           | 24480 | 24480  | 24480 | 9       |
+| transferFrom                                 | 750             | 18320 | 22358  | 22358 | 11      |
+
+
+| test/mock/WETH.sol:WETH contract |                 |       |        |       |         |
+|----------------------------------|-----------------|-------|--------|-------|---------|
+| Deployment Cost                  | Deployment Size |       |        |       |         |
+| 854547                           | 4868            |       |        |       |         |
+| Function Name                    | min             | avg   | median | max   | # calls |
+| approve                          | 24522           | 24522 | 24522  | 24522 | 1       |
+| balanceOf                        | 552             | 552   | 552    | 552   | 1       |
+| mint                             | 47035           | 47035 | 47035  | 47035 | 1       |
+| transferFrom                     | 20148           | 20148 | 20148  | 20148 | 1       |
+
+
+
