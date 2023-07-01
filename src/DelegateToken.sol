@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {IDelegateTokenBase, TokenType} from "./interfaces/IDelegateToken.sol";
 import {INFTFlashBorrower} from "./interfaces/INFTFlashBorrower.sol";
 
-import {IDelegateRegistry} from "./interfaces/IDelegateRegistry.sol";
+import {IDelegateRegistry} from "./delegateRegistry/IDelegateRegistry.sol";
 
 import {IERC721, IERC1155} from "./interfaces/ITokenInterfaces.sol";
 

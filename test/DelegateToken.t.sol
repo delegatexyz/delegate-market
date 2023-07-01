@@ -7,7 +7,7 @@ import {LibString} from "solady/utils/LibString.sol";
 import {DelegateToken, TokenType} from "src/DelegateToken.sol";
 import {ExpiryType} from "src/interfaces/IWrapOfferer.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
-import {DelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
+import {DelegateRegistry} from "../src/delegateRegistry/DelegateRegistry.sol";
 import {MockERC721} from "./mock/MockERC721.sol";
 
 contract DelegateTokenTest is Test {

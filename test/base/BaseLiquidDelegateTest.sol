@@ -7,7 +7,7 @@ import {LibRLP} from "solady/utils/LibRLP.sol";
 
 import {DelegateToken} from "src/DelegateToken.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
-import {DelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
+import {DelegateRegistry} from "../../src/delegateRegistry/DelegateRegistry.sol";
 
 contract BaseLiquidDelegateTest is Test {
     DelegateRegistry internal registry;

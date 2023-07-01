@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 import {Script} from "forge-std/Script.sol";
 import {console2} from "forge-std/console2.sol";
-import {DelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
+import {DelegateRegistry} from "../src/delegateRegistry/DelegateRegistry.sol";
 import {DelegateToken} from "../src/DelegateToken.sol";
 import {PrincipalToken} from "../src/PrincipalToken.sol";
 import {WrapOfferer} from "../src/WrapOfferer.sol";

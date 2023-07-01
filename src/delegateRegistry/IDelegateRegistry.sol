@@ -219,6 +219,6 @@ interface IDelegateRegistry {
      * @notice allows external contracts to read storage of a delegation
      */
     function readDelegationAddress(bytes32 delegationHash, StoragePositions position) external view returns (address);
-    function readDelegationUint256(bytes32 delegationHash, StoragePositions position) external view returns (uint256);
+    function readDelegationUint(bytes32 delegationHash, StoragePositions position) external view returns (uint256);
     function readDelegationBytes32(bytes32 delegationHash, StoragePositions position) external view returns (bytes32);
 }

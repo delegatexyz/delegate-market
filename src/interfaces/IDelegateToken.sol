@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {IERC721} from "lib/openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
 
-import {IDelegateRegistry} from "./IDelegateRegistry.sol";
+import {IDelegateRegistry} from "../delegateRegistry/IDelegateRegistry.sol";
 
 enum TokenType {
     NONE,
