@@ -1,9 +1,5 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.20;
-
-import {IERC721} from "lib/openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
-
-import {IDelegateRegistry} from "../delegateRegistry/IDelegateRegistry.sol";
+pragma solidity 0.8.20;
 
 enum TokenType {
     NONE,
@@ -12,15 +8,23 @@ enum TokenType {
     ERC1155
 }
 
-// struct DelegateInfo {
-//     TokenType type_;
-//     uint40 expiry;
-//     address token;
-//     uint256 id;
-//     uint256 amount;
-// }
+interface IERC721 {
+    event Transfer(address indexed, address indexed, uint256 indexed);
+    event Approval(address indexed, address indexed, uint256 indexed);
+    event ApprovalForAll(address indexed, address indexed, bool);
 
-interface IDelegateTokenBase {
+    function balanceOf(address) external view returns (uint256);
+    function ownerOf(uint256) external view returns (address);
+    function safeTransferFrom(address, address, uint256, bytes memory) external;
+    function safeTransferFrom(address, address, uint256) external;
+    function transferFrom(address, address, uint256) external;
+    function approve(address, uint256) external;
+    function setApprovalForAll(address, bool) external;
+    function getApproved(uint256) external view returns (address);
+    function isApprovedForAll(address, address) external view returns (bool);
+}
+
+interface IDelegateToken is IERC721 {
     /*//////////////////////////////////////////////////////////////
                              ERRORS
     //////////////////////////////////////////////////////////////*/
@@ -49,7 +53,7 @@ interface IDelegateTokenBase {
 
     function baseURI() external view returns (string memory);
 
-    function delegateRegistry() external view returns (IDelegateRegistry);
+    function delegateRegistry() external view returns (address);
     function principalToken() external view returns (address);
 
     function getDelegateInfo(uint256 delegateId)
@@ -89,5 +93,3 @@ interface IDelegateTokenBase {
 
     function flashLoan(address receiver, uint256 delegateId, bytes calldata data) external payable;
 }
-
-interface IDelegateToken is IDelegateTokenBase, IERC721 {}

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.20;
 
-import {IDelegateTokenBase, TokenType} from "./interfaces/IDelegateToken.sol";
+import {IDelegateToken, TokenType} from "./interfaces/IDelegateToken.sol";
 import {INFTFlashBorrower} from "./interfaces/INFTFlashBorrower.sol";
 
 import {IDelegateRegistry} from "./delegateRegistry/IDelegateRegistry.sol";
@@ -26,7 +26,7 @@ interface ERC721TokenReceiver {
  * and we also prevent delegateId reuse with a simple boolean set membership lookup
  */
 
-contract DelegateToken is ERC721TokenReceiver, IDelegateTokenBase, ERC2981, Owned {
+contract DelegateToken is ERC721TokenReceiver, IDelegateToken, ERC2981, Owned {
     // Errors
     error ToIsZero();
     error FromNotOwner();
@@ -37,7 +37,7 @@ contract DelegateToken is ERC721TokenReceiver, IDelegateTokenBase, ERC2981, Owne
     bytes32 public constant FLASHLOAN_CALLBACK_SUCCESS = bytes32(uint256(keccak256("INFTFlashBorrower.onFlashLoan")) - 1);
 
     /// @notice The v2 delegate registry
-    IDelegateRegistry public immutable override delegateRegistry;
+    address public immutable override delegateRegistry;
 
     /// @notice The principal token deployed in tandem with this delegate token
     address public immutable override principalToken;
@@ -60,7 +60,7 @@ contract DelegateToken is ERC721TokenReceiver, IDelegateTokenBase, ERC2981, Owne
     uint256 internal constant DELEGATE_TOKEN_ID_USED = 1;
 
     constructor(address delegateRegistry_, address principalToken_, string memory baseURI_, address initialMetadataOwner) Owned(initialMetadataOwner) {
-        delegateRegistry = IDelegateRegistry(delegateRegistry_);
+        delegateRegistry = delegateRegistry_;
         principalToken = principalToken_;
         baseURI = baseURI_;
     }
@@ -71,10 +71,6 @@ contract DelegateToken is ERC721TokenReceiver, IDelegateTokenBase, ERC2981, Owne
 
     error InvalidDelegateTokenHolder();
     error NotERC721Receiver();
-
-    event Transfer(address from, address to, uint256 id);
-    event Approval(address indexed delegateTokenHolder, address indexed approved, uint256 indexed tokenId);
-    event ApprovalForAll(address indexed delegateTokenHolder, address indexed operator, bool approved);
 
     /// @notice mapping for ERC721 balances
     mapping(address delegateTokenHolder => uint256 balance) internal _balanceOf;
@@ -93,7 +89,7 @@ contract DelegateToken is ERC721TokenReceiver, IDelegateTokenBase, ERC2981, Owne
     /// @param delegateTokenId is the delegateToken identifier
     /// @return delegateTokenHolder that is assigned to the delegateTokenId
     function ownerOf(uint256 delegateTokenId) external view returns (address delegateTokenHolder) {
-        delegateTokenHolder = delegateRegistry.readDelegationAddress(
+        delegateTokenHolder = IDelegateRegistry(delegateRegistry).readDelegationAddress(
             bytes32(delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)]), IDelegateRegistry.StoragePositions.to
         );
         if (delegateTokenHolder == address(0)) revert InvalidDelegateTokenHolder();
@@ -126,7 +122,7 @@ contract DelegateToken is ERC721TokenReceiver, IDelegateTokenBase, ERC2981, Owne
     /// @notice ERC721 approve function
     function approve(address spender, uint256 delegateTokenId) external {
         // Load delegateTokenHolder of delegateTokenId
-        address delegateTokenHolder = delegateRegistry.readDelegationAddress(
+        address delegateTokenHolder = IDelegateRegistry(delegateRegistry).readDelegationAddress(
             bytes32(delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)]), IDelegateRegistry.StoragePositions.to
         );
         // Revert if the caller is not the owner and not approved all by the owner
@@ -266,7 +262,7 @@ contract DelegateToken is ERC721TokenReceiver, IDelegateTokenBase, ERC2981, Owne
     }
 
     function _isApprovedOrOwner(address spender, uint256 delegateTokenId) internal view returns (bool approvedOrOwner, address delegateTokenHolder) {
-        delegateTokenHolder = delegateRegistry.readDelegationAddress(
+        delegateTokenHolder = IDelegateRegistry(delegateRegistry).readDelegationAddress(
             bytes32(delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)]), IDelegateRegistry.StoragePositions.to
         );
         approvedOrOwner = spender == delegateTokenHolder || isApprovedForAll(delegateTokenHolder, spender) || getApproved(delegateTokenId) == spender;
