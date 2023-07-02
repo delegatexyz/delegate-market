@@ -6,7 +6,7 @@ import {ContractOffererInterface, IWrapOfferer, ReceiptFillerType, ExpiryType} f
 import {ReceivedItem, SpentItem, Schema} from "seaport-types/src/interfaces/ContractOffererInterface.sol";
 import {ItemType} from "seaport-types/src/lib/ConsiderationEnums.sol";
 
-import {IDelegateToken, TokenType} from "./interfaces/IDelegateToken.sol";
+import {IDelegateToken, IDelegateRegistry} from "./interfaces/IDelegateToken.sol";
 
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
@@ -17,15 +17,16 @@ contract WrapOfferer is IWrapOfferer {
     uint256 internal constant CONTEXT_SIZE = 59;
 
     /// @notice Address for Seaport 1.5
-    address public immutable SEAPORT;
+    address public immutable seaport;
 
     /// @notice Address for the delegate token
-    address public immutable DELEGATE_TOKEN;
+    address public immutable delegateToken;
 
     /// @dev Used as transient storage to hold the latest receiptHash
     uint256 internal transientReceiptHash;
 
     error NotSeaport();
+    error NotDelegateToken();
     error IncorrectReceived();
     error InvalidExpiryType();
     error InvalidReceiptTransfer();
@@ -33,11 +34,13 @@ contract WrapOfferer is IWrapOfferer {
     error InvalidContext();
     error NoBatchWrapping();
 
-    /// @param _SEAPORT The latest seaport address, currently using 1.5
-    /// @param _DELEGATE_TOKEN The delegate token to operate on
-    constructor(address _SEAPORT, address _DELEGATE_TOKEN) {
-        SEAPORT = _SEAPORT;
-        DELEGATE_TOKEN = _DELEGATE_TOKEN;
+    /// @param seaport_ The latest seaport address, currently using 1.5
+    /// @param delegateToken_ The delegate token to operate on
+    constructor(address seaport_, address delegateToken_) {
+        if (seaport_ == address(0)) revert NotSeaport();
+        seaport = seaport_;
+        if (delegateToken_ == address(0)) revert NotDelegateToken();
+        delegateToken = delegateToken_;
     }
 
     /**
@@ -45,7 +48,7 @@ contract WrapOfferer is IWrapOfferer {
      */
 
     modifier onlySeaport(address caller) {
-        if (caller != SEAPORT) revert NotSeaport();
+        if (caller != seaport) revert NotSeaport();
         _;
     }
 
@@ -65,7 +68,6 @@ contract WrapOfferer is IWrapOfferer {
     {
         if (!(minimumReceived.length == 1 && maximumSpent.length == 1)) revert NoBatchWrapping();
         SpentItem calldata spent = maximumSpent[0];
-        SpentItem calldata received = minimumReceived[0];
         if (!(spent.itemType == ItemType.ERC721 || spent.itemType == ItemType.ERC20 || spent.itemType == ItemType.ERC1155)) revert IncorrectReceived();
         uint256 receiptHash = _parseReceiptHashFromContext(spent, context);
 
@@ -91,7 +93,6 @@ contract WrapOfferer is IWrapOfferer {
     {
         if (!(minimumReceived.length == 1 && maximumSpent.length == 1)) revert NoBatchWrapping();
         SpentItem calldata spent = maximumSpent[0];
-        SpentItem calldata received = minimumReceived[0];
         if (!(spent.itemType == ItemType.ERC721 || spent.itemType == ItemType.ERC20 || spent.itemType == ItemType.ERC1155)) revert IncorrectReceived();
         uint256 receiptHash = _parseReceiptHashFromContext(spent, context);
 
@@ -118,29 +119,55 @@ contract WrapOfferer is IWrapOfferer {
     {
         // Remove validated receipt, was already used to verify address(this).transferFrom() after generateOrder() but before ratifyOrder()
         // delete transientReceiptHash;
-
-        // Address stack-too-deep by caching consideration values in memory
         ItemType itemType = consideration[0].itemType;
         address considerationToken = consideration[0].token;
         uint256 considerationIdentifier = consideration[0].identifier;
         uint256 considerationAmount = consideration[0].amount;
+        uint256 expiry = 0;
+        address delegateRecipient = address(0);
+        address principalRecipient = address(0);
+        uint96 salt = 0;
         if (itemType == ItemType.ERC721) {
-            (, uint256 expiry, address delegateRecipient, address principalRecipient, uint96 salt) = decodeContext(context);
-            IERC721(considerationToken).setApprovalForAll(address(DELEGATE_TOKEN), true);
-            uint256 delegateId = IDelegateToken(DELEGATE_TOKEN).create(
-                delegateRecipient, principalRecipient, TokenType.ERC721, considerationToken, considerationIdentifier, considerationAmount, "", expiry, salt
+            (, expiry, delegateRecipient, principalRecipient, salt) = decodeContext(context);
+            IERC721(considerationToken).setApprovalForAll(address(delegateToken), true);
+            IDelegateToken(delegateToken).create(
+                delegateRecipient,
+                principalRecipient,
+                IDelegateRegistry.DelegationType.ERC721,
+                considerationToken,
+                considerationIdentifier,
+                considerationAmount,
+                "",
+                expiry,
+                salt
             );
         } else if (itemType == ItemType.ERC20) {
-            (, uint256 expiry, address delegateRecipient, address principalRecipient, uint96 salt) = decodeContext(context);
-            IERC20(considerationToken).approve(address(DELEGATE_TOKEN), considerationAmount);
-            uint256 delegateId = IDelegateToken(DELEGATE_TOKEN).create(
-                delegateRecipient, principalRecipient, TokenType.ERC20, considerationToken, considerationIdentifier, considerationAmount, "", expiry, salt
+            (, expiry, delegateRecipient, principalRecipient, salt) = decodeContext(context);
+            IERC20(considerationToken).approve(address(delegateToken), considerationAmount);
+            IDelegateToken(delegateToken).create(
+                delegateRecipient,
+                principalRecipient,
+                IDelegateRegistry.DelegationType.ERC20,
+                considerationToken,
+                considerationIdentifier,
+                considerationAmount,
+                "",
+                expiry,
+                salt
             );
         } else if (itemType == ItemType.ERC1155) {
-            (, uint256 expiry, address delegateRecipient, address principalRecipient, uint96 salt) = decodeContext(context);
-            IERC1155(considerationToken).setApprovalForAll(address(DELEGATE_TOKEN), true);
-            uint256 delegateId = IDelegateToken(DELEGATE_TOKEN).create(
-                delegateRecipient, principalRecipient, TokenType.ERC1155, considerationToken, considerationIdentifier, considerationAmount, "", expiry, salt
+            (, expiry, delegateRecipient, principalRecipient, salt) = decodeContext(context);
+            IERC1155(considerationToken).setApprovalForAll(address(delegateToken), true);
+            IDelegateToken(delegateToken).create(
+                delegateRecipient,
+                principalRecipient,
+                IDelegateRegistry.DelegationType.ERC1155,
+                considerationToken,
+                considerationIdentifier,
+                considerationAmount,
+                "",
+                expiry,
+                salt
             );
         }
 
@@ -178,7 +205,7 @@ contract WrapOfferer is IWrapOfferer {
 
     /// @return receiptHash The receipt hash for a given context to match with the receipt id
     function _parseReceiptHashFromContext(SpentItem calldata spotToken, bytes calldata context) internal pure returns (uint256 receiptHash) {
-        (ReceiptFillerType fillerType, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient, uint96 salt) =
+        (ReceiptFillerType fillerType, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient, /* salt */ ) =
             decodeContextForReceipt(context);
 
         // The receipt hash can have the zero address if the offerer doesn't know who their counterparty will be
@@ -211,7 +238,7 @@ contract WrapOfferer is IWrapOfferer {
         ExpiryType expiryType,
         uint256 expiryValue
     ) public pure returns (bytes32 receiptHash) {
-        receiptHash = keccak256(abi.encode(tokenAddress, tokenId, tokenAmount, uint8(expiryType), delegateRecipient, principalRecipient));
+        receiptHash = keccak256(abi.encode(tokenAddress, tokenId, tokenAmount, expiryType, expiryValue, delegateRecipient, principalRecipient));
     }
 
     /// @notice Pack information about the Liquid Delegate to be created into a reversible bytes object

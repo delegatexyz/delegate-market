@@ -11,7 +11,7 @@ import {MockERC721} from "../mock/MockERC721.sol";
 import {LibString} from "solady/utils/LibString.sol";
 import {SafeCastLib} from "solady/utils/SafeCastLib.sol";
 
-import {IDelegateToken, TokenType} from "src/interfaces/IDelegateToken.sol";
+import {IDelegateToken, IDelegateRegistry} from "src/interfaces/IDelegateToken.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 
 import {ExpiryType} from "src/interfaces/IWrapOfferer.sol";
@@ -82,8 +82,9 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         uint256 amount = 0;
         uint96 salt = 3;
-        uint256 delegateId =
-            delegateToken.create(currentActor, currentActor, TokenType.ERC721, address(token), id, amount, "", block.timestamp + 1 seconds, salt);
+        uint256 delegateId = delegateToken.create(
+            currentActor, currentActor, IDelegateRegistry.DelegationType.ERC721, address(token), id, amount, "", block.timestamp + 1 seconds, salt
+        );
         allDelegateTokens.add(delegateId);
         allPrincipalTokens.add(delegateId);
         existingDelegateTokens.add(delegateId);
@@ -112,7 +113,9 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
             uint256 amount = 0;
             uint96 salt = 3;
-            delegateId = delegateToken.create(to, currentActor, TokenType.ERC721, address(token), id, amount, "", block.timestamp + 1 seconds, salt);
+            delegateId = delegateToken.create(
+                to, currentActor, IDelegateRegistry.DelegationType.ERC721, address(token), id, amount, "", block.timestamp + 1 seconds, salt
+            );
 
             allDelegateTokens.add(delegateId);
             allPrincipalTokens.add(delegateId);
@@ -149,7 +152,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         address dtOwner = _getDTOwner(prId);
 
-        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, bytes32 rights, uint256 expiry) = delegateToken.getDelegateInfo(prId);
+        ( /* DelegationType */ , address tokenContract, uint256 tokenId, /* tokenAmount */, /* rights */, uint256 expiry) = delegateToken.getDelegateInfo(prId);
         vm.warp(expiry);
         vm.startPrank(currentActor);
         delegateToken.withdrawTo(currentActor, prId);
@@ -178,7 +181,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
             ownedDTTokens[dtOwner].remove(prId);
         }
 
-        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, bytes32 rights, uint256 expiry) = delegateToken.getDelegateInfo(prId);
+        ( /* DelegationType */ , address tokenContract, uint256 tokenId, /* tokenAmount */, /* rights */, /* expiry */ ) = delegateToken.getDelegateInfo(prId);
         vm.prank(currentActor);
         delegateToken.withdrawTo(currentActor, prId);
 

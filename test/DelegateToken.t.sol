@@ -4,10 +4,10 @@ pragma solidity ^0.8.20;
 import {Test} from "forge-std/Test.sol";
 import {LibRLP} from "solady/utils/LibRLP.sol";
 import {LibString} from "solady/utils/LibString.sol";
-import {DelegateToken, TokenType} from "src/DelegateToken.sol";
+import {DelegateToken} from "src/DelegateToken.sol";
 import {ExpiryType} from "src/interfaces/IWrapOfferer.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
-import {DelegateRegistry} from "../src/delegateRegistry/DelegateRegistry.sol";
+import {DelegateRegistry, IDelegateRegistry} from "../src/delegateRegistry/DelegateRegistry.sol";
 import {MockERC721} from "./mock/MockERC721.sol";
 
 contract DelegateTokenTest is Test {
@@ -64,13 +64,13 @@ contract DelegateTokenTest is Test {
         vm.assume(principalTo != address(0));
         vm.assume(notLdTo != dtTo);
 
-        (ExpiryType expiryType, uint256 expiry, uint256 expiryValue) = prepareValidExpiry(expiryTypeRelative, time);
+        ( /* ExpiryType */ , uint256 expiry, /* expiryValue */ ) = prepareValidExpiry(expiryTypeRelative, time);
 
         token.mint(tokenOwner, tokenId);
         vm.startPrank(tokenOwner);
         token.setApprovalForAll(address(dt), true);
 
-        uint256 delegateId = dt.create(dtTo, principalTo, TokenType.ERC721, address(token), tokenId, 0, "", expiry, SALT);
+        uint256 delegateId = dt.create(dtTo, principalTo, IDelegateRegistry.DelegationType.ERC721, address(token), tokenId, 0, "", expiry, SALT);
 
         vm.stopPrank();
 
@@ -85,12 +85,12 @@ contract DelegateTokenTest is Test {
         vm.assume(from != address(0));
         vm.assume(to != address(0));
 
-        (ExpiryType expiryType, uint256 expiry, uint256 expiryValue) = prepareValidExpiry(expiryTypeRelative, time);
+        ( /* ExpiryType */ , uint256 expiry, /* ExpiryValue */ ) = prepareValidExpiry(expiryTypeRelative, time);
         token.mint(address(from), underlyingTokenId);
 
         vm.startPrank(from);
         token.setApprovalForAll(address(dt), true);
-        uint256 delegateId = dt.create(from, from, TokenType.ERC721, address(token), underlyingTokenId, 0, "", expiry, SALT);
+        uint256 delegateId = dt.create(from, from, IDelegateRegistry.DelegationType.ERC721, address(token), underlyingTokenId, 0, "", expiry, SALT);
 
         vm.prank(from);
         dt.transferFrom(from, to, delegateId);
@@ -104,11 +104,11 @@ contract DelegateTokenTest is Test {
 
     function test_fuzzingCannotCreateWithoutToken(address minter, uint256 tokenId, bool expiryTypeRelative, uint256 time) public {
         vm.assume(minter != address(0));
-        (ExpiryType expiryType, uint256 expiry, uint256 expiryValue) = prepareValidExpiry(expiryTypeRelative, time);
+        ( /* ExpiryType */ , uint256 expiry, /* expiryValue */ ) = prepareValidExpiry(expiryTypeRelative, time);
 
         vm.startPrank(minter);
         vm.expectRevert();
-        dt.create(minter, minter, TokenType.ERC721, address(token), tokenId, 0, "", expiry, SALT);
+        dt.create(minter, minter, IDelegateRegistry.DelegationType.ERC721, address(token), tokenId, 0, "", expiry, SALT);
         vm.stopPrank();
     }
 
@@ -126,12 +126,12 @@ contract DelegateTokenTest is Test {
         vm.assume(principalTo != address(0));
         vm.assume(notLdTo != dtTo);
 
-        (ExpiryType expiryType, uint256 expiry, uint256 expiryValue) = prepareValidExpiry(expiryTypeRelative, time);
+        ( /* ExpiryType */ , uint256 expiry, /* expiryValue */ ) = prepareValidExpiry(expiryTypeRelative, time);
 
         token.mint(tokenOwner, tokenId);
         vm.startPrank(tokenOwner);
         token.setApprovalForAll(address(dt), true);
-        uint256 delegateId = dt.create(dtTo, principalTo, TokenType.ERC721, address(token), tokenId, 0, "", expiry, SALT);
+        uint256 delegateId = dt.create(dtTo, principalTo, IDelegateRegistry.DelegationType.ERC721, address(token), tokenId, 0, "", expiry, SALT);
 
         vm.stopPrank();
 
@@ -147,13 +147,13 @@ contract DelegateTokenTest is Test {
         uint256 tokenId = token.mintNext(tokenOwner);
         vm.startPrank(tokenOwner);
         token.setApprovalForAll(address(dt), true);
-        dt.create(tokenOwner, tokenOwner, TokenType.ERC721, address(token), tokenId, 0, "", block.timestamp + 10 days, SALT);
+        dt.create(tokenOwner, tokenOwner, IDelegateRegistry.DelegationType.ERC721, address(token), tokenId, 0, "", block.timestamp + 10 days, SALT);
         vm.stopPrank();
 
         address attacker = makeAddr("attacker");
         vm.prank(attacker);
         vm.expectRevert();
-        dt.create(attacker, attacker, TokenType.ERC721, address(token), tokenId, 0, "", block.timestamp + 10 days, SALT);
+        dt.create(attacker, attacker, IDelegateRegistry.DelegationType.ERC721, address(token), tokenId, 0, "", block.timestamp + 10 days, SALT);
     }
 
     function test_fuzzingCannotCreateWithNonexistentContract(address minter, address tokenContract, uint256 tokenId, bool expiryTypeRelative, uint256 time)
@@ -162,11 +162,11 @@ contract DelegateTokenTest is Test {
         vm.assume(minter != address(0));
         vm.assume(tokenContract.code.length == 0);
 
-        (ExpiryType expiryType, uint256 expiry, uint256 expiryValue) = prepareValidExpiry(expiryTypeRelative, time);
+        ( /* ExpiryType */ , uint256 expiry, /* expiryValue */ ) = prepareValidExpiry(expiryTypeRelative, time);
 
         vm.startPrank(minter);
         vm.expectRevert();
-        dt.create(minter, minter, TokenType.ERC721, tokenContract, tokenId, 0, "", expiry, SALT);
+        dt.create(minter, minter, IDelegateRegistry.DelegationType.ERC721, tokenContract, tokenId, 0, "", expiry, SALT);
         vm.stopPrank();
     }
 
@@ -176,7 +176,7 @@ contract DelegateTokenTest is Test {
         token.mint(address(user), id);
         vm.startPrank(user);
         token.setApprovalForAll(address(dt), true);
-        uint256 delegateId = dt.create(user, user, TokenType.ERC721, address(token), id, 0, "", block.timestamp + 10 seconds, SALT);
+        uint256 delegateId = dt.create(user, user, IDelegateRegistry.DelegationType.ERC721, address(token), id, 0, "", block.timestamp + 10 seconds, SALT);
 
         vm.prank(dtOwner);
         dt.setBaseURI("https://test-uri.com/");
