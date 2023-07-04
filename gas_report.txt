@@ -1,35 +1,28 @@
-No files changed, compilation skipped
+Compiling 8 files with 0.8.20
+Solc 0.8.20 finished in 11.81s
+Compiler run [32msuccessful![0m
 
 Running 3 tests for test/WrapOfferer.t.sol:WrapOffererTest
-[32m[PASS][0m testWrapOrderFilledByBuyer() (gas: 799370)
-[32m[PASS][0m testWrapOrderFilledBySeller() (gas: 834463)
-[32m[PASS][0m test_fuzzingContextEncodingReversible(uint8,uint8,uint40,address,address) (runs: 256, μ: 17975, ~: 18248)
-Test result: [32mok[0m. 3 passed; 0 failed; finished in 101.51ms
+[32m[PASS][0m testWrapOrderFilledByBuyer() (gas: 740764)
+[32m[PASS][0m testWrapOrderFilledBySeller() (gas: 775786)
+[32m[PASS][0m test_fuzzingContextEncodingReversible(uint8,uint8,uint40,address,address) (runs: 256, μ: 17973, ~: 18254)
+Test result: [32mok[0m. 3 passed; 0 failed; finished in 189.24ms
 
 Running 7 tests for test/DelegateToken.t.sol:DelegateTokenTest
-[32m[PASS][0m testCannotMintWithExisting() (gas: 456705)
-[32m[PASS][0m testTokenURI() (gas: 648130)
-[32m[PASS][0m test_fuzzingCannotCreateWithNonexistentContract(address,address,uint256,bool,uint256) (runs: 256, μ: 18305, ~: 18272)
-[32m[PASS][0m test_fuzzingCannotCreateWithoutToken(address,uint256,bool,uint256) (runs: 256, μ: 22797, ~: 22992)
-[32m[PASS][0m test_fuzzingCreateRights(address,address,address,address,uint256,bool,uint256) (runs: 256, μ: 495860, ~: 498198)
-[32m[PASS][0m test_fuzzingMintRights(address,address,address,address,uint256,bool,uint256) (runs: 256, μ: 496662, ~: 498218)
-[32m[PASS][0m test_fuzzingTransferDelegation(address,address,uint256,bool,uint256) (runs: 256, μ: 603620, ~: 605471)
-Test result: [32mok[0m. 7 passed; 0 failed; finished in 101.47ms
-| lib/delegate-registry/src/DelegateRegistry.sol:DelegateRegistry contract |                 |        |        |        |         |
-|--------------------------------------------------------------------------|-----------------|--------|--------|--------|---------|
-| Deployment Cost                                                          | Deployment Size |        |        |        |         |
-| 1730020                                                                  | 8673            |        |        |        |         |
-| Function Name                                                            | min             | avg    | median | max    | # calls |
-| checkDelegateForERC721                                                   | 6982            | 7656   | 6998   | 8982   | 6       |
-| delegateERC721                                                           | 3691            | 156875 | 181249 | 181249 | 9       |
-
-
+[32m[PASS][0m testCannotMintWithExisting() (gas: 407928)
+[32m[PASS][0m testTokenURI() (gas: 591251)
+[32m[PASS][0m test_fuzzingCannotCreateWithNonexistentContract(address,address,uint256,bool,uint256) (runs: 256, μ: 18283, ~: 18282)
+[32m[PASS][0m test_fuzzingCannotCreateWithoutToken(address,uint256,bool,uint256) (runs: 256, μ: 22677, ~: 22439)
+[32m[PASS][0m test_fuzzingCreateRights(address,address,address,address,uint256,bool,uint256) (runs: 256, μ: 430140, ~: 430679)
+[32m[PASS][0m test_fuzzingMintRights(address,address,address,address,uint256,bool,uint256) (runs: 256, μ: 430044, ~: 430749)
+[32m[PASS][0m test_fuzzingTransferDelegation(address,address,uint256,bool,uint256) (runs: 256, μ: 541018, ~: 541571)
+Test result: [32mok[0m. 7 passed; 0 failed; finished in 189.91ms
 | lib/seaport/lib/seaport-core/src/conduit/Conduit.sol:Conduit contract |                 |       |        |       |         |
 |-----------------------------------------------------------------------|-----------------|-------|--------|-------|---------|
 | Deployment Cost                                                       | Deployment Size |       |        |       |         |
 | 658115                                                                | 3335            |       |        |       |         |
 | Function Name                                                         | min             | avg   | median | max   | # calls |
-| execute                                                               | 27129           | 37619 | 37619  | 48110 | 2       |
+| execute                                                               | 27112           | 37602 | 37602  | 48092 | 2       |
 | updateChannel                                                         | 24300           | 24300 | 24300  | 24300 | 3       |
 
 
@@ -46,40 +39,53 @@ Test result: [32mok[0m. 7 passed; 0 failed; finished in 101.47ms
 | src/DelegateToken.sol:DelegateToken contract |                 |        |        |        |         |
 |----------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                              | Deployment Size |        |        |        |         |
-| 3852580                                      | 20120           |        |        |        |         |
+| 5465471                                      | 28594           |        |        |        |         |
 | Function Name                                | min             | avg    | median | max    | # calls |
-| baseURI                                      | 1294            | 1294   | 1294   | 1294   | 1       |
-| create                                       | 1120            | 263851 | 379808 | 381808 | 10      |
-| getDelegateId                                | 1176            | 1176   | 1176   | 1176   | 2       |
-| getDelegateInfo                              | 1262            | 1262   | 1262   | 1262   | 3       |
-| ownerOf                                      | 554             | 554    | 554    | 554    | 5       |
-| setBaseURI                                   | 25206           | 25206  | 25206  | 25206  | 1       |
-| tokenURI                                     | 54190           | 54190  | 54190  | 54190  | 1       |
-| transferFrom                                 | 154776          | 154776 | 154776 | 154776 | 1       |
+| baseURI                                      | 1274            | 1274   | 1274   | 1274   | 1       |
+| create                                       | 1099            | 217775 | 311152 | 313152 | 10      |
+| getDelegateId                                | 1193            | 1193   | 1193   | 1193   | 2       |
+| getDelegateInfo                              | 5900            | 8566   | 9900   | 9900   | 3       |
+| ownerOf                                      | 1790            | 1790   | 1790   | 1790   | 5       |
+| setBaseURI                                   | 25280           | 25280  | 25280  | 25280  | 1       |
+| tokenURI                                     | 62193           | 62193  | 62193  | 62193  | 1       |
+| transferFrom                                 | 158607          | 158607 | 158607 | 158607 | 1       |
 
 
 | src/PrincipalToken.sol:PrincipalToken contract |                 |       |        |       |         |
 |------------------------------------------------|-----------------|-------|--------|-------|---------|
 | Deployment Cost                                | Deployment Size |       |        |       |         |
-| 1951029                                        | 10197           |       |        |       |         |
+| 1527898                                        | 7864            |       |        |       |         |
 | Function Name                                  | min             | avg   | median | max   | # calls |
-| mint                                           | 46963           | 46963 | 46963  | 46963 | 7       |
-| ownerOf                                        | 554             | 554   | 554    | 554   | 5       |
-| tokenURI                                       | 64955           | 64955 | 64955  | 64955 | 1       |
+| mint                                           | 46762           | 46762 | 46762  | 46762 | 7       |
+| ownerOf                                        | 538             | 538   | 538    | 538   | 5       |
+| tokenURI                                       | 68655           | 68655 | 68655  | 68655 | 1       |
 
 
 | src/WrapOfferer.sol:WrapOfferer contract |                 |        |        |        |         |
 |------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                          | Deployment Size |        |        |        |         |
-| 1749771                                  | 9063            |        |        |        |         |
+| 1745436                                  | 9122            |        |        |        |         |
 | Function Name                            | min             | avg    | median | max    | # calls |
-| decodeContextForReceipt                  | 1896            | 1896   | 1896   | 1896   | 1       |
-| encodeContext                            | 1458            | 1458   | 1458   | 1458   | 3       |
-| generateOrder                            | 27685           | 27703  | 27703  | 27722  | 2       |
-| getReceiptHash                           | 1107            | 1107   | 1107   | 1107   | 2       |
-| previewOrder                             | 5660            | 5660   | 5660   | 5660   | 1       |
-| ratifyOrder                              | 411201          | 411213 | 411213 | 411226 | 2       |
-| transferFrom                             | 656             | 656    | 656    | 656    | 2       |
+| decodeContextForReceipt                  | 1971            | 1971   | 1971   | 1971   | 1       |
+| encodeContext                            | 1452            | 1452   | 1452   | 1452   | 3       |
+| generateOrder                            | 27736           | 27754  | 27754  | 27773  | 2       |
+| getReceiptHash                           | 1229            | 1229   | 1229   | 1229   | 2       |
+| previewOrder                             | 5780            | 5780   | 5780   | 5780   | 1       |
+| ratifyOrder                              | 342515          | 342527 | 342527 | 342540 | 2       |
+| transferFrom                             | 634             | 634    | 634    | 634    | 2       |
+
+
+| src/delegateRegistry/DelegateRegistry.sol:DelegateRegistry contract |                 |        |        |        |         |
+|---------------------------------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                                                     | Deployment Size |        |        |        |         |
+| 1779869                                                             | 8922            |        |        |        |         |
+| Function Name                                                       | min             | avg    | median | max    | # calls |
+| checkDelegateForERC721                                              | 6978            | 7654   | 6997   | 8978   | 6       |
+| delegateERC721                                                      | 3717            | 156908 | 181282 | 181282 | 9       |
+| getDelegationsFromHashes                                            | 2835            | 5835   | 6835   | 6835   | 4       |
+| readAddress                                                         | 672             | 672    | 672    | 672    | 7       |
+| readBytes32                                                         | 2685            | 2685   | 2685   | 2685   | 1       |
+| readUint                                                            | 685             | 685    | 685    | 685    | 1       |
 
 
 | test/mock/MockERC721.sol:MockERC721 contract |                 |       |        |       |         |
