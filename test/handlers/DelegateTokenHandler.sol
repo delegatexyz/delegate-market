@@ -137,7 +137,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         if (delegateId != 0) {
             vm.startPrank(currentActor);
 
-            delegateToken.burn(delegateId);
+            delegateToken.rescind(currentActor, delegateId);
             ownedDTTokens[currentActor].remove(delegateId);
             existingDelegateTokens.remove(delegateId);
 
@@ -175,7 +175,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         address dtOwner = _getDTOwner(prId);
         if (dtOwner != address(0)) {
             vm.prank(dtOwner);
-            delegateToken.burn(prId);
+            delegateToken.rescind(dtOwner, prId);
 
             existingDelegateTokens.remove(prId);
             ownedDTTokens[dtOwner].remove(prId);

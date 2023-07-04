@@ -66,7 +66,7 @@ interface IDelegateToken is IERC721, ERC721TokenReceiver, ERC1155TokenReceiver {
 
     function withdrawTo(address to, uint256 delegateId) external;
 
-    function burn(uint256 delegateId) external;
+    function rescind(address from, uint256 delegateId) external;
 
     function flashLoan(address receiver, uint256 delegateId, bytes calldata data) external payable;
 }
