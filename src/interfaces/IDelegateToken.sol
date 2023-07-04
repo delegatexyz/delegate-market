@@ -30,6 +30,7 @@ interface IDelegateToken is IERC721, ERC721TokenReceiver, ERC1155TokenReceiver {
     error NotMinted();
     error InvalidDelegateTokenHolder();
     error NotERC721Receiver();
+    error HashMisMatch();
 
     /*//////////////////////////////////////////////////////////////
                       VIEW & INTROSPECTION

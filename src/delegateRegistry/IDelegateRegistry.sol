@@ -64,7 +64,7 @@ interface IDelegateRegistry {
      * @param rights Specific subdelegation rights granted to the delegate, pass an empty bytestring to encompass all rights
      * @param enable Whether to enable or disable this delegation, true delegates and false revokes
      */
-    function delegateAll(address to, bytes32 rights, bool enable) external;
+    function delegateAll(address to, bytes32 rights, bool enable) external returns (bytes32);
 
     /**
      * @notice Allow the delegate to act on behalf of `msg.sender` for a specific contract
@@ -73,7 +73,7 @@ interface IDelegateRegistry {
      * @param rights Specific subdelegation rights granted to the delegate, pass an empty bytestring to encompass all rights
      * @param enable Whether to enable or disable this delegation, true delegates and false revokes
      */
-    function delegateContract(address to, address contract_, bytes32 rights, bool enable) external;
+    function delegateContract(address to, address contract_, bytes32 rights, bool enable) external returns (bytes32);
 
     /**
      * @notice Allow the delegate to act on behalf of `msg.sender` for a specific ERC721 token
@@ -83,7 +83,7 @@ interface IDelegateRegistry {
      * @param rights Specific subdelegation rights granted to the delegate, pass an empty bytestring to encompass all rights
      * @param enable Whether to enable or disable this delegation, true delegates and false revokes
      */
-    function delegateERC721(address to, address contract_, uint256 tokenId, bytes32 rights, bool enable) external;
+    function delegateERC721(address to, address contract_, uint256 tokenId, bytes32 rights, bool enable) external returns (bytes32);
 
     /**
      * @notice Allow the delegate to act on behalf of `msg.sender` for a specific amount of ERC20 tokens
@@ -93,7 +93,7 @@ interface IDelegateRegistry {
      * @param rights Specific subdelegation rights granted to the delegate, pass an empty bytestring to encompass all rights
      * @param enable Whether to enable or disable this delegation, true delegates and false revokes
      */
-    function delegateERC20(address to, address contract_, uint256 amount, bytes32 rights, bool enable) external;
+    function delegateERC20(address to, address contract_, uint256 amount, bytes32 rights, bool enable) external returns (bytes32);
 
     /**
      * @notice Allow the delegate to act on behalf of `msg.sender` for a specific amount of ERC1155 tokens
@@ -104,7 +104,7 @@ interface IDelegateRegistry {
      * @param rights Specific subdelegation rights granted to the delegate, pass an empty bytestring to encompass all rights
      * @param enable Whether to enable or disable this delegation, true delegates and false revokes
      */
-    function delegateERC1155(address to, address contract_, uint256 tokenId, uint256 amount, bytes32 rights, bool enable) external;
+    function delegateERC1155(address to, address contract_, uint256 tokenId, uint256 amount, bytes32 rights, bool enable) external returns (bytes32);
 
     /**
      * ----------- CHECKS -----------

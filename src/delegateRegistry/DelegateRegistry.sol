@@ -43,8 +43,8 @@ contract DelegateRegistry is IDelegateRegistry {
     }
 
     /// @inheritdoc IDelegateRegistry
-    function delegateAll(address to, bytes32 rights, bool enable) external override {
-        bytes32 hash = RegistryHashes._computeAll(to, rights, msg.sender);
+    function delegateAll(address to, bytes32 rights, bool enable) external override returns (bytes32 hash) {
+        hash = RegistryHashes._computeAll(to, rights, msg.sender);
         bytes32 location = _computeLocation(hash);
         if (_loadDelegationAddress(location, StoragePositions.from) == DELEGATION_EMPTY) _pushDelegationHashes(msg.sender, to, hash);
         if (enable) {
@@ -60,8 +60,8 @@ contract DelegateRegistry is IDelegateRegistry {
     }
 
     /// @inheritdoc IDelegateRegistry
-    function delegateContract(address to, address contract_, bytes32 rights, bool enable) external override {
-        bytes32 hash = RegistryHashes._computeContract(contract_, to, rights, msg.sender);
+    function delegateContract(address to, address contract_, bytes32 rights, bool enable) external override returns (bytes32 hash) {
+        hash = RegistryHashes._computeContract(contract_, to, rights, msg.sender);
         bytes32 location = _computeLocation(hash);
         if (_loadDelegationAddress(location, StoragePositions.from) == DELEGATION_EMPTY) _pushDelegationHashes(msg.sender, to, hash);
         if (enable) {
@@ -79,8 +79,8 @@ contract DelegateRegistry is IDelegateRegistry {
     }
 
     /// @inheritdoc IDelegateRegistry
-    function delegateERC721(address to, address contract_, uint256 tokenId, bytes32 rights, bool enable) external override {
-        bytes32 hash = RegistryHashes._computeERC721(contract_, to, rights, tokenId, msg.sender);
+    function delegateERC721(address to, address contract_, uint256 tokenId, bytes32 rights, bool enable) external override returns (bytes32 hash) {
+        hash = RegistryHashes._computeERC721(contract_, to, rights, tokenId, msg.sender);
         bytes32 location = _computeLocation(hash);
         if (_loadDelegationAddress(location, StoragePositions.from) == DELEGATION_EMPTY) _pushDelegationHashes(msg.sender, to, hash);
         if (enable) {
@@ -100,8 +100,8 @@ contract DelegateRegistry is IDelegateRegistry {
     }
 
     // @inheritdoc IDelegateRegistry
-    function delegateERC20(address to, address contract_, uint256 amount, bytes32 rights, bool enable) external override {
-        bytes32 hash = RegistryHashes._computeERC20(contract_, to, rights, msg.sender);
+    function delegateERC20(address to, address contract_, uint256 amount, bytes32 rights, bool enable) external override returns (bytes32 hash) {
+        hash = RegistryHashes._computeERC20(contract_, to, rights, msg.sender);
         bytes32 location = _computeLocation(hash);
         if (_loadDelegationAddress(location, StoragePositions.from) == DELEGATION_EMPTY) _pushDelegationHashes(msg.sender, to, hash);
         if (enable) {
@@ -124,8 +124,12 @@ contract DelegateRegistry is IDelegateRegistry {
      * @inheritdoc IDelegateRegistry
      * @dev The actual amount is not encoded in the hash, just the existence of a amount (since it is an upper bound)
      */
-    function delegateERC1155(address to, address contract_, uint256 tokenId, uint256 amount, bytes32 rights, bool enable) external override {
-        bytes32 hash = RegistryHashes._computeERC1155(contract_, to, rights, tokenId, msg.sender);
+    function delegateERC1155(address to, address contract_, uint256 tokenId, uint256 amount, bytes32 rights, bool enable)
+        external
+        override
+        returns (bytes32 hash)
+    {
+        hash = RegistryHashes._computeERC1155(contract_, to, rights, tokenId, msg.sender);
         bytes32 location = _computeLocation(hash);
         if (_loadDelegationAddress(location, StoragePositions.from) == DELEGATION_EMPTY) _pushDelegationHashes(msg.sender, to, hash);
         if (enable) {
