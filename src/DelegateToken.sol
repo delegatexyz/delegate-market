@@ -126,9 +126,9 @@ contract DelegateToken is IDelegateToken, ERC2981, Owned {
     /// @param delegateTokenId is the delegateToken identifier
     /// @return delegateTokenHolder that is assigned to the delegateTokenId
     function ownerOf(uint256 delegateTokenId) external view returns (address delegateTokenHolder) {
-        delegateTokenHolder = IDelegateRegistry(delegateRegistry).readAddress(
-            bytes32(delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)]), IDelegateRegistry.StoragePositions.to
-        );
+        bytes32 registryLocation = RegistryHashes._computeLocation(bytes32(delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)]));
+        delegateTokenHolder =
+            address(uint160(uint256(IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(IDelegateRegistry.StoragePositions.to))))));
         if (delegateTokenHolder == address(0)) revert InvalidDelegateTokenHolder();
     }
 
@@ -148,9 +148,9 @@ contract DelegateToken is IDelegateToken, ERC2981, Owned {
     /// @notice ERC721 approve function
     function approve(address spender, uint256 delegateTokenId) external {
         // Load delegateTokenHolder of delegateTokenId
-        address delegateTokenHolder = IDelegateRegistry(delegateRegistry).readAddress(
-            bytes32(delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)]), IDelegateRegistry.StoragePositions.to
-        );
+        bytes32 registryLocation = RegistryHashes._computeLocation(bytes32(delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)]));
+        address delegateTokenHolder =
+            address(uint160(uint256(IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(IDelegateRegistry.StoragePositions.to))))));
         // Revert if the caller is not the owner and not approved all by the owner
         if (msg.sender != delegateTokenHolder && !approvals[keccak256(abi.encode(delegateTokenHolder, msg.sender))]) revert NotAuthorized();
         // Set approval
@@ -196,7 +196,9 @@ contract DelegateToken is IDelegateToken, ERC2981, Owned {
         if (to == address(0)) revert ToIsZero();
         // Load delegateTokenHolder from delegate registry
         bytes32 delegationHash = bytes32(delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)]);
-        address delegateTokenHolder = IDelegateRegistry(delegateRegistry).readAddress(delegationHash, IDelegateRegistry.StoragePositions.to);
+        bytes32 registryLocation = RegistryHashes._computeLocation(bytes32(delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)]));
+        address delegateTokenHolder =
+            address(uint160(uint256(IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(IDelegateRegistry.StoragePositions.to))))));
         // Revert if from is not delegateTokenHolder
         if (from != delegateTokenHolder) revert FromNotOwner();
         // Revert if caller is not the delegateTokenHolder, authorized, or approved for the id
@@ -215,15 +217,18 @@ contract DelegateToken is IDelegateToken, ERC2981, Owned {
         IDelegateRegistry.DelegationType underlyingType = RegistryHashes._decodeLastByteToType(delegationHash);
         bytes32 newDelegationHash = 0;
         // Load contract and rights from delegate registry
-        address underlyingContract = IDelegateRegistry(delegateRegistry).readAddress(delegationHash, IDelegateRegistry.StoragePositions.contract_);
-        bytes32 underlyingRights = IDelegateRegistry(delegateRegistry).readBytes32(delegationHash, IDelegateRegistry.StoragePositions.rights);
+        address underlyingContract = address(
+            uint160(uint256(IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(IDelegateRegistry.StoragePositions.contract_)))))
+        );
+        bytes32 underlyingRights = IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(IDelegateRegistry.StoragePositions.rights)));
         // Update registry according to type
         // TODO: consider implementation of transfer function for registry
-        _transferByType(delegateTokenId, from, delegationHash, to, newDelegationHash, underlyingType, underlyingContract, underlyingRights);
+        _transferByType(delegateTokenId, registryLocation, from, delegationHash, to, newDelegationHash, underlyingType, underlyingContract, underlyingRights);
     }
 
     function _transferByType(
         uint256 delegateTokenId,
+        bytes32 registryLocation,
         address from,
         bytes32 delegationHash,
         address to,
@@ -234,7 +239,8 @@ contract DelegateToken is IDelegateToken, ERC2981, Owned {
     ) internal {
         if (underlyingType == IDelegateRegistry.DelegationType.ERC721) {
             // Load token id from delegate registry
-            uint256 erc721UnderlyingId = IDelegateRegistry(delegateRegistry).readUint(delegationHash, IDelegateRegistry.StoragePositions.tokenId);
+            uint256 erc721UnderlyingId =
+                uint256(IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(IDelegateRegistry.StoragePositions.tokenId))));
             // Update hash, using deterministic registry hash calculation
             newDelegationHash = RegistryHashes._computeERC721(underlyingContract, to, underlyingRights, erc721UnderlyingId, address(this));
             delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)] = uint256(newDelegationHash);
@@ -250,8 +256,13 @@ contract DelegateToken is IDelegateToken, ERC2981, Owned {
             // Fetch current amount
             uint256 erc20Amount = delegateTokenInfo[delegateTokenId][uint256(StoragePositions.delegatedAmount)];
             // Calculate fromAmount and toAmount, reading directly from registry storage
-            uint256 erc20FromAmount = IDelegateRegistry(delegateRegistry).readUint(delegationHash, IDelegateRegistry.StoragePositions.amount) - erc20Amount;
-            uint256 erc20ToAmount = IDelegateRegistry(delegateRegistry).readUint(newDelegationHash, IDelegateRegistry.StoragePositions.amount) + erc20Amount;
+            uint256 erc20FromAmount = uint256(
+                IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(IDelegateRegistry.StoragePositions.amount)))
+            ) - erc20Amount;
+            bytes32 newRegistryLocation = RegistryHashes._computeLocation(newDelegationHash);
+            uint256 erc20ToAmount = uint256(
+                IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(newRegistryLocation) + uint256(IDelegateRegistry.StoragePositions.amount)))
+            ) + erc20Amount;
             // Update registry, reverts if returned hashes aren't correct
             if (
                 delegationHash
@@ -263,15 +274,21 @@ contract DelegateToken is IDelegateToken, ERC2981, Owned {
             ) revert HashMisMatch();
         } else if (underlyingType == IDelegateRegistry.DelegationType.ERC1155) {
             // Load tokenId from delegate registry
-            uint256 erc1155UnderlyingId = IDelegateRegistry(delegateRegistry).readUint(delegationHash, IDelegateRegistry.StoragePositions.tokenId);
+            uint256 erc1155UnderlyingId =
+                uint256(IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(IDelegateRegistry.StoragePositions.tokenId))));
             // Update hash, using deterministic registry hash calculation
             newDelegationHash = RegistryHashes._computeERC1155(underlyingContract, to, underlyingRights, erc1155UnderlyingId, address(this));
             delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)] = uint256(newDelegationHash);
             // Fetch current amount
             uint256 erc1155Amount = delegateTokenInfo[delegateTokenId][uint256(StoragePositions.delegatedAmount)];
             // Calculate fromAmount and toAmount, reading directly from registry storage
-            uint256 erc1155FromAmount = IDelegateRegistry(delegateRegistry).readUint(delegationHash, IDelegateRegistry.StoragePositions.amount) - erc1155Amount;
-            uint256 erc1155ToAmount = IDelegateRegistry(delegateRegistry).readUint(newDelegationHash, IDelegateRegistry.StoragePositions.amount) + erc1155Amount;
+            uint256 erc1155FromAmount = uint256(
+                IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(IDelegateRegistry.StoragePositions.amount)))
+            ) - erc1155Amount;
+            bytes32 newRegistryLocation = RegistryHashes._computeLocation(newDelegationHash);
+            uint256 erc1155ToAmount = uint256(
+                IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(newRegistryLocation) + uint256(IDelegateRegistry.StoragePositions.amount)))
+            ) + erc1155Amount;
             // Update registry, reverts if returned hashes aren't correct
             if (
                 delegationHash
@@ -298,9 +315,9 @@ contract DelegateToken is IDelegateToken, ERC2981, Owned {
     }
 
     function _isApprovedOrOwner(address spender, uint256 delegateTokenId) internal view returns (bool approvedOrOwner, address delegateTokenHolder) {
-        delegateTokenHolder = IDelegateRegistry(delegateRegistry).readAddress(
-            bytes32(delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)]), IDelegateRegistry.StoragePositions.to
-        );
+        bytes32 registryLocation = RegistryHashes._computeLocation(bytes32(delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)]));
+        delegateTokenHolder =
+            address(uint160(uint256(IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(IDelegateRegistry.StoragePositions.to))))));
         approvedOrOwner = spender == delegateTokenHolder || isApprovedForAll(delegateTokenHolder, spender) || getApproved(delegateTokenId) == spender;
     }
 
@@ -419,7 +436,10 @@ contract DelegateToken is IDelegateToken, ERC2981, Owned {
             newDelegationHash = RegistryHashes._computeERC20(underlyingContract, delegateTokenTo, underlyingRights, address(this));
             delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)] = uint256(newDelegationHash);
             // Calculate increasedAmount, reading directly from registry storage
-            uint256 erc20IncreasedAmount = IDelegateRegistry(delegateRegistry).readUint(newDelegationHash, IDelegateRegistry.StoragePositions.amount) + underlyingAmount;
+            bytes32 newRegistryLocation = RegistryHashes._computeLocation(newDelegationHash);
+            uint256 erc20IncreasedAmount = uint256(
+                IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(newRegistryLocation) + uint256(IDelegateRegistry.StoragePositions.amount)))
+            ) + underlyingAmount;
             // Update registry, reverts if returned hashes aren't correct
             if (newDelegationHash != IDelegateRegistry(delegateRegistry).delegateERC20(delegateTokenTo, underlyingContract, erc20IncreasedAmount, underlyingRights, true))
             {
@@ -432,7 +452,10 @@ contract DelegateToken is IDelegateToken, ERC2981, Owned {
             newDelegationHash = RegistryHashes._computeERC1155(underlyingContract, delegateTokenTo, underlyingRights, underlyingTokenId, address(this));
             delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)] = uint256(newDelegationHash);
             // Calculate toAmount, reading directly from registry storage
-            uint256 erc1155IncreasedAmount = IDelegateRegistry(delegateRegistry).readUint(newDelegationHash, IDelegateRegistry.StoragePositions.amount) + underlyingAmount;
+            bytes32 newRegistryLocation = RegistryHashes._computeLocation(newDelegationHash);
+            uint256 erc1155IncreasedAmount = uint256(
+                IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(newRegistryLocation) + uint256(IDelegateRegistry.StoragePositions.amount)))
+            ) + underlyingAmount;
             // Update registry, reverts if returned hashes aren't correct
             if (
                 newDelegationHash
@@ -482,7 +505,9 @@ contract DelegateToken is IDelegateToken, ERC2981, Owned {
         // Set registry hash to delegate token id used
         delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)] = DELEGATE_TOKEN_ID_USED;
         // Load delegateTokenHolder from registry
-        address delegateTokenHolder = IDelegateRegistry(delegateRegistry).readAddress(delegationHash, IDelegateRegistry.StoragePositions.to);
+        bytes32 registryLocation = RegistryHashes._computeLocation(delegationHash);
+        address delegateTokenHolder =
+            address(uint160(uint256(IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(IDelegateRegistry.StoragePositions.to))))));
         // If it still exists the only valid way to withdraw is the delegation having expired or delegateTokenHolder rescinded to this contract
         if (block.timestamp < _readExpiry(delegateTokenId) && delegateTokenHolder != address(this)) {
             revert WithdrawNotAvailable();
@@ -496,13 +521,16 @@ contract DelegateToken is IDelegateToken, ERC2981, Owned {
         // Decode token type
         IDelegateRegistry.DelegationType delegationType = RegistryHashes._decodeLastByteToType(delegationHash);
         // Fetch underlying contract and rights from registry
-        address underlyingContract = IDelegateRegistry(delegateRegistry).readAddress(delegationHash, IDelegateRegistry.StoragePositions.contract_);
-        bytes32 underlyingRights = IDelegateRegistry(delegateRegistry).readBytes32(delegationHash, IDelegateRegistry.StoragePositions.rights);
-        _withdrawByType(to, delegateTokenId, delegationHash, delegateTokenHolder, delegationType, underlyingContract, underlyingRights);
+        address underlyingContract = address(
+            uint160(uint256(IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(IDelegateRegistry.StoragePositions.contract_)))))
+        );
+        bytes32 underlyingRights = IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(IDelegateRegistry.StoragePositions.rights)));
+        _withdrawByType(to, registryLocation, delegateTokenId, delegationHash, delegateTokenHolder, delegationType, underlyingContract, underlyingRights);
     }
 
     function _withdrawByType(
         address to,
+        bytes32 registryLocation,
         uint256 delegateTokenId,
         bytes32 delegationHash,
         address delegateTokenHolder,
@@ -511,7 +539,8 @@ contract DelegateToken is IDelegateToken, ERC2981, Owned {
         bytes32 underlyingRights
     ) internal {
         if (delegationType == IDelegateRegistry.DelegationType.ERC721) {
-            uint256 erc721UnderlyingTokenId = IDelegateRegistry(delegateRegistry).readUint(delegationHash, IDelegateRegistry.StoragePositions.tokenId);
+            uint256 erc721UnderlyingTokenId =
+                uint256(IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(IDelegateRegistry.StoragePositions.tokenId))));
             if (
                 delegationHash
                     != IDelegateRegistry(delegateRegistry).delegateERC721(delegateTokenHolder, underlyingContract, erc721UnderlyingTokenId, underlyingRights, false)
@@ -523,8 +552,9 @@ contract DelegateToken is IDelegateToken, ERC2981, Owned {
             uint256 erc20DelegatedAmount = delegateTokenInfo[delegateTokenId][uint256(StoragePositions.delegatedAmount)];
             delete delegateTokenInfo[delegateTokenId][uint256(StoragePositions.delegatedAmount)];
             // Calculate decrementedAmount, reading directly from registry storage
-            uint256 erc20DecrementedAmount =
-                IDelegateRegistry(delegateRegistry).readUint(delegationHash, IDelegateRegistry.StoragePositions.amount) - erc20DelegatedAmount;
+            uint256 erc20DecrementedAmount = uint256(
+                IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(IDelegateRegistry.StoragePositions.amount)))
+            ) - erc20DelegatedAmount;
             // Update registry, reverts if returned hashes aren't correct
             if (
                 delegationHash
@@ -541,10 +571,12 @@ contract DelegateToken is IDelegateToken, ERC2981, Owned {
             uint256 erc1155DelegatedAmount = delegateTokenInfo[delegateTokenId][uint256(StoragePositions.delegatedAmount)];
             delete delegateTokenInfo[delegateTokenId][uint256(StoragePositions.delegatedAmount)];
             // Load tokenId from registry
-            uint256 erc11551UnderlyingTokenId = IDelegateRegistry(delegateRegistry).readUint(delegationHash, IDelegateRegistry.StoragePositions.tokenId);
+            uint256 erc11551UnderlyingTokenId =
+                uint256(IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(IDelegateRegistry.StoragePositions.tokenId))));
             // Calculate decrementedAmount, reading directly from registry storage
-            uint256 erc1155DecrementedAmount =
-                IDelegateRegistry(delegateRegistry).readUint(delegationHash, IDelegateRegistry.StoragePositions.amount) - erc1155DelegatedAmount;
+            uint256 erc1155DecrementedAmount = uint256(
+                IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(IDelegateRegistry.StoragePositions.amount)))
+            ) - erc1155DelegatedAmount;
             // Update registry, reverts if returned hashes aren't correct
             if (
                 delegationHash
