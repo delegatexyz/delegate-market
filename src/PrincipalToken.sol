@@ -57,19 +57,9 @@ contract PrincipalToken is ERC721 {
 
         IDelegateToken dt = IDelegateToken(delegateToken);
 
-        (
-            /* delegation type */
-            ,
-            address tokenContract,
-            uint256 tokenId,
-            /* tokenAmount */
-            ,
-            /* right */
-            ,
-            uint256 expiry
-        ) = dt.getDelegateInfo(id);
+        IDelegateToken.DelegateInfo memory delegateInfo = dt.getDelegateInfo(id);
 
-        string memory idstr = LibString.toString(tokenId);
+        string memory idstr = LibString.toString(delegateInfo.tokenId);
         string memory imageUrl = string.concat(dt.baseURI(), "principal/", idstr);
 
         address rightsOwner = address(0);
@@ -78,17 +68,17 @@ contract PrincipalToken is ERC721 {
         } catch {}
 
         string memory rightsOwnerStr = rightsOwner == address(0) ? "N/A" : LibString.toHexStringChecksummed(rightsOwner);
-        string memory status = rightsOwner == address(0) || expiry <= block.timestamp ? "Unlocked" : "Locked";
+        string memory status = rightsOwner == address(0) || delegateInfo.expiry <= block.timestamp ? "Unlocked" : "Locked";
 
         string memory firstPartOfMetadataString = string.concat(
             '{"name":"',
             string.concat(name(), " #", idstr),
             '","description":"LiquidDelegate lets you escrow your token for a chosen timeperiod and receive a liquid NFT representing the associated delegation rights. This collection represents the principal i.e. the future right to claim the underlying token once the associated delegate token expires.","attributes":[{"trait_type":"Collection Address","value":"',
-            LibString.toHexStringChecksummed(tokenContract),
+            LibString.toHexStringChecksummed(delegateInfo.tokenContract),
             '"},{"trait_type":"Token ID","value":"',
             idstr,
             '"},{"trait_type":"Unlocks At","display_type":"date","value":',
-            LibString.toString(expiry)
+            LibString.toString(delegateInfo.expiry)
         );
         string memory secondPartOfMetadataString = string.concat(
             '},{"trait_type":"Delegate Owner Address","value":"', rightsOwnerStr, '"},{"trait_type":"Principal Status","value":"', status, '"}],"image":"', imageUrl, '"}'

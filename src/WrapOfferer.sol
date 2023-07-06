@@ -132,42 +132,48 @@ contract WrapOfferer is IWrapOfferer {
             (, expiry, delegateRecipient, principalRecipient, salt) = decodeContext(context);
             IERC721(considerationToken).setApprovalForAll(address(delegateToken), true);
             IDelegateToken(delegateToken).create(
-                delegateRecipient,
-                principalRecipient,
-                IDelegateRegistry.DelegationType.ERC721,
-                considerationToken,
-                considerationIdentifier,
-                considerationAmount,
-                "",
-                expiry,
+                IDelegateToken.DelegateInfo(
+                    principalRecipient,
+                    IDelegateRegistry.DelegationType.ERC721,
+                    delegateRecipient,
+                    considerationAmount,
+                    considerationToken,
+                    considerationIdentifier,
+                    "",
+                    expiry
+                ),
                 salt
             );
         } else if (itemType == ItemType.ERC20) {
             (, expiry, delegateRecipient, principalRecipient, salt) = decodeContext(context);
             IERC20(considerationToken).approve(address(delegateToken), considerationAmount);
             IDelegateToken(delegateToken).create(
-                delegateRecipient,
-                principalRecipient,
-                IDelegateRegistry.DelegationType.ERC20,
-                considerationToken,
-                considerationIdentifier,
-                considerationAmount,
-                "",
-                expiry,
+                IDelegateToken.DelegateInfo(
+                    principalRecipient,
+                    IDelegateRegistry.DelegationType.ERC20,
+                    delegateRecipient,
+                    considerationAmount,
+                    considerationToken,
+                    considerationIdentifier,
+                    "",
+                    expiry
+                ),
                 salt
             );
         } else if (itemType == ItemType.ERC1155) {
             (, expiry, delegateRecipient, principalRecipient, salt) = decodeContext(context);
             IERC1155(considerationToken).setApprovalForAll(address(delegateToken), true);
             IDelegateToken(delegateToken).create(
-                delegateRecipient,
-                principalRecipient,
-                IDelegateRegistry.DelegationType.ERC1155,
-                considerationToken,
-                considerationIdentifier,
-                considerationAmount,
-                "",
-                expiry,
+                IDelegateToken.DelegateInfo(
+                    principalRecipient,
+                    IDelegateRegistry.DelegationType.ERC1155,
+                    delegateRecipient,
+                    considerationAmount,
+                    considerationToken,
+                    considerationIdentifier,
+                    "",
+                    expiry
+                ),
                 salt
             );
         }
