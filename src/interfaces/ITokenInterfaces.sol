@@ -39,3 +39,7 @@ interface ERC1155TokenReceiver {
     function onERC1155Received(address, address, uint256, uint256, bytes calldata) external returns (bytes4);
     function onERC1155BatchReceived(address, address, uint256[] calldata, uint256[] calldata, bytes calldata) external returns (bytes4);
 }
+
+interface ERC165 {
+    function supportsInterface(bytes4 interfaceID) external view returns (bool);
+}

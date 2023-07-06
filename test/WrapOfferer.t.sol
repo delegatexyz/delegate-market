@@ -21,7 +21,7 @@ import {SpentItem} from "seaport-types/src/interfaces/ContractOffererInterface.s
 
 import {WrapOfferer, ReceiptFillerType} from "src/WrapOfferer.sol";
 import {ExpiryType} from "src/interfaces/IWrapOfferer.sol";
-import {MockERC721} from "./mock/MockERC721.sol";
+import {MockERC721} from "./mock/MockTokens.sol";
 import {WETH} from "./mock/WETH.sol";
 
 import {console2} from "forge-std/console2.sol";

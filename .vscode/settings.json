@@ -1,12 +1,10 @@
 {
   "editor.formatOnSave": true,
   "[solidity]": {
-    "editor.defaultFormatter": "JuanBlanco.solidity"
+    "editor.defaultFormatter": "NomicFoundation.hardhat-solidity"
   },
-  "solidity.formatter": "forge",
-  "solidity.compileUsingRemoteVersion": "v0.8.20",
-  "solidity.enabledAsYouTypeCompilationErrorCheck": true,
-  "solidity.validationDelay": 1500,
-  "solidity.packageDefaultDependenciesContractsDirectory": "src",
-  "solidity.packageDefaultDependenciesDirectory": "lib"
+  "[toml]": {
+    "editor.defaultFormatter": "tamasfe.even-better-toml"
+  },
+  "solidity.formatter": "forge"
 }

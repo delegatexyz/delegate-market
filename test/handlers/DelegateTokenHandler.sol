@@ -7,7 +7,7 @@ import {StdUtils} from "forge-std/StdUtils.sol";
 import {console} from "forge-std/console.sol";
 
 import {AddressSet, TokenSet, UintSet, SetsLib} from "../utils/SetsLib.sol";
-import {MockERC721} from "../mock/MockERC721.sol";
+import {MockERC721} from "../mock/MockTokens.sol";
 import {LibString} from "solady/utils/LibString.sol";
 import {SafeCastLib} from "solady/utils/SafeCastLib.sol";
 
