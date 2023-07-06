@@ -25,11 +25,7 @@ abstract contract SeaportHelpers is Test {
         sig = abi.encodePacked(r, s, v);
     }
 
-    function signOrder(User memory _user, bytes32 _domainSeparator, OrderParameters memory _orderParams, uint256 _nonce)
-        internal
-        pure
-        returns (bytes memory sig)
-    {
+    function signOrder(User memory _user, bytes32 _domainSeparator, OrderParameters memory _orderParams, uint256 _nonce) internal pure returns (bytes memory sig) {
         (sig,) = signERC712(_user, _domainSeparator, _orderParams.hash(_nonce));
     }
 }

@@ -7,7 +7,7 @@ import {LibString} from "solady/utils/LibString.sol";
 import {DelegateToken} from "src/DelegateToken.sol";
 import {ExpiryType} from "src/interfaces/IWrapOfferer.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
-import {DelegateRegistry, IDelegateRegistry} from "../src/delegateRegistry/DelegateRegistry.sol";
+import {DelegateRegistry, IDelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
 import {MockERC721} from "./mock/MockERC721.sol";
 
 contract DelegateTokenTest is Test {
@@ -50,15 +50,9 @@ contract DelegateTokenTest is Test {
         }
     }
 
-    function test_fuzzingCreateRights(
-        address tokenOwner,
-        address dtTo,
-        address notLdTo,
-        address principalTo,
-        uint256 tokenId,
-        bool expiryTypeRelative,
-        uint256 time
-    ) public {
+    function test_fuzzingCreateRights(address tokenOwner, address dtTo, address notLdTo, address principalTo, uint256 tokenId, bool expiryTypeRelative, uint256 time)
+        public
+    {
         vm.assume(tokenOwner != address(0));
         vm.assume(dtTo != address(0));
         vm.assume(principalTo != address(0));
@@ -112,15 +106,9 @@ contract DelegateTokenTest is Test {
         vm.stopPrank();
     }
 
-    function test_fuzzingMintRights(
-        address tokenOwner,
-        address dtTo,
-        address notLdTo,
-        address principalTo,
-        uint256 tokenId,
-        bool expiryTypeRelative,
-        uint256 time
-    ) public {
+    function test_fuzzingMintRights(address tokenOwner, address dtTo, address notLdTo, address principalTo, uint256 tokenId, bool expiryTypeRelative, uint256 time)
+        public
+    {
         vm.assume(tokenOwner != address(0));
         vm.assume(dtTo != address(0));
         vm.assume(principalTo != address(0));
@@ -156,9 +144,7 @@ contract DelegateTokenTest is Test {
         dt.create(attacker, attacker, IDelegateRegistry.DelegationType.ERC721, address(token), tokenId, 0, "", block.timestamp + 10 days, SALT);
     }
 
-    function test_fuzzingCannotCreateWithNonexistentContract(address minter, address tokenContract, uint256 tokenId, bool expiryTypeRelative, uint256 time)
-        public
-    {
+    function test_fuzzingCannotCreateWithNonexistentContract(address minter, address tokenContract, uint256 tokenId, bool expiryTypeRelative, uint256 time) public {
         vm.assume(minter != address(0));
         vm.assume(tokenContract.code.length == 0);
 

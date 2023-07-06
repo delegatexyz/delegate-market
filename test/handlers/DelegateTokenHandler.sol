@@ -82,9 +82,8 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         uint256 amount = 0;
         uint96 salt = 3;
-        uint256 delegateId = delegateToken.create(
-            currentActor, currentActor, IDelegateRegistry.DelegationType.ERC721, address(token), id, amount, "", block.timestamp + 1 seconds, salt
-        );
+        uint256 delegateId =
+            delegateToken.create(currentActor, currentActor, IDelegateRegistry.DelegationType.ERC721, address(token), id, amount, "", block.timestamp + 1 seconds, salt);
         allDelegateTokens.add(delegateId);
         allPrincipalTokens.add(delegateId);
         existingDelegateTokens.add(delegateId);
@@ -95,11 +94,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         vm.stopPrank();
     }
 
-    function transferDTToken(uint256 fromSeed, uint256 toSeed, uint256 rightsSeed, uint256 backupTokenSeed)
-        public
-        useActor(fromSeed)
-        countCall("dt_transfer")
-    {
+    function transferDTToken(uint256 fromSeed, uint256 toSeed, uint256 rightsSeed, uint256 backupTokenSeed) public useActor(fromSeed) countCall("dt_transfer") {
         address to = actors.get(toSeed);
         if (to == address(0)) to = currentActor;
 
@@ -113,9 +108,8 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
             uint256 amount = 0;
             uint96 salt = 3;
-            delegateId = delegateToken.create(
-                to, currentActor, IDelegateRegistry.DelegationType.ERC721, address(token), id, amount, "", block.timestamp + 1 seconds, salt
-            );
+            delegateId =
+                delegateToken.create(to, currentActor, IDelegateRegistry.DelegationType.ERC721, address(token), id, amount, "", block.timestamp + 1 seconds, salt);
 
             allDelegateTokens.add(delegateId);
             allPrincipalTokens.add(delegateId);

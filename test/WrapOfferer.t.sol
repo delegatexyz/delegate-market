@@ -6,7 +6,7 @@ import {BaseSeaportTest} from "./base/BaseSeaportTest.sol";
 import {BaseLiquidDelegateTest} from "./base/BaseLiquidDelegateTest.sol";
 import {SeaportHelpers, User} from "./utils/SeaportHelpers.sol";
 
-import {IDelegateRegistry} from "src/delegateRegistry/IDelegateRegistry.sol";
+import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
 import {
     AdvancedOrder,
     OrderParameters,
@@ -285,11 +285,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         return AdvancedOrder({parameters: orderParams, numerator: 1, denominator: 1, signature: "", extraData: context});
     }
 
-    function _createBuyerOrder(User memory user, uint256 receiptId, uint256 expectedETH, bool submittingAsCaller)
-        internal
-        view
-        returns (AdvancedOrder memory)
-    {
+    function _createBuyerOrder(User memory user, uint256 receiptId, uint256 expectedETH, bool submittingAsCaller) internal view returns (AdvancedOrder memory) {
         OfferItem[] memory offer = new OfferItem[](1);
         offer[0] = OfferItem({
             itemType: submittingAsCaller ? ItemType.NATIVE : ItemType.ERC20,

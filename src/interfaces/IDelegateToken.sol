@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity 0.8.20;
 
-import {IDelegateRegistry} from "../delegateRegistry/IDelegateRegistry.sol";
+import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
 import {IERC721, ERC721TokenReceiver, ERC1155TokenReceiver} from "./ITokenInterfaces.sol";
 
 interface IDelegateToken is IERC721, ERC721TokenReceiver, ERC1155TokenReceiver {

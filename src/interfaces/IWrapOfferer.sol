@@ -18,13 +18,8 @@ enum ReceiptFillerType {
 interface IWrapOfferer is ContractOffererInterface {
     function transferFrom(address from, address to, uint256 receiptId) external;
 
-    function getReceiptHash(
-        address delegateRecipient,
-        address principalRecipient,
-        address token,
-        uint256 id,
-        uint256 amount,
-        ExpiryType expiryType,
-        uint256 expiryValue
-    ) external view returns (bytes32 receiptHash);
+    function getReceiptHash(address delegateRecipient, address principalRecipient, address token, uint256 id, uint256 amount, ExpiryType expiryType, uint256 expiryValue)
+        external
+        view
+        returns (bytes32 receiptHash);
 }

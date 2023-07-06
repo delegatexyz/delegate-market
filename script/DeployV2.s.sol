@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 import {Script} from "forge-std/Script.sol";
 import {console2} from "forge-std/console2.sol";
-import {DelegateRegistry} from "../src/delegateRegistry/DelegateRegistry.sol";
+import {DelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
 import {DelegateToken} from "../src/DelegateToken.sol";
 import {PrincipalToken} from "../src/PrincipalToken.sol";
 import {WrapOfferer} from "../src/WrapOfferer.sol";
@@ -40,7 +40,8 @@ contract DeployV2 is Script {
         if (_nonce <= 0xffffff) {
             return address(uint160(uint256(keccak256(abi.encodePacked(bytes1(0xd9), bytes1(0x94), _origin, bytes1(0x83), uint24(_nonce))))));
         }
-        return address(uint160(uint256(keccak256(abi.encodePacked(bytes1(0xda), bytes1(0x94), _origin, bytes1(0x84), uint32(_nonce)))))); // more than 2^32 nonces not realistic
+        return address(uint160(uint256(keccak256(abi.encodePacked(bytes1(0xda), bytes1(0x94), _origin, bytes1(0x84), uint32(_nonce)))))); // more than 2^32 nonces not
+            // realistic
     }
 
     function deploy() external {

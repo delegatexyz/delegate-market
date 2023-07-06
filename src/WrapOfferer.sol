@@ -82,7 +82,8 @@ contract WrapOfferer is IWrapOfferer {
     }
 
     /// TODO: inheritdoc ContractOffererInterface
-    /// @dev Param names are from the end user's point of view. They're giving up maximumSpent (eg 10 eth, or spot NFT), and want minimumReceived in return (eg blitmap, or receipt to become DT)
+    /// @dev Param names are from the end user's point of view. They're giving up maximumSpent (eg 10 eth, or spot NFT), and want minimumReceived in return (eg blitmap,
+    /// or receipt to become DT)
     /// @param minimumReceived The minimum items that the caller is willing to receive (the Delegate Token)
     /// @param maximumSpent The maximum items that the caller is willing to spend (the spot token)
     /// @param context ABI-packed data about the delegate token
@@ -242,14 +243,11 @@ contract WrapOfferer is IWrapOfferer {
     }
 
     /// @notice Pack information about the Liquid Delegate to be created into a reversible bytes object
-    function encodeContext(
-        ReceiptFillerType fillerType,
-        ExpiryType expiryType,
-        uint40 expiryValue,
-        address delegateRecipient,
-        address principalRecipient,
-        uint96 salt
-    ) public pure returns (bytes memory) {
+    function encodeContext(ReceiptFillerType fillerType, ExpiryType expiryType, uint40 expiryValue, address delegateRecipient, address principalRecipient, uint96 salt)
+        public
+        pure
+        returns (bytes memory)
+    {
         return abi.encodePacked(fillerType, expiryType, expiryValue, delegateRecipient, principalRecipient, salt);
     }
 

@@ -91,13 +91,7 @@ contract PrincipalToken is ERC721 {
             LibString.toString(expiry)
         );
         string memory secondPartOfMetadataString = string.concat(
-            '},{"trait_type":"Delegate Owner Address","value":"',
-            rightsOwnerStr,
-            '"},{"trait_type":"Principal Status","value":"',
-            status,
-            '"}],"image":"',
-            imageUrl,
-            '"}'
+            '},{"trait_type":"Delegate Owner Address","value":"', rightsOwnerStr, '"},{"trait_type":"Principal Status","value":"', status, '"}],"image":"', imageUrl, '"}'
         );
         // Build in two parts to avoid stack-too-deep
         string memory metadataString = string.concat(firstPartOfMetadataString, secondPartOfMetadataString);

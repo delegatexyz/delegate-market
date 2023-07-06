@@ -8,7 +8,7 @@ import {IERC721, ERC721TokenReceiver, IERC1155, ERC1155TokenReceiver} from "./in
 import {PrincipalToken} from "./PrincipalToken.sol";
 import {ERC2981} from "openzeppelin-contracts/contracts/token/common/ERC2981.sol";
 
-import {RegistryHashes} from "./delegateRegistry/libraries/RegistryHashes.sol";
+import {RegistryHashes} from "delegate-registry/src/libraries/RegistryHashes.sol";
 import {Base64} from "solady/utils/Base64.sol";
 import {LibString} from "solady/utils/LibString.sol";
 import {Owned} from "solmate/auth/Owned.sol";

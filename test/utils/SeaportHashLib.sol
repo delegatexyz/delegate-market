@@ -17,9 +17,7 @@ library SeaportHashLib {
     }
 
     function hash(OfferItem memory offerItem) internal pure returns (bytes32) {
-        return keccak256(
-            abi.encode(OFFER_ITEM_TYPEHASH, offerItem.itemType, offerItem.token, offerItem.identifierOrCriteria, offerItem.startAmount, offerItem.endAmount)
-        );
+        return keccak256(abi.encode(OFFER_ITEM_TYPEHASH, offerItem.itemType, offerItem.token, offerItem.identifierOrCriteria, offerItem.startAmount, offerItem.endAmount));
     }
 
     function hash(ConsiderationItem memory considerationItem) internal pure returns (bytes32) {
