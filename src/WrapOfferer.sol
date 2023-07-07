@@ -124,12 +124,8 @@ contract WrapOfferer is IWrapOfferer {
         address considerationToken = consideration[0].token;
         uint256 considerationIdentifier = consideration[0].identifier;
         uint256 considerationAmount = consideration[0].amount;
-        uint256 expiry = 0;
-        address delegateRecipient = address(0);
-        address principalRecipient = address(0);
-        uint96 salt = 0;
+        (, uint256 expiry, address delegateRecipient, address principalRecipient, uint256 salt) = decodeContext(context);
         if (itemType == ItemType.ERC721) {
-            (, expiry, delegateRecipient, principalRecipient, salt) = decodeContext(context);
             IERC721(considerationToken).setApprovalForAll(address(delegateToken), true);
             IDelegateToken(delegateToken).create(
                 IDelegateToken.DelegateInfo(
@@ -144,8 +140,8 @@ contract WrapOfferer is IWrapOfferer {
                 ),
                 salt
             );
+            IERC721(considerationToken).setApprovalForAll(address(delegateToken), false); // Deleting approval saves gas
         } else if (itemType == ItemType.ERC20) {
-            (, expiry, delegateRecipient, principalRecipient, salt) = decodeContext(context);
             IERC20(considerationToken).approve(address(delegateToken), considerationAmount);
             IDelegateToken(delegateToken).create(
                 IDelegateToken.DelegateInfo(
@@ -160,8 +156,8 @@ contract WrapOfferer is IWrapOfferer {
                 ),
                 salt
             );
+            require(IERC20(considerationToken).allowance(address(this), address(delegateToken)) == 0, "Approval invariant");
         } else if (itemType == ItemType.ERC1155) {
-            (, expiry, delegateRecipient, principalRecipient, salt) = decodeContext(context);
             IERC1155(considerationToken).setApprovalForAll(address(delegateToken), true);
             IDelegateToken(delegateToken).create(
                 IDelegateToken.DelegateInfo(
@@ -176,6 +172,7 @@ contract WrapOfferer is IWrapOfferer {
                 ),
                 salt
             );
+            IERC1155(considerationToken).setApprovalForAll(address(delegateToken), false); // Deleting approval saves gas
         }
 
         return this.ratifyOrder.selector;

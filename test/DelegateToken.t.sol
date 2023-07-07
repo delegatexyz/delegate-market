@@ -58,7 +58,6 @@ contract DelegateTokenTest is Test {
         public
     {
         vm.assume(tokenOwner != address(0));
-        vm.assume(dtTo != address(0));
         vm.assume(principalTo != address(0));
         vm.assume(notLdTo != dtTo);
 
@@ -68,10 +67,12 @@ contract DelegateTokenTest is Test {
         vm.startPrank(tokenOwner);
         mock721.setApprovalForAll(address(dt), true);
 
+        if (dtTo == address(0)) vm.expectRevert(IDelegateToken.ToIsZero.selector);
         uint256 delegateId =
             dt.create(IDelegateToken.DelegateInfo(principalTo, IDelegateRegistry.DelegationType.ERC721, dtTo, 0, address(mock721), tokenId, "", expiry), SALT);
 
         vm.stopPrank();
+        if (dtTo == address(0)) return;
 
         assertEq(dt.ownerOf(delegateId), dtTo);
         assertEq(principal.ownerOf(delegateId), principalTo);
@@ -82,10 +83,8 @@ contract DelegateTokenTest is Test {
 
     function testFuzzingCreate20(address tokenOwner, address dtTo, address notLdTo, address principalTo, uint256 amount, bool expiryTypeRelative, uint256 time) public {
         vm.assume(tokenOwner != address(0));
-        vm.assume(dtTo != address(0));
         vm.assume(principalTo != address(0));
         vm.assume(notLdTo != dtTo);
-        vm.assume(amount != 0);
 
         ( /* ExpiryType */ , uint256 expiry, /* expiryValue */ ) = prepareValidExpiry(expiryTypeRelative, time);
 
@@ -93,10 +92,13 @@ contract DelegateTokenTest is Test {
         vm.startPrank(tokenOwner);
         mock20.approve(address(dt), amount);
 
+        if (dtTo == address(0) && amount != 0) vm.expectRevert(IDelegateToken.ToIsZero.selector);
+        if (amount == 0) vm.expectRevert(abi.encodeWithSelector(IDelegateToken.WrongAmountForType.selector, IDelegateRegistry.DelegationType.ERC20, 0));
         uint256 delegateId =
             dt.create(IDelegateToken.DelegateInfo(principalTo, IDelegateRegistry.DelegationType.ERC20, dtTo, amount, address(mock20), 0, "", expiry), SALT);
 
         vm.stopPrank();
+        if (dtTo == address(0) || amount == 0) return;
 
         assertEq(dt.ownerOf(delegateId), dtTo);
         assertEq(principal.ownerOf(delegateId), principalTo);
@@ -116,21 +118,23 @@ contract DelegateTokenTest is Test {
         uint256 time
     ) public {
         vm.assume(tokenOwner != address(0));
-        vm.assume(dtTo != address(0));
         vm.assume(principalTo != address(0));
         vm.assume(notLdTo != dtTo);
-        vm.assume(amount != 0);
 
         ( /* ExpiryType */ , uint256 expiry, /* expiryValue */ ) = prepareValidExpiry(expiryTypeRelative, time);
 
+        vm.assume(tokenOwner.code.length == 0); //  Prevents reverts if tokenOwner is a contract and not a 1155 receiver
         mock1155.mint(tokenOwner, tokenId, amount, "");
         vm.startPrank(tokenOwner);
         mock1155.setApprovalForAll(address(dt), true);
 
+        if (dtTo == address(0) && amount != 0) vm.expectRevert(IDelegateToken.ToIsZero.selector);
+        if (amount == 0) vm.expectRevert(abi.encodeWithSelector(IDelegateToken.WrongAmountForType.selector, IDelegateRegistry.DelegationType.ERC1155, 0));
         uint256 delegateId =
             dt.create(IDelegateToken.DelegateInfo(principalTo, IDelegateRegistry.DelegationType.ERC1155, dtTo, amount, address(mock1155), tokenId, "", expiry), SALT);
 
         vm.stopPrank();
+        if (dtTo == address(0) || amount == 0) return;
 
         assertEq(dt.ownerOf(delegateId), dtTo);
         assertEq(principal.ownerOf(delegateId), principalTo);
@@ -139,9 +143,8 @@ contract DelegateTokenTest is Test {
         assertEq(0, registry.checkDelegateForERC1155(notLdTo, address(dt), address(mock1155), tokenId, ""));
     }
 
-    function test_fuzzingTransferDelegation(address from, address to, uint256 underlyingTokenId, bool expiryTypeRelative, uint256 time) public {
+    function testFuzzingTransfer721(address from, address to, uint256 underlyingTokenId, bool expiryTypeRelative, uint256 time) public {
         vm.assume(from != address(0));
-        vm.assume(to != address(0));
 
         ( /* ExpiryType */ , uint256 expiry, /* ExpiryValue */ ) = prepareValidExpiry(expiryTypeRelative, time);
         mock721.mint(address(from), underlyingTokenId);
@@ -150,9 +153,9 @@ contract DelegateTokenTest is Test {
         mock721.setApprovalForAll(address(dt), true);
         uint256 delegateId =
             dt.create(IDelegateToken.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 0, address(mock721), underlyingTokenId, "", expiry), SALT);
-
-        vm.prank(from);
+        if (to == address(0)) vm.expectRevert(IDelegateToken.ToIsZero.selector);
         dt.transferFrom(from, to, delegateId);
+        if (to == address(0)) return;
 
         assertTrue(registry.checkDelegateForERC721(to, address(dt), address(mock721), underlyingTokenId, ""));
 
@@ -161,13 +164,64 @@ contract DelegateTokenTest is Test {
         }
     }
 
-    function test_fuzzingCannotCreateWithoutToken(address minter, uint256 tokenId, bool expiryTypeRelative, uint256 time) public {
+    function testFuzzingTransfer20(address from, address to, uint256 underlyingAmount, bool expiryTypeRelative, uint256 time) public {
+        vm.assume(from != address(0));
+        vm.assume(underlyingAmount != 0);
+
+        ( /* ExpiryType */ , uint256 expiry, /* ExpiryValue */ ) = prepareValidExpiry(expiryTypeRelative, time);
+        mock20.mint(address(from), underlyingAmount);
+
+        vm.startPrank(from);
+        mock20.approve(address(dt), underlyingAmount);
+        uint256 delegateId =
+            dt.create(IDelegateToken.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC20, from, underlyingAmount, address(mock20), 0, "", expiry), SALT);
+        if (to == address(0)) vm.expectRevert(IDelegateToken.ToIsZero.selector);
+        dt.transferFrom(from, to, delegateId);
+        if (to == address(0)) return;
+
+        assertEq(underlyingAmount, registry.checkDelegateForERC20(to, address(dt), address(mock20), ""));
+
+        if (from != to) {
+            assertEq(0, registry.checkDelegateForERC20(from, address(dt), address(mock20), ""));
+        }
+    }
+
+    function testFuzzingTransfer1155(address from, address to, uint256 underlyingAmount, uint256 underlyingTokenId, bool expiryTypeRelative, uint256 time) public {
+        vm.assume(from != address(0));
+        vm.assume(underlyingAmount != 0);
+
+        ( /* ExpiryType */ , uint256 expiry, /* ExpiryValue */ ) = prepareValidExpiry(expiryTypeRelative, time);
+
+        vm.assume(from.code.length == 0); //  Prevents reverts if from is a contract and not a 1155 receiver
+        mock1155.mint(address(from), underlyingTokenId, underlyingAmount, "");
+
+        vm.startPrank(from);
+        mock1155.setApprovalForAll(address(dt), true);
+        uint256 delegateId = dt.create(
+            IDelegateToken.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC1155, from, underlyingAmount, address(mock1155), underlyingTokenId, "", expiry), SALT
+        );
+        if (to == address(0)) vm.expectRevert(IDelegateToken.ToIsZero.selector);
+        dt.transferFrom(from, to, delegateId);
+        if (to == address(0)) return;
+
+        assertEq(underlyingAmount, registry.checkDelegateForERC1155(to, address(dt), address(mock1155), underlyingTokenId, ""));
+
+        if (from != to) {
+            assertEq(0, registry.checkDelegateForERC1155(from, address(dt), address(mock1155), underlyingTokenId, ""));
+        }
+    }
+
+    function testFuzzingCannotCreateWithoutToken(address minter, uint256 amount, uint256 tokenId, bool expiryTypeRelative, uint256 time) public {
         vm.assume(minter != address(0));
         ( /* ExpiryType */ , uint256 expiry, /* expiryValue */ ) = prepareValidExpiry(expiryTypeRelative, time);
 
         vm.startPrank(minter);
         vm.expectRevert();
         dt.create(IDelegateToken.DelegateInfo(minter, IDelegateRegistry.DelegationType.ERC721, minter, 0, address(mock721), tokenId, "", expiry), SALT);
+        vm.expectRevert();
+        dt.create(IDelegateToken.DelegateInfo(minter, IDelegateRegistry.DelegationType.ERC20, minter, amount, address(mock20), 0, "", expiry), SALT);
+        vm.expectRevert();
+        dt.create(IDelegateToken.DelegateInfo(minter, IDelegateRegistry.DelegationType.ERC1155, minter, amount, address(mock1155), tokenId, "", expiry), SALT);
         vm.stopPrank();
     }
 
@@ -215,15 +269,26 @@ contract DelegateTokenTest is Test {
         );
     }
 
-    function test_fuzzingCannotCreateWithNonexistentContract(address minter, address tokenContract, uint256 tokenId, bool expiryTypeRelative, uint256 time) public {
-        vm.assume(minter != address(0));
+    function testFuzzingCannotCreateWithNonexistentContract(
+        address minter,
+        uint256 underlyingAmount,
+        address tokenContract,
+        uint256 tokenId,
+        bool expiryTypeRelative,
+        bytes32 rights,
+        uint256 time
+    ) public {
         vm.assume(tokenContract.code.length == 0);
 
         ( /* ExpiryType */ , uint256 expiry, /* expiryValue */ ) = prepareValidExpiry(expiryTypeRelative, time);
 
         vm.startPrank(minter);
         vm.expectRevert();
-        dt.create(IDelegateToken.DelegateInfo(minter, IDelegateRegistry.DelegationType.ERC721, minter, 0, tokenContract, tokenId, "", expiry), SALT);
+        dt.create(IDelegateToken.DelegateInfo(minter, IDelegateRegistry.DelegationType.ERC721, minter, 1, tokenContract, tokenId, rights, expiry), SALT);
+        vm.expectRevert();
+        dt.create(IDelegateToken.DelegateInfo(minter, IDelegateRegistry.DelegationType.ERC20, minter, underlyingAmount, tokenContract, tokenId, rights, expiry), SALT);
+        vm.expectRevert();
+        dt.create(IDelegateToken.DelegateInfo(minter, IDelegateRegistry.DelegationType.ERC1155, minter, underlyingAmount, tokenContract, tokenId, rights, expiry), SALT);
         vm.stopPrank();
     }
 

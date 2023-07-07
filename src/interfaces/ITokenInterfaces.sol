@@ -17,6 +17,12 @@ interface IERC721 {
     function isApprovedForAll(address, address) external view returns (bool);
 }
 
+interface ERC721Metadata {
+    function name() external view returns (string memory _name);
+    function symbol() external view returns (string memory _symbol);
+    function tokenURI(uint256 _tokenId) external view returns (string memory);
+}
+
 interface ERC721TokenReceiver {
     function onERC721Received(address, address, uint256, bytes calldata) external returns (bytes4);
 }

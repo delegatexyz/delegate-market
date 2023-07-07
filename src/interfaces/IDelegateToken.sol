@@ -2,9 +2,9 @@
 pragma solidity 0.8.20;
 
 import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
-import {IERC721, ERC165, ERC721TokenReceiver, ERC1155TokenReceiver} from "./ITokenInterfaces.sol";
+import {IERC721, ERC721Metadata, ERC721TokenReceiver, ERC1155TokenReceiver} from "./ITokenInterfaces.sol";
 
-interface IDelegateToken is IERC721, ERC721TokenReceiver, ERC1155TokenReceiver {
+interface IDelegateToken is IERC721, ERC721Metadata, ERC721TokenReceiver, ERC1155TokenReceiver {
     /*//////////////////////////////////////////////////////////////
                              EVENTS
     //////////////////////////////////////////////////////////////*/
@@ -14,11 +14,11 @@ interface IDelegateToken is IERC721, ERC721TokenReceiver, ERC1155TokenReceiver {
      * previously double covered by "RightsCreated" and "RightsBurned" events
      * A Transfer event with from = address(0) is a "create" event
      * A Transfer event with to = address(0) is a "withdraw" event
-     * A Transfer event with to = address(DelegateToken) is a "rescind" event
+     * A Transfer event with to = address(1) is a "rescind" event
      */
 
     /// @notice Emitted when a principal token holder extends the expiry of the delegate token
-    event ExpiryExtended(uint256 delegateTokenId, uint256 previousExpiry, uint256 newExpiry);
+    event ExpiryExtended(uint256 indexed delegateTokenId, uint256 previousExpiry, uint256 newExpiry);
 
     /*//////////////////////////////////////////////////////////////
                              ERRORS
@@ -30,6 +30,7 @@ interface IDelegateToken is IERC721, ERC721TokenReceiver, ERC1155TokenReceiver {
     error ToIsZero();
     error FromIsZero();
     error TokenAmountIsZero();
+    error CodeIsZero();
 
     error NotERC721Receiver(address to);
 
@@ -57,7 +58,7 @@ interface IDelegateToken is IERC721, ERC721TokenReceiver, ERC1155TokenReceiver {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice The value flash borrowers need to return from `onFlashLoan` for the call to be successful.
-    function FLASHLOAN_CALLBACK_SUCCESS() external pure returns (bytes32);
+    function flashLoanCallBackSuccess() external pure returns (bytes32);
 
     /// @notice The v2 delegate registry address
     function delegateRegistry() external view returns (address);
