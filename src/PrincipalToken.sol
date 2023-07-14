@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.20;
+pragma solidity 0.8.20;
 
 import {IDelegateToken, IDelegateRegistry} from "./interfaces/IDelegateToken.sol";
 
-import {LibString} from "solady/utils/LibString.sol";
-import {Base64} from "solady/utils/Base64.sol";
+import {Strings} from "openzeppelin/utils/Strings.sol";
+import {Base64} from "openzeppelin/utils/Base64.sol";
 
-import {ERC721} from "solady/tokens/ERC721.sol";
+import {ERC721} from "openzeppelin/token/ERC721/ERC721.sol";
 
 /// @notice A simple NFT that doesn't store any user data itself, being tightly linked to the more stateful Delegate Token.
 /// @notice The holder of the PT is eligible to reclaim the escrowed NFT when the DT expires or is burned.
-contract PrincipalToken is ERC721 {
+contract PrincipalToken is ERC721("PrincipalToken", "PT") {
     address public immutable delegateToken;
 
     error CallerNotDelegateToken();
@@ -21,14 +21,6 @@ contract PrincipalToken is ERC721 {
     constructor(address delegateToken_) {
         if (delegateToken_ == address(0)) revert NotDelegateToken();
         delegateToken = delegateToken_;
-    }
-
-    function name() public pure override returns (string memory) {
-        return "Principal Token";
-    }
-
-    function symbol() public pure override returns (string memory) {
-        return "PT";
     }
 
     function mint(address to, uint256 id) external {
@@ -59,7 +51,7 @@ contract PrincipalToken is ERC721 {
 
         IDelegateToken.DelegateInfo memory delegateInfo = dt.getDelegateInfo(id);
 
-        string memory idstr = LibString.toString(delegateInfo.tokenId);
+        string memory idstr = Strings.toString(delegateInfo.tokenId);
         string memory imageUrl = string.concat(dt.baseURI(), "principal/", idstr);
 
         address rightsOwner = address(0);
@@ -67,18 +59,18 @@ contract PrincipalToken is ERC721 {
             rightsOwner = retrievedOwner;
         } catch {}
 
-        string memory rightsOwnerStr = rightsOwner == address(0) ? "N/A" : LibString.toHexStringChecksummed(rightsOwner);
+        string memory rightsOwnerStr = rightsOwner == address(0) ? "N/A" : Strings.toHexString(rightsOwner);
         string memory status = rightsOwner == address(0) || delegateInfo.expiry <= block.timestamp ? "Unlocked" : "Locked";
 
         string memory firstPartOfMetadataString = string.concat(
             '{"name":"',
             string.concat(name(), " #", idstr),
             '","description":"LiquidDelegate lets you escrow your token for a chosen timeperiod and receive a liquid NFT representing the associated delegation rights. This collection represents the principal i.e. the future right to claim the underlying token once the associated delegate token expires.","attributes":[{"trait_type":"Collection Address","value":"',
-            LibString.toHexStringChecksummed(delegateInfo.tokenContract),
+            Strings.toHexString(delegateInfo.tokenContract),
             '"},{"trait_type":"Token ID","value":"',
             idstr,
             '"},{"trait_type":"Unlocks At","display_type":"date","value":',
-            LibString.toString(delegateInfo.expiry)
+            Strings.toString(delegateInfo.expiry)
         );
         string memory secondPartOfMetadataString = string.concat(
             '},{"trait_type":"Delegate Owner Address","value":"', rightsOwnerStr, '"},{"trait_type":"Principal Status","value":"', status, '"}],"image":"', imageUrl, '"}'

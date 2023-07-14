@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.20;
 
-import {ERC20} from "solmate/tokens/ERC20.sol";
+import {ERC20} from "openzeppelin/token/ERC20/ERC20.sol";
 import {CommonBase} from "forge-std/Base.sol";
 
-contract WETH is ERC20("WETH", "WETH", 18), CommonBase {
+contract WETH is ERC20("WETH", "WETH"), CommonBase {
     function mint(address to, uint256 wad) external {
         vm.deal(address(this), address(this).balance + wad);
         _mint(to, wad);

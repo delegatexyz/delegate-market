@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.20;
+pragma solidity 0.8.20;
 
 import {ContractOffererInterface, IWrapOfferer, ReceiptFillerType, ExpiryType} from "./interfaces/IWrapOfferer.sol";
 
@@ -8,9 +8,9 @@ import {ItemType} from "seaport-types/src/lib/ConsiderationEnums.sol";
 
 import {IDelegateToken, IDelegateRegistry} from "./interfaces/IDelegateToken.sol";
 
-import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
-import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
-import {IERC1155} from "openzeppelin-contracts/contracts/token/ERC1155/IERC1155.sol";
+import {IERC20} from "openzeppelin/token/ERC20/IERC20.sol";
+import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
+import {IERC1155} from "openzeppelin/token/ERC1155/IERC1155.sol";
 
 /// @notice A Seaport ContractOfferer
 contract WrapOfferer is IWrapOfferer {

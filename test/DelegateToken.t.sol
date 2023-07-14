@@ -2,16 +2,16 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
-import {LibRLP} from "solady/utils/LibRLP.sol";
-import {LibString} from "solady/utils/LibString.sol";
+import {ComputeAddress} from "../script/ComputeAddress.s.sol";
+import {Strings} from "openzeppelin/utils/Strings.sol";
 import {DelegateToken, IDelegateToken} from "src/DelegateToken.sol";
 import {ExpiryType} from "src/interfaces/IWrapOfferer.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 import {DelegateRegistry, IDelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
-import {MockERC721, MockERC20, MockERC1155} from "./mock/MockTokens.sol";
+import {MockERC721, MockERC20, MockERC1155} from "./mock/MockTokens.t.sol";
 
 contract DelegateTokenTest is Test {
-    using LibString for uint256;
+    using Strings for uint256;
 
     // Environment contracts.
     DelegateRegistry registry;
@@ -36,7 +36,7 @@ contract DelegateTokenTest is Test {
         vm.startPrank(coreDeployer);
         dt = new DelegateToken(
             address(registry),
-            LibRLP.computeAddress(coreDeployer, vm.getNonce(coreDeployer) + 1),
+            ComputeAddress.addressFrom(coreDeployer, vm.getNonce(coreDeployer) + 1),
             "",
             dtOwner
         );

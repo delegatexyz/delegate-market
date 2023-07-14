@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.20;
 
-import {ERC721} from "solmate/tokens/ERC721.sol";
-import {ERC20} from "solmate/tokens/ERC20.sol";
-import {ERC1155} from "solmate/tokens/ERC1155.sol";
+import {ERC721} from "openzeppelin/token/ERC721/ERC721.sol";
+import {ERC20} from "openzeppelin/token/ERC20/ERC20.sol";
+import {ERC1155} from "openzeppelin/token/ERC1155/ERC1155.sol";
 
 contract MockERC721 is ERC721("Mock ERC721", "MOCK721") {
     uint256 public nextId;
@@ -25,13 +25,13 @@ contract MockERC721 is ERC721("Mock ERC721", "MOCK721") {
     }
 }
 
-contract MockERC20 is ERC20("Mock ERC20", "MOCK20", 18) {
+contract MockERC20 is ERC20("Mock ERC20", "MOCK20") {
     function mint(address recipient, uint256 amount) external {
         _mint(recipient, amount);
     }
 }
 
-contract MockERC1155 is ERC1155 {
+contract MockERC1155 is ERC1155("Mock ERC1155") {
     function mint(address recipient, uint256 id, uint256 amount, bytes calldata data) external {
         _mint(recipient, id, amount, data);
     }

@@ -6,10 +6,10 @@ import {StdCheats} from "forge-std/StdCheats.sol";
 import {StdUtils} from "forge-std/StdUtils.sol";
 import {console} from "forge-std/console.sol";
 
-import {AddressSet, TokenSet, UintSet, SetsLib} from "../utils/SetsLib.sol";
-import {MockERC721} from "../mock/MockTokens.sol";
-import {LibString} from "solady/utils/LibString.sol";
-import {SafeCastLib} from "solady/utils/SafeCastLib.sol";
+import {AddressSet, TokenSet, UintSet, SetsLib} from "../utils/SetsLib.t.sol";
+import {MockERC721} from "../mock/MockTokens.t.sol";
+import {Strings} from "openzeppelin/utils/Strings.sol";
+import {SafeCast} from "openzeppelin/utils/math/SafeCast.sol";
 
 import {IDelegateToken, IDelegateRegistry} from "src/interfaces/IDelegateToken.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
@@ -17,14 +17,14 @@ import {PrincipalToken} from "src/PrincipalToken.sol";
 import {ExpiryType} from "src/interfaces/IWrapOfferer.sol";
 
 contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
-    using LibString for address;
-    using LibString for uint256;
+    using Strings for address;
+    using Strings for uint256;
 
     using SetsLib for AddressSet;
     using SetsLib for TokenSet;
     using SetsLib for UintSet;
 
-    using SafeCastLib for uint256;
+    using SafeCast for uint256;
 
     IDelegateToken public immutable delegateToken;
     PrincipalToken public immutable principal;

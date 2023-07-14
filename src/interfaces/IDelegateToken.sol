@@ -2,9 +2,11 @@
 pragma solidity 0.8.20;
 
 import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
-import {IERC721, ERC721Metadata, ERC721TokenReceiver, ERC1155TokenReceiver} from "./ITokenInterfaces.sol";
+import {IERC721Metadata} from "openzeppelin/token/ERC721/extensions/IERC721Metadata.sol";
+import {IERC721Receiver} from "openzeppelin/token/ERC721/IERC721Receiver.sol";
+import {IERC1155Receiver} from "openzeppelin/token/ERC1155/IERC1155Receiver.sol";
 
-interface IDelegateToken is IERC721, ERC721Metadata, ERC721TokenReceiver, ERC1155TokenReceiver {
+interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver {
     /*//////////////////////////////////////////////////////////////
                              EVENTS
     //////////////////////////////////////////////////////////////*/
@@ -27,10 +29,10 @@ interface IDelegateToken is IERC721, ERC721Metadata, ERC721TokenReceiver, ERC115
     error DelegateRegistryZero();
     error PrincipalTokenZero();
     error DelegateTokenHolderZero();
+    error InitialMetadataOwnerZero();
     error ToIsZero();
     error FromIsZero();
     error TokenAmountIsZero();
-    error CodeIsZero();
 
     error NotERC721Receiver(address to);
 
@@ -56,6 +58,9 @@ interface IDelegateToken is IERC721, ERC721Metadata, ERC721TokenReceiver, ERC115
     /*//////////////////////////////////////////////////////////////
                       VIEW & INTROSPECTION
     //////////////////////////////////////////////////////////////*/
+
+    /// @dev see https://eips.ethereum.org/EIPS/eip-165
+    function supportsInterface(bytes4 interfaceId) external view returns (bool);
 
     /// @notice The value flash borrowers need to return from `onFlashLoan` for the call to be successful.
     function flashLoanCallBackSuccess() external pure returns (bytes32);

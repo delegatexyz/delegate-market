@@ -2,9 +2,9 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
-import {BaseSeaportTest} from "./base/BaseSeaportTest.sol";
-import {BaseLiquidDelegateTest} from "./base/BaseLiquidDelegateTest.sol";
-import {SeaportHelpers, User} from "./utils/SeaportHelpers.sol";
+import {BaseSeaportTest} from "./base/BaseSeaportTest.t.sol";
+import {BaseLiquidDelegateTest} from "./base/BaseLiquidDelegateTest.t.sol";
+import {SeaportHelpers, User} from "./utils/SeaportHelpers.t.sol";
 import {IDelegateToken} from "../src/interfaces/IDelegateToken.sol";
 
 import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
@@ -22,8 +22,8 @@ import {SpentItem} from "seaport-types/src/interfaces/ContractOffererInterface.s
 
 import {WrapOfferer, ReceiptFillerType} from "src/WrapOfferer.sol";
 import {ExpiryType} from "src/interfaces/IWrapOfferer.sol";
-import {MockERC721} from "./mock/MockTokens.sol";
-import {WETH} from "./mock/WETH.sol";
+import {MockERC721} from "./mock/MockTokens.t.sol";
+import {WETH} from "./mock/WETH.t.sol";
 
 import {console2} from "forge-std/console2.sol";
 

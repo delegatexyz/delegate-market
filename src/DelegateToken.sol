@@ -1,21 +1,26 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.20;
+pragma solidity 0.8.20;
 
 import {IDelegateToken, IDelegateRegistry} from "./interfaces/IDelegateToken.sol";
 import {INFTFlashBorrower} from "./interfaces/INFTFlashBorrower.sol";
-import {IERC721, ERC165, ERC721TokenReceiver, IERC1155, ERC1155TokenReceiver} from "./interfaces/ITokenInterfaces.sol";
+import {IERC1155} from "openzeppelin/token/ERC1155/IERC1155.sol";
+import {IERC1155Receiver} from "openzeppelin/token/ERC1155/IERC1155Receiver.sol";
+import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
+import {IERC721Receiver} from "openzeppelin/token/ERC721/IERC721Receiver.sol";
+import {IERC20} from "openzeppelin/token/ERC20/IERC20.sol";
 
 import {PrincipalToken} from "./PrincipalToken.sol";
-import {ERC2981} from "openzeppelin-contracts/contracts/token/common/ERC2981.sol";
+import {ERC2981} from "openzeppelin/token/common/ERC2981.sol";
+import {Ownable2Step} from "openzeppelin/access/Ownable2Step.sol";
+import {ReentrancyGuard} from "openzeppelin/security/ReentrancyGuard.sol";
 
 import {RegistryHashes} from "delegate-registry/src/libraries/RegistryHashes.sol";
 import {RegistryStorage} from "delegate-registry/src/libraries/RegistryStorage.sol";
-import {Base64} from "solady/utils/Base64.sol";
-import {LibString} from "solady/utils/LibString.sol";
-import {Owned} from "solmate/auth/Owned.sol";
-import {SafeTransferLib, ERC20} from "solmate/utils/SafeTransferLib.sol";
+import {Base64} from "openzeppelin/utils/Base64.sol";
+import {Strings} from "openzeppelin/utils/Strings.sol";
+import {SafeERC20} from "openzeppelin/token/ERC20/utils/SafeERC20.sol";
 
-contract DelegateToken is IDelegateToken, ERC165, ERC2981, Owned {
+contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken {
     /*//////////////////////////////////////////////////////////////
     /                  Constants & Immutables                      /
     //////////////////////////////////////////////////////////////*/
@@ -66,20 +71,22 @@ contract DelegateToken is IDelegateToken, ERC165, ERC2981, Owned {
     /                      Constructor                             /
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address delegateRegistry_, address principalToken_, string memory baseURI_, address initialMetadataOwner) Owned(initialMetadataOwner) {
+    constructor(address delegateRegistry_, address principalToken_, string memory baseURI_, address initialMetadataOwner) {
         if (delegateRegistry_ == address(0)) revert DelegateRegistryZero();
         delegateRegistry = delegateRegistry_;
         if (principalToken_ == address(0)) revert PrincipalTokenZero();
         principalToken = principalToken_;
         baseURI = baseURI_;
+        if (initialMetadataOwner == address(0)) revert InitialMetadataOwnerZero();
+        super._transferOwnership(initialMetadataOwner); // Transfer ownership to initialMetadataOwner
     }
 
     /*//////////////////////////////////////////////////////////////
     /                    Supported Interfaces                      /
     //////////////////////////////////////////////////////////////*/
 
-    /// @inheritdoc ERC165
-    function supportsInterface(bytes4 interfaceId) public pure override(ERC2981, ERC165) returns (bool) {
+    /// @inheritdoc IDelegateToken
+    function supportsInterface(bytes4 interfaceId) public pure override(ERC2981, IDelegateToken) returns (bool) {
         return interfaceId == 0x2a55205a // ERC165 Interface ID for ERC2981
             || interfaceId == 0x01ffc9a7 // ERC165 Interface ID for ERC165
             || interfaceId == 0x80ac58cd // ERC165 Interface ID for ERC721
@@ -90,20 +97,20 @@ contract DelegateToken is IDelegateToken, ERC165, ERC2981, Owned {
     /                    Token Receiver methods                    /
     //////////////////////////////////////////////////////////////*/
 
-    /// @inheritdoc ERC721TokenReceiver
+    /// @inheritdoc IERC721Receiver
     function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
-        return ERC721TokenReceiver.onERC721Received.selector;
+        return IERC721Receiver.onERC721Received.selector;
     }
 
-    /// @inheritdoc ERC1155TokenReceiver
+    /// @inheritdoc IERC1155Receiver
     function onERC1155Received(address, address, uint256, uint256, bytes calldata) external pure returns (bytes4) {
-        return ERC1155TokenReceiver.onERC1155Received.selector;
+        return IERC1155Receiver.onERC1155Received.selector;
     }
 
-    /// @inheritdoc ERC1155TokenReceiver
+    /// @inheritdoc IERC1155Receiver
     /// @dev return 0 if length is not equal to one since this contract only works with single erc1155 transfers
     function onERC1155BatchReceived(address, address, uint256[] calldata ids, uint256[] calldata amounts, bytes calldata) external pure returns (bytes4) {
-        if (ids.length == 1 && amounts.length == 1) return ERC1155TokenReceiver.onERC1155BatchReceived.selector;
+        if (ids.length == 1 && amounts.length == 1) return IERC1155Receiver.onERC1155BatchReceived.selector;
         return 0;
     }
 
@@ -129,16 +136,19 @@ contract DelegateToken is IDelegateToken, ERC165, ERC2981, Owned {
     }
 
     /// @inheritdoc IERC721
-    function safeTransferFrom(address from, address to, uint256 delegateTokenId, bytes memory data) public {
+    function safeTransferFrom(address from, address to, uint256 delegateTokenId, bytes memory data) external {
         transferFrom(from, to, delegateTokenId);
-        if (to.code.length != 0 && ERC721TokenReceiver(to).onERC721Received(msg.sender, from, delegateTokenId, data) != ERC721TokenReceiver.onERC721Received.selector) {
+        if (to.code.length != 0 && IERC721Receiver(to).onERC721Received(msg.sender, from, delegateTokenId, data) != IERC721Receiver.onERC721Received.selector) {
             revert NotERC721Receiver(to);
         }
     }
 
     /// @inheritdoc IERC721
     function safeTransferFrom(address from, address to, uint256 delegateTokenId) external {
-        safeTransferFrom(from, to, delegateTokenId, "");
+        transferFrom(from, to, delegateTokenId);
+        if (to.code.length != 0 && IERC721Receiver(to).onERC721Received(msg.sender, from, delegateTokenId, "") != IERC721Receiver.onERC721Received.selector) {
+            revert NotERC721Receiver(to);
+        }
     }
 
     /// @inheritdoc IERC721
@@ -166,13 +176,13 @@ contract DelegateToken is IDelegateToken, ERC165, ERC2981, Owned {
 
     /// @inheritdoc IERC721
     /// @dev TODO: revert if token ID is not valid
-    function getApproved(uint256 delegateTokenId) public view returns (address approved) {
-        approved = _readApproved(delegateTokenId);
+    function getApproved(uint256 delegateTokenId) public view returns (address) {
+        return _readApproved(delegateTokenId);
     }
 
     /// @inheritdoc IERC721
-    function isApprovedForAll(address owner_, address operator) public view returns (bool approved) {
-        approved = approvals[keccak256(abi.encode(owner_, operator))];
+    function isApprovedForAll(address owner_, address operator) public view returns (bool) {
+        return approvals[keccak256(abi.encode(owner_, operator))];
     }
 
     /// @inheritdoc IERC721
@@ -192,6 +202,7 @@ contract DelegateToken is IDelegateToken, ERC165, ERC2981, Owned {
         // Load delegateTokenHolder from delegate registry
         bytes32 delegationHash = bytes32(delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)]);
         bytes32 registryLocation = RegistryHashes.location(bytes32(delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)]));
+        //slither-disable-next-line unused-return
         (, address delegateTokenHolder, address underlyingContract) = RegistryStorage.unPackAddresses(
             IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(RegistryStorage.Positions.firstPacked))),
             IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(RegistryStorage.Positions.secondPacked)))
@@ -346,7 +357,7 @@ contract DelegateToken is IDelegateToken, ERC165, ERC2981, Owned {
     }
 
     /// @inheritdoc IDelegateToken
-    function create(DelegateInfo calldata delegateInfo, uint256 salt) external returns (uint256 delegateTokenId) {
+    function create(DelegateInfo calldata delegateInfo, uint256 salt) external nonReentrant returns (uint256 delegateTokenId) {
         // Pulls tokens in before minting, reverts if invalid token type, parses underlyingAmount and underlyingTokenId
         (uint256 underlyingAmount, uint256 underlyingTokenId) =
             _pullAndParse(delegateInfo.tokenType, delegateInfo.amount, delegateInfo.tokenContract, delegateInfo.tokenId);
@@ -377,13 +388,12 @@ contract DelegateToken is IDelegateToken, ERC165, ERC2981, Owned {
         returns (uint256, uint256)
     {
         if (underlyingType == IDelegateRegistry.DelegationType.ERC721) {
-            IERC721(underlyingContract).transferFrom(msg.sender, address(this), underlyingTokenId);
+            IDelegateToken(underlyingContract).transferFrom(msg.sender, address(this), underlyingTokenId);
             return (1, underlyingTokenId);
         } else if (underlyingType == IDelegateRegistry.DelegationType.ERC20) {
             // Revert if underlyingAmount is zero
             if (underlyingAmount == 0) revert WrongAmountForType(IDelegateRegistry.DelegationType.ERC20, underlyingAmount);
-            SafeTransferLib.safeTransferFrom(ERC20(underlyingContract), msg.sender, address(this), underlyingAmount);
-            if (underlyingContract.code.length == 0) revert CodeIsZero();
+            SafeERC20.safeTransferFrom(IERC20(underlyingContract), msg.sender, address(this), underlyingAmount);
             return (underlyingAmount, 0);
         } else if (underlyingType == IDelegateRegistry.DelegationType.ERC1155) {
             // Revert if underlyingAmount is zero
@@ -479,6 +489,7 @@ contract DelegateToken is IDelegateToken, ERC165, ERC2981, Owned {
         delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)] = DELEGATE_TOKEN_ID_USED;
         // Load delegateTokenHolder from registry
         bytes32 registryLocation = RegistryHashes.location(delegationHash);
+        //slither-disable-next-line unused-return
         (, address delegateTokenHolder, address underlyingContract) = RegistryStorage.unPackAddresses(
             IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(RegistryStorage.Positions.firstPacked))),
             IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(RegistryStorage.Positions.secondPacked)))
@@ -522,7 +533,7 @@ contract DelegateToken is IDelegateToken, ERC165, ERC2981, Owned {
                     != IDelegateRegistry(delegateRegistry).delegateERC721(delegateTokenHolder, underlyingContract, erc721UnderlyingTokenId, underlyingRights, false)
             ) revert HashMisMatch();
             PrincipalToken(principalToken).burnIfAuthorized(msg.sender, delegateTokenId);
-            IERC721(underlyingContract).transferFrom(address(this), recipient, erc721UnderlyingTokenId);
+            IDelegateToken(underlyingContract).transferFrom(address(this), recipient, erc721UnderlyingTokenId);
         } else if (delegationType == IDelegateRegistry.DelegationType.ERC20) {
             // Load and then delete delegatedAmount
             uint256 erc20DelegatedAmount = delegateTokenInfo[delegateTokenId][uint256(StoragePositions.delegatedAmount)];
@@ -541,7 +552,7 @@ contract DelegateToken is IDelegateToken, ERC165, ERC2981, Owned {
                     )
             ) revert HashMisMatch();
             PrincipalToken(principalToken).burnIfAuthorized(msg.sender, delegateTokenId);
-            SafeTransferLib.safeTransfer(ERC20(underlyingContract), recipient, erc20DelegatedAmount);
+            SafeERC20.safeTransfer(IERC20(underlyingContract), recipient, erc20DelegatedAmount);
         } else if (delegationType == IDelegateRegistry.DelegationType.ERC1155) {
             // Load and then delete delegatedAmount
             uint256 erc1155DelegatedAmount = delegateTokenInfo[delegateTokenId][uint256(StoragePositions.delegatedAmount)];
@@ -573,20 +584,20 @@ contract DelegateToken is IDelegateToken, ERC165, ERC2981, Owned {
 
     /// @inheritdoc IDelegateToken
     /// @dev TODO: implement ERC20 and ERC1155 versions of this
-    function flashLoan(address receiver, uint256 delegateId, bytes calldata data) external payable {
+    function flashLoan(address receiver, uint256 delegateId, bytes calldata data) external payable nonReentrant {
         if (!isApprovedOrOwner(msg.sender, delegateId)) revert NotAuthorized(msg.sender, delegateId);
         bytes32[] memory delegationHash = new bytes32[](1);
         delegationHash[0] = bytes32(delegateTokenInfo[delegateId][uint256(StoragePositions.registryHash)]);
         IDelegateRegistry.Delegation[] memory delegation = IDelegateRegistry(delegateRegistry).getDelegationsFromHashes(delegationHash);
         if (!(delegation[0].type_ == IDelegateRegistry.DelegationType.ERC721 && delegation[0].rights == "")) revert InvalidFlashloan();
-        IERC721(delegation[0].contract_).transferFrom(address(this), receiver, delegation[0].tokenId);
+        IDelegateToken(delegation[0].contract_).transferFrom(address(this), receiver, delegation[0].tokenId);
 
         if (INFTFlashBorrower(receiver).onFlashLoan{value: msg.value}(msg.sender, delegation[0].contract_, delegation[0].tokenId, data) != flashLoanCallBackSuccess) {
             revert InvalidFlashloan();
         }
 
         // Safer and cheaper to expect the token to have been returned rather than pulling it with `transferFrom`.
-        if (IERC721(delegation[0].contract_).ownerOf(delegation[0].tokenId) != address(this)) revert InvalidFlashloan();
+        if (IDelegateToken(delegation[0].contract_).ownerOf(delegation[0].tokenId) != address(this)) revert InvalidFlashloan();
     }
 
     /// @dev TODO: revert if delegate id has been used
@@ -631,11 +642,11 @@ contract DelegateToken is IDelegateToken, ERC165, ERC2981, Owned {
     }
 
     /// @inheritdoc IDelegateToken
-    function contractURI() public view returns (string memory) {
+    function contractURI() external view returns (string memory) {
         return string.concat(baseURI, "contract");
     }
 
-    function tokenURI(uint256 delegateTokenId) public view returns (string memory) {
+    function tokenURI(uint256 delegateTokenId) external view returns (string memory) {
         // Load delegation from registry
         bytes32[] memory delegationHash = new bytes32[](1);
         delegationHash[0] = bytes32(delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)]);
@@ -651,20 +662,20 @@ contract DelegateToken is IDelegateToken, ERC165, ERC2981, Owned {
     }
 
     function _buildTokenURI(address tokenContract, uint256 delegateTokenId, uint256 expiry, address principalOwner) internal view returns (string memory) {
-        string memory idstr = LibString.toString(delegateTokenId);
+        string memory idstr = Strings.toString(delegateTokenId);
 
-        string memory pownerstr = principalOwner == address(0) ? "N/A" : LibString.toHexStringChecksummed(principalOwner);
+        string memory pownerstr = principalOwner == address(0) ? "N/A" : Strings.toHexString(principalOwner);
         string memory status = principalOwner == address(0) || expiry <= block.timestamp ? "Expired" : "Active";
 
         string memory firstPartOfMetadataString = string.concat(
             '{"name":"Delegate Token #"',
             idstr,
             '","description":"LiquidDelegate lets you escrow your token for a chosen timeperiod and receive a liquid NFT representing the associated delegation rights. This collection represents the tokenized delegation rights.","attributes":[{"trait_type":"Collection Address","value":"',
-            LibString.toHexStringChecksummed(tokenContract),
+            Strings.toHexString(tokenContract),
             '"},{"trait_type":"Token ID","value":"',
             idstr,
             '"},{"trait_type":"Expires At","display_type":"date","value":',
-            LibString.toString(expiry)
+            Strings.toString(expiry)
         );
         string memory secondPartOfMetadataString = string.concat(
             '},{"trait_type":"Principal Owner Address","value":"',

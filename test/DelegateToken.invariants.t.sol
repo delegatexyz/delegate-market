@@ -3,9 +3,9 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 import {StdInvariant} from "forge-std/StdInvariant.sol";
-import {BaseLiquidDelegateTest} from "./base/BaseLiquidDelegateTest.sol";
+import {BaseLiquidDelegateTest} from "./base/BaseLiquidDelegateTest.t.sol";
 
-import {DelegateTokenHandler} from "./handlers/DelegateTokenHandler.sol";
+import {DelegateTokenHandler} from "./handlers/DelegateTokenHandler.t.sol";
 
 import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
 
