@@ -225,7 +225,7 @@ contract DelegateTokenTest is Test {
         vm.stopPrank();
     }
 
-    function test_fuzzingMintRights(address tokenOwner, address dtTo, address notLdTo, address principalTo, uint256 tokenId, bool expiryTypeRelative, uint256 time)
+    function testFuzzingMintRights(address tokenOwner, address dtTo, address notLdTo, address principalTo, uint256 tokenId, bool expiryTypeRelative, uint256 time)
         public
     {
         vm.assume(tokenOwner != address(0));

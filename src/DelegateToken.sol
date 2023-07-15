@@ -52,7 +52,7 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
     }
 
     /// @dev Use this to syntactically store the max of the expiry
-    uint96 internal constant MAX_EXPIRY = type(uint96).max;
+    uint256 internal constant MAX_EXPIRY = type(uint96).max;
 
     /// @dev Standardizes registryHash storage flags to prevent double-creation and griefing
     uint256 internal constant DELEGATE_TOKEN_ID_AVAILABLE = 0;
@@ -61,8 +61,12 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
     /// @notice mapping for ERC721 balances
     mapping(address delegateTokenHolder => uint256 balance) internal balances;
 
-    /// @notice approve for all mapping
-    mapping(bytes32 approveAllHash => bool enabled) internal approvals;
+    /// @notice approve for all mapping, cheaper to use uint256 rather than bool
+    mapping(bytes32 approveAllHash => uint256 enabled) internal approvals;
+
+    /// @dev Standardizes approvalAll flags
+    uint256 internal constant APPROVE_ALL_DISABLED = 0;
+    uint256 internal constant APPROVE_ALL_ENABLED = 1;
 
     /// @notice Standardizes rescind address
     address internal constant RESCIND_ADDRESS = address(1);
@@ -96,11 +100,6 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
     /*//////////////////////////////////////////////////////////////
     /                    Token Receiver methods                    /
     //////////////////////////////////////////////////////////////*/
-
-    /// @inheritdoc IERC721Receiver
-    function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
-        return IERC721Receiver.onERC721Received.selector;
-    }
 
     /// @inheritdoc IERC1155Receiver
     function onERC1155Received(address, address, uint256, uint256, bytes calldata) external pure returns (bytes4) {
@@ -159,7 +158,9 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
             IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(RegistryStorage.Positions.secondPacked)))
         );
         // Revert if the caller is not the owner and not approved all by the owner
-        if (msg.sender != delegateTokenHolder && !approvals[keccak256(abi.encode(delegateTokenHolder, msg.sender))]) revert NotAuthorized(msg.sender, delegateTokenId);
+        if (msg.sender != delegateTokenHolder && approvals[keccak256(abi.encode(delegateTokenHolder, msg.sender))] == APPROVE_ALL_DISABLED) {
+            revert NotAuthorized(msg.sender, delegateTokenId);
+        }
         // Set approval
         _writeApproved(delegateTokenId, spender);
         // Emit approval event
@@ -169,7 +170,7 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
     /// @inheritdoc IERC721
     function setApprovalForAll(address operator, bool approved) external {
         // Set approve all
-        approvals[keccak256(abi.encode(msg.sender, operator))] = approved;
+        approvals[keccak256(abi.encode(msg.sender, operator))] = approved == true ? APPROVE_ALL_ENABLED : APPROVE_ALL_DISABLED;
         // Emit approval event
         emit ApprovalForAll(msg.sender, operator, approved);
     }
@@ -182,7 +183,7 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
 
     /// @inheritdoc IERC721
     function isApprovedForAll(address owner_, address operator) public view returns (bool) {
-        return approvals[keccak256(abi.encode(owner_, operator))];
+        return approvals[keccak256(abi.encode(owner_, operator))] == APPROVE_ALL_ENABLED ? true : false;
     }
 
     /// @inheritdoc IERC721
@@ -202,11 +203,11 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
         // Load delegateTokenHolder from delegate registry
         bytes32 delegationHash = bytes32(delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)]);
         bytes32 registryLocation = RegistryHashes.location(bytes32(delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)]));
-        //slither-disable-next-line unused-return
-        (, address delegateTokenHolder, address underlyingContract) = RegistryStorage.unPackAddresses(
+        (address vault, address delegateTokenHolder, address underlyingContract) = RegistryStorage.unPackAddresses(
             IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(RegistryStorage.Positions.firstPacked))),
             IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(RegistryStorage.Positions.secondPacked)))
         );
+        if (vault != address(this)) revert VaultMisMatch();
         // Revert if from is not delegateTokenHolder
         if (from != delegateTokenHolder) revert FromNotDelegateTokenHolder(from, delegateTokenHolder);
         // Revert if caller is not the delegateTokenHolder, authorized, or approved for the id
@@ -385,7 +386,7 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
 
     function _pullAndParse(IDelegateRegistry.DelegationType underlyingType, uint256 underlyingAmount, address underlyingContract, uint256 underlyingTokenId)
         internal
-        returns (uint256, uint256)
+        returns (uint256 parsedUnderlyingAmount, uint256 parsedUnderlyingTokenId)
     {
         if (underlyingType == IDelegateRegistry.DelegationType.ERC721) {
             IDelegateToken(underlyingContract).transferFrom(msg.sender, address(this), underlyingTokenId);
@@ -489,11 +490,11 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
         delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)] = DELEGATE_TOKEN_ID_USED;
         // Load delegateTokenHolder from registry
         bytes32 registryLocation = RegistryHashes.location(delegationHash);
-        //slither-disable-next-line unused-return
-        (, address delegateTokenHolder, address underlyingContract) = RegistryStorage.unPackAddresses(
+        (address vault, address delegateTokenHolder, address underlyingContract) = RegistryStorage.unPackAddresses(
             IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(RegistryStorage.Positions.firstPacked))),
             IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(RegistryStorage.Positions.secondPacked)))
         );
+        if (vault != address(this)) revert VaultMisMatch();
         // If it still exists the only valid way to withdraw is the delegation having expired or delegateTokenHolder rescinded to this contract
         // Also allows withdraw if the caller is approved or holder of delegate token
         if (

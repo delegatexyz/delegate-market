@@ -3,10 +3,9 @@ pragma solidity 0.8.20;
 
 import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
 import {IERC721Metadata} from "openzeppelin/token/ERC721/extensions/IERC721Metadata.sol";
-import {IERC721Receiver} from "openzeppelin/token/ERC721/IERC721Receiver.sol";
 import {IERC1155Receiver} from "openzeppelin/token/ERC1155/IERC1155Receiver.sol";
 
-interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver {
+interface IDelegateToken is IERC721Metadata, IERC1155Receiver {
     /*//////////////////////////////////////////////////////////////
                              EVENTS
     //////////////////////////////////////////////////////////////*/
@@ -41,6 +40,7 @@ interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver {
     error FromNotDelegateTokenHolder(address from, address delegateTokenHolder);
 
     error HashMisMatch();
+    error VaultMisMatch();
 
     error NotMinted(uint256 delegateTokenId);
     error AlreadyExisted(uint256 delegateTokenId);
