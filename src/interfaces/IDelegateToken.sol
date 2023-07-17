@@ -40,7 +40,6 @@ interface IDelegateToken is IERC721Metadata, IERC1155Receiver {
     error FromNotDelegateTokenHolder(address from, address delegateTokenHolder);
 
     error HashMisMatch();
-    error VaultMisMatch();
 
     error NotMinted(uint256 delegateTokenId);
     error AlreadyExisted(uint256 delegateTokenId);

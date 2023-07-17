@@ -70,12 +70,11 @@ contract DTHarness is DelegateToken {
         address from,
         bytes32 delegationHash,
         address to,
-        bytes32 newDelegationHash,
         IDelegateRegistry.DelegationType underlyingType,
         address underlyingContract,
         bytes32 underlyingRights
     ) external {
-        _transferByType(delegateTokenId, registryLocation, from, delegationHash, to, newDelegationHash, underlyingType, underlyingContract, underlyingRights);
+        _transferByType(delegateTokenId, registryLocation, from, delegationHash, to, underlyingType, underlyingContract, underlyingRights);
     }
 
     function exposedIsApprovedOrOwner(address spender, uint256 delegateTokenId) external view returns (bool approvedOrOwner, address delegateTokenHolder) {

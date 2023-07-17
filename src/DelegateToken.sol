@@ -94,7 +94,8 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
         return interfaceId == 0x2a55205a // ERC165 Interface ID for ERC2981
             || interfaceId == 0x01ffc9a7 // ERC165 Interface ID for ERC165
             || interfaceId == 0x80ac58cd // ERC165 Interface ID for ERC721
-            || interfaceId == 0x5b5e139f; // ERC165 Interface ID for ERC721Metadata
+            || interfaceId == 0x5b5e139f // ERC165 Interface ID for ERC721Metadata
+            || interfaceId == 0x4e2312e0; // ERC165 Interface ID for ERC1155 Token receiver
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -127,10 +128,7 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
     /// @inheritdoc IERC721
     /// @dev must revert if delegateTokenHolder is zero address
     function ownerOf(uint256 delegateTokenId) external view returns (address delegateTokenHolder) {
-        bytes32 registryLocation = RegistryHashes.location(bytes32(delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)]));
-        delegateTokenHolder = RegistryStorage.unpackAddress(
-            IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(RegistryStorage.Positions.secondPacked)))
-        );
+        delegateTokenHolder = _loadTokenHolder(RegistryHashes.location(bytes32(_loadRegistryHash(delegateTokenId))));
         if (delegateTokenHolder == address(0)) revert DelegateTokenHolderZero();
     }
 
@@ -152,32 +150,24 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
 
     /// @inheritdoc IERC721
     function approve(address spender, uint256 delegateTokenId) external {
-        // Load delegateTokenHolder of delegateTokenId
-        bytes32 registryLocation = RegistryHashes.location(bytes32(delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)]));
-        address delegateTokenHolder = RegistryStorage.unpackAddress(
-            IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(RegistryStorage.Positions.secondPacked)))
-        );
+        address delegateTokenHolder = _loadTokenHolder(RegistryHashes.location(bytes32(_loadRegistryHash(delegateTokenId))));
         // Revert if the caller is not the owner and not approved all by the owner
         if (msg.sender != delegateTokenHolder && approvals[keccak256(abi.encode(delegateTokenHolder, msg.sender))] == APPROVE_ALL_DISABLED) {
             revert NotAuthorized(msg.sender, delegateTokenId);
         }
-        // Set approval
         _writeApproved(delegateTokenId, spender);
-        // Emit approval event
         emit Approval(delegateTokenHolder, spender, delegateTokenId);
     }
 
     /// @inheritdoc IERC721
     function setApprovalForAll(address operator, bool approved) external {
-        // Set approve all
         approvals[keccak256(abi.encode(msg.sender, operator))] = approved == true ? APPROVE_ALL_ENABLED : APPROVE_ALL_DISABLED;
-        // Emit approval event
         emit ApprovalForAll(msg.sender, operator, approved);
     }
 
     /// @inheritdoc IERC721
-    /// @dev TODO: revert if token ID is not valid
     function getApproved(uint256 delegateTokenId) public view returns (address) {
+        _revertIfNotMinted(_loadRegistryHash(delegateTokenId), delegateTokenId);
         return _readApproved(delegateTokenId);
     }
 
@@ -198,19 +188,12 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
     ///      not via the CheckDelegate method to avoid invariants with "[specific rights]" and "" classes
     /// @dev registryHash for the DelegateTokenId must point to the new registry delegation associated with the to address
     function transferFrom(address from, address to, uint256 delegateTokenId) public {
-        // Revert if to is zero address
         if (to == address(0)) revert ToIsZero();
-        // Load delegateTokenHolder from delegate registry
-        bytes32 delegationHash = bytes32(delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)]);
-        bytes32 registryLocation = RegistryHashes.location(bytes32(delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)]));
-        (address vault, address delegateTokenHolder, address underlyingContract) = RegistryStorage.unPackAddresses(
-            IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(RegistryStorage.Positions.firstPacked))),
-            IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(RegistryStorage.Positions.secondPacked)))
-        );
-        if (vault != address(this)) revert VaultMisMatch();
-        // Revert if from is not delegateTokenHolder
+        uint256 registryHash = _loadRegistryHash(delegateTokenId);
+        _revertIfNotMinted(registryHash, delegateTokenId);
+        bytes32 registryLocation = RegistryHashes.location(bytes32(registryHash));
+        (address delegateTokenHolder, address underlyingContract) = _loadTokenHolderAndUnderlyingContract(registryLocation);
         if (from != delegateTokenHolder) revert FromNotDelegateTokenHolder(from, delegateTokenHolder);
-        // Revert if caller is not the delegateTokenHolder, authorized, or approved for the id
         // We can use from here instead of delegateTokenHolder since we've just verified that from == delegateTokenHolder
         if (!(msg.sender == from || isApprovedForAll(from, msg.sender) || msg.sender == _readApproved(delegateTokenId))) {
             revert NotAuthorized(msg.sender, delegateTokenId);
@@ -218,18 +201,13 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
         // Update balances
         balances[from]--;
         balances[to]++;
-        // Set approved to zero
+        // Reset approved
         _writeApproved(delegateTokenId, address(0));
-        // Emit transfer event
         emit Transfer(from, to, delegateTokenId);
-        // Decode delegation type from hash and initialize newDelegationHash
-        IDelegateRegistry.DelegationType underlyingType = RegistryHashes.decodeType(delegationHash);
-        bytes32 newDelegationHash = 0;
-        // Load rights from delegate registry
+        // Decode delegation type from hash
+        IDelegateRegistry.DelegationType underlyingType = RegistryHashes.decodeType(bytes32(registryHash));
         bytes32 underlyingRights = IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(RegistryStorage.Positions.rights)));
-        // Update registry according to type
-        // TODO: consider implementation of transfer function for registry
-        _transferByType(delegateTokenId, registryLocation, from, delegationHash, to, newDelegationHash, underlyingType, underlyingContract, underlyingRights);
+        _transferByType(delegateTokenId, registryLocation, from, bytes32(registryHash), to, underlyingType, underlyingContract, underlyingRights);
     }
 
     function _transferByType(
@@ -238,11 +216,11 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
         address from,
         bytes32 delegationHash,
         address to,
-        bytes32 newDelegationHash,
         IDelegateRegistry.DelegationType underlyingType,
         address underlyingContract,
         bytes32 underlyingRights
     ) internal {
+        bytes32 newDelegationHash = 0;
         if (underlyingType == IDelegateRegistry.DelegationType.ERC721) {
             // Load token id from delegate registry
             uint256 erc721UnderlyingId =
@@ -327,10 +305,7 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
 
     /// @notice Adapted from solmate's [ERC721](https://github.com/transmissions11/solmate/blob/main/src/tokens/ERC721.sol)
     function _isApprovedOrOwner(address spender, uint256 delegateTokenId) internal view returns (bool approvedOrOwner, address delegateTokenHolder) {
-        bytes32 registryLocation = RegistryHashes.location(bytes32(delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)]));
-        delegateTokenHolder = RegistryStorage.unpackAddress(
-            IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(RegistryStorage.Positions.secondPacked)))
-        );
+        delegateTokenHolder = _loadTokenHolder(RegistryHashes.location(bytes32(_loadRegistryHash(delegateTokenId))));
         approvedOrOwner = spender == delegateTokenHolder || isApprovedForAll(delegateTokenHolder, spender) || getApproved(delegateTokenId) == spender;
     }
 
@@ -481,20 +456,15 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
     }
 
     /// @inheritdoc IDelegateToken
-    function withdraw(address recipient, uint256 delegateTokenId) external {
-        // Load delegationHash
-        bytes32 delegationHash = bytes32(delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)]);
-        // Revert if delegation already burned or not minted
-        if (delegationHash == bytes32(DELEGATE_TOKEN_ID_AVAILABLE) || delegationHash == bytes32(DELEGATE_TOKEN_ID_USED)) revert NotMinted(delegateTokenId);
+    function withdraw(address recipient, uint256 delegateTokenId) external nonReentrant {
+        // Load registryHash and check nft is valid
+        uint256 registryHash = delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)];
+        _revertIfNotMinted(registryHash, delegateTokenId);
         // Set registry hash to delegate token id used
         delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)] = DELEGATE_TOKEN_ID_USED;
         // Load delegateTokenHolder from registry
-        bytes32 registryLocation = RegistryHashes.location(delegationHash);
-        (address vault, address delegateTokenHolder, address underlyingContract) = RegistryStorage.unPackAddresses(
-            IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(RegistryStorage.Positions.firstPacked))),
-            IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(RegistryStorage.Positions.secondPacked)))
-        );
-        if (vault != address(this)) revert VaultMisMatch();
+        bytes32 registryLocation = RegistryHashes.location(bytes32(registryHash));
+        (address delegateTokenHolder, address underlyingContract) = _loadTokenHolderAndUnderlyingContract(registryLocation);
         // If it still exists the only valid way to withdraw is the delegation having expired or delegateTokenHolder rescinded to this contract
         // Also allows withdraw if the caller is approved or holder of delegate token
         if (
@@ -510,10 +480,10 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
         // Emit transfer to zero address
         emit Transfer(delegateTokenHolder, address(0), delegateTokenId);
         // Decode token type
-        IDelegateRegistry.DelegationType delegationType = RegistryHashes.decodeType(delegationHash);
+        IDelegateRegistry.DelegationType delegationType = RegistryHashes.decodeType(bytes32(registryHash));
         // Fetch underlying contract and rights from registry
         bytes32 underlyingRights = IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(RegistryStorage.Positions.rights)));
-        _withdrawByType(recipient, registryLocation, delegateTokenId, delegationHash, delegateTokenHolder, delegationType, underlyingContract, underlyingRights);
+        _withdrawByType(recipient, registryLocation, delegateTokenId, bytes32(registryHash), delegateTokenHolder, delegationType, underlyingContract, underlyingRights);
     }
 
     function _withdrawByType(
@@ -625,6 +595,29 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
 
     function _readExpiry(uint256 id) internal view returns (uint256 expiry) {
         expiry = uint96(delegateTokenInfo[id][uint256(StoragePositions.packedInfo)]); // Extract expiry from the lower 96 bits
+    }
+
+    ////////// Other helpers ////////
+
+    function _revertIfNotMinted(uint256 registryHash, uint256 delegateTokenId) internal pure {
+        if (registryHash == DELEGATE_TOKEN_ID_AVAILABLE || registryHash == DELEGATE_TOKEN_ID_USED) revert NotMinted(delegateTokenId);
+    }
+
+    function _loadRegistryHash(uint256 delegateTokenId) internal view returns (uint256) {
+        return delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)];
+    }
+
+    function _loadTokenHolder(bytes32 registryLocation) internal view returns (address delegateTokenHolder) {
+        return RegistryStorage.unpackAddress(
+            IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(RegistryStorage.Positions.secondPacked)))
+        );
+    }
+
+    function _loadTokenHolderAndUnderlyingContract(bytes32 registryLocation) internal view returns (address delegateTokenHolder, address underlyingContract) {
+        (, delegateTokenHolder, underlyingContract) = RegistryStorage.unPackAddresses(
+            IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(RegistryStorage.Positions.firstPacked))),
+            IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(RegistryStorage.Positions.secondPacked)))
+        );
     }
 
     ////////// METADATA ////////
