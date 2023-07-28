@@ -232,7 +232,7 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
             if (
                 IDelegateRegistry(delegateRegistry).delegateERC721(from, underlyingContract, erc721UnderlyingId, underlyingRights, false) != delegationHash
                     || IDelegateRegistry(delegateRegistry).delegateERC721(to, underlyingContract, erc721UnderlyingId, underlyingRights, true) != newDelegationHash
-            ) revert HashMisMatch();
+            ) revert HashMismatch();
         } else if (underlyingType == IDelegateRegistry.DelegationType.ERC20) {
             // Update hash, using deterministic registry hash calculation
             newDelegationHash = RegistryHashes.erc20Hash(address(this), underlyingRights, to, underlyingContract);
@@ -250,14 +250,14 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
                             ? IDelegateRegistry(delegateRegistry).delegateERC20(from, underlyingContract, erc20FromAmount, underlyingRights, false)
                             : IDelegateRegistry(delegateRegistry).delegateERC20(from, underlyingContract, erc20FromAmount, underlyingRights, true)
                     )
-            ) revert HashMisMatch();
+            ) revert HashMismatch();
             // Calculate toAmount
             uint256 erc20ToAmount = uint256(
                 IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(newDelegationHash)) + uint256(RegistryStorage.Positions.amount)))
             ) + erc20Amount;
             // Update registry, reverts if returned hashes aren't correct
             if (newDelegationHash != IDelegateRegistry(delegateRegistry).delegateERC20(to, underlyingContract, erc20ToAmount, underlyingRights, true)) {
-                revert HashMisMatch();
+                revert HashMismatch();
             }
         } else if (underlyingType == IDelegateRegistry.DelegationType.ERC1155) {
             // Load tokenId from delegate registry
@@ -279,7 +279,7 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
                             ? IDelegateRegistry(delegateRegistry).delegateERC1155(from, underlyingContract, erc1155UnderlyingId, erc1155FromAmount, underlyingRights, false)
                             : IDelegateRegistry(delegateRegistry).delegateERC1155(from, underlyingContract, erc1155UnderlyingId, erc1155FromAmount, underlyingRights, true)
                     )
-            ) revert HashMisMatch();
+            ) revert HashMismatch();
             // Calculate to amount
             uint256 erc1155ToAmount = uint256(
                 IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(newDelegationHash)) + uint256(RegistryStorage.Positions.amount)))
@@ -288,7 +288,7 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
             if (
                 newDelegationHash
                     != IDelegateRegistry(delegateRegistry).delegateERC1155(to, underlyingContract, erc1155UnderlyingId, erc1155ToAmount, underlyingRights, true)
-            ) revert HashMisMatch();
+            ) revert HashMismatch();
         }
     }
 
@@ -397,7 +397,7 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
             delegateTokenInfo[delegateTokenId][uint256(StoragePositions.registryHash)] = uint256(newDelegationHash);
             // Update Registry
             if (newDelegationHash != IDelegateRegistry(delegateRegistry).delegateERC721(delegateTokenTo, underlyingContract, underlyingTokenId, underlyingRights, true)) {
-                revert HashMisMatch();
+                revert HashMismatch();
             }
         } else if (underlyingType == IDelegateRegistry.DelegationType.ERC20) {
             // Store amount
@@ -413,7 +413,7 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
             // Update registry, reverts if returned hashes aren't correct
             if (newDelegationHash != IDelegateRegistry(delegateRegistry).delegateERC20(delegateTokenTo, underlyingContract, erc20IncreasedAmount, underlyingRights, true))
             {
-                revert HashMisMatch();
+                revert HashMismatch();
             }
         } else if (underlyingType == IDelegateRegistry.DelegationType.ERC1155) {
             // Store amount
@@ -432,7 +432,7 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
                     != IDelegateRegistry(delegateRegistry).delegateERC1155(
                         delegateTokenTo, underlyingContract, underlyingTokenId, erc1155IncreasedAmount, underlyingRights, true
                     )
-            ) revert HashMisMatch();
+            ) revert HashMismatch();
         }
     }
 
@@ -502,7 +502,7 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
             if (
                 delegationHash
                     != IDelegateRegistry(delegateRegistry).delegateERC721(delegateTokenHolder, underlyingContract, erc721UnderlyingTokenId, underlyingRights, false)
-            ) revert HashMisMatch();
+            ) revert HashMismatch();
             PrincipalToken(principalToken).burnIfAuthorized(msg.sender, delegateTokenId);
             IDelegateToken(underlyingContract).transferFrom(address(this), recipient, erc721UnderlyingTokenId);
         } else if (delegationType == IDelegateRegistry.DelegationType.ERC20) {
@@ -521,7 +521,7 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
                             ? IDelegateRegistry(delegateRegistry).delegateERC20(delegateTokenHolder, underlyingContract, erc20DecrementedAmount, underlyingRights, false)
                             : IDelegateRegistry(delegateRegistry).delegateERC20(delegateTokenHolder, underlyingContract, erc20DecrementedAmount, underlyingRights, true)
                     )
-            ) revert HashMisMatch();
+            ) revert HashMismatch();
             PrincipalToken(principalToken).burnIfAuthorized(msg.sender, delegateTokenId);
             SafeERC20.safeTransfer(IERC20(underlyingContract), recipient, erc20DelegatedAmount);
         } else if (delegationType == IDelegateRegistry.DelegationType.ERC1155) {
@@ -547,7 +547,7 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
                                 delegateTokenHolder, underlyingContract, erc11551UnderlyingTokenId, erc1155DecrementedAmount, underlyingRights, true
                             )
                     )
-            ) revert HashMisMatch();
+            ) revert HashMismatch();
             PrincipalToken(principalToken).burnIfAuthorized(msg.sender, delegateTokenId);
             IERC1155(underlyingContract).safeTransferFrom(address(this), recipient, erc11551UnderlyingTokenId, erc1155DelegatedAmount, "");
         }
