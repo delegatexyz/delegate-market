@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.21;
 
 import {ERC721} from "openzeppelin/token/ERC721/ERC721.sol";
 import {ERC20} from "openzeppelin/token/ERC20/ERC20.sol";

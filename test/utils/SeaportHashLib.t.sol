@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.21;
 
-import {OrderParameters, ConsiderationItem, OfferItem} from "seaport-types/src/lib/ConsiderationStructs.sol";
+import {OrderParameters, ConsiderationItem, OfferItem} from "seaport/contracts/lib/ConsiderationStructs.sol";
 
 library SeaportHashLib {
-    bytes32 internal constant OFFER_ITEM_TYPEHASH =
+    bytes32 internal constant OFFER_ITEM_TYPE_HASH =
         keccak256("OfferItem(uint8 itemType,address token,uint256 identifierOrCriteria,uint256 startAmount,uint256 endAmount)");
-    bytes32 internal constant CONSIDERATION_ITEM_TYPEHASH =
+    bytes32 internal constant CONSIDERATION_ITEM_TYPE_HASH =
         keccak256("ConsiderationItem(uint8 itemType,address token,uint256 identifierOrCriteria,uint256 startAmount,uint256 endAmount,address recipient)");
-    bytes32 internal constant ORDER_TYPEHASH = keccak256(
+    bytes32 internal constant ORDER_TYPE_HASH = keccak256(
         "OrderComponents(address offerer,address zone,OfferItem[] offer,ConsiderationItem[] consideration,uint8 orderType,uint256 startTime,uint256 endTime,bytes32 zoneHash,uint256 salt,bytes32 conduitKey,uint256 counter)ConsiderationItem(uint8 itemType,address token,uint256 identifierOrCriteria,uint256 startAmount,uint256 endAmount,address recipient)OfferItem(uint8 itemType,address token,uint256 identifierOrCriteria,uint256 startAmount,uint256 endAmount)"
     );
 
@@ -17,13 +17,14 @@ library SeaportHashLib {
     }
 
     function hash(OfferItem memory offerItem) internal pure returns (bytes32) {
-        return keccak256(abi.encode(OFFER_ITEM_TYPEHASH, offerItem.itemType, offerItem.token, offerItem.identifierOrCriteria, offerItem.startAmount, offerItem.endAmount));
+        return
+            keccak256(abi.encode(OFFER_ITEM_TYPE_HASH, offerItem.itemType, offerItem.token, offerItem.identifierOrCriteria, offerItem.startAmount, offerItem.endAmount));
     }
 
     function hash(ConsiderationItem memory considerationItem) internal pure returns (bytes32) {
         return keccak256(
             abi.encode(
-                CONSIDERATION_ITEM_TYPEHASH,
+                CONSIDERATION_ITEM_TYPE_HASH,
                 considerationItem.itemType,
                 considerationItem.token,
                 considerationItem.identifierOrCriteria,
@@ -60,7 +61,7 @@ library SeaportHashLib {
 
         return keccak256(
             abi.encode(
-                ORDER_TYPEHASH,
+                ORDER_TYPE_HASH,
                 orderParams.offerer,
                 orderParams.zone,
                 keccak256(abi.encodePacked(offerHashes)),

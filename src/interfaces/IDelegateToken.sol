@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity 0.8.20;
+pragma solidity ^0.8.0;
 
 import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
 import {IERC721Metadata} from "openzeppelin/token/ERC721/extensions/IERC721Metadata.sol";

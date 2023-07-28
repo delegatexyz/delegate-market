@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.21;
 
 import {Test} from "forge-std/Test.sol";
-import {OrderParameters} from "seaport-types/src/lib/ConsiderationStructs.sol";
+import {OrderParameters} from "seaport/contracts/lib/ConsiderationStructs.sol";
 import {SeaportHashLib} from "./SeaportHashLib.t.sol";
 
 struct User {

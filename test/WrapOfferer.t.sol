@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.21;
 
 import {Test} from "forge-std/Test.sol";
 import {BaseSeaportTest} from "./base/BaseSeaportTest.t.sol";
@@ -16,9 +16,9 @@ import {
     OfferItem,
     ConsiderationItem,
     FulfillmentComponent
-} from "seaport-types/src/lib/ConsiderationStructs.sol";
-import {ItemType, OrderType} from "seaport-types/src/lib/ConsiderationEnums.sol";
-import {SpentItem} from "seaport-types/src/interfaces/ContractOffererInterface.sol";
+} from "seaport/contracts/lib/ConsiderationStructs.sol";
+import {ItemType, OrderType} from "seaport/contracts/lib/ConsiderationEnums.sol";
+import {SpentItem} from "seaport/contracts/interfaces/ContractOffererInterface.sol";
 
 import {WrapOfferer, ReceiptFillerType} from "src/WrapOfferer.sol";
 import {ExpiryType} from "src/interfaces/IWrapOfferer.sol";

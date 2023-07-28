@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.21;
 
 library ComputeAddress {
     function addressFrom(address _origin, uint256 _nonce) internal pure returns (address) {

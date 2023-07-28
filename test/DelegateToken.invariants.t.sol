@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.21;
 
 import {Test} from "forge-std/Test.sol";
 import {StdInvariant} from "forge-std/StdInvariant.sol";
@@ -7,7 +7,7 @@ import {BaseLiquidDelegateTest} from "./base/BaseLiquidDelegateTest.t.sol";
 
 import {DelegateTokenHandler} from "./handlers/DelegateTokenHandler.t.sol";
 
-import {IERC721} from "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
+import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
 
 contract DelegateTokenInvariants is StdInvariant, BaseLiquidDelegateTest {
     DelegateTokenHandler internal handler;
@@ -77,7 +77,7 @@ contract DelegateTokenInvariants is StdInvariant, BaseLiquidDelegateTest {
     //     assertLe(nonce, rights.nonce);
     // }
 
-    // /// @dev Two existing principal tokens shoudt never have the same base rights Id
+    // /// @dev Two existing principal tokens should never have the same base rights Id
     // function invariant_onlySinglePrincipal() public {
     //     handler.forEachExistingPrincipalToken(this.uniquePrincipalBaseDelegateId);
     // }
