@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.21;
 
 import {Test} from "forge-std/Test.sol";
-import {ConduitController} from "seaport-core/src/conduit/ConduitController.sol";
-import {SeaportInterface} from "seaport-types/src/interfaces/SeaportInterface.sol";
-import {Conduit} from "seaport-core/src/conduit/Conduit.sol";
+import {ConduitController} from "seaport/contracts/conduit/ConduitController.sol";
+import {SeaportInterface} from "seaport/contracts/interfaces/SeaportInterface.sol";
+import {Conduit} from "seaport/contracts/conduit/Conduit.sol";
 
 import {console2} from "forge-std/console2.sol";
 

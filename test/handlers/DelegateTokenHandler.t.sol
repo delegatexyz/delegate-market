@@ -1,30 +1,30 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.21;
 
 import {CommonBase} from "forge-std/Base.sol";
 import {StdCheats} from "forge-std/StdCheats.sol";
 import {StdUtils} from "forge-std/StdUtils.sol";
 import {console} from "forge-std/console.sol";
 
-import {AddressSet, TokenSet, UintSet, SetsLib} from "../utils/SetsLib.sol";
-import {MockERC721} from "../mock/MockERC721.sol";
-import {LibString} from "solady/utils/LibString.sol";
-import {SafeCastLib} from "solady/utils/SafeCastLib.sol";
+import {AddressSet, TokenSet, UintSet, SetsLib} from "../utils/SetsLib.t.sol";
+import {MockERC721} from "../mock/MockTokens.t.sol";
+import {Strings} from "openzeppelin/utils/Strings.sol";
+import {SafeCast} from "openzeppelin/utils/math/SafeCast.sol";
 
-import {IDelegateToken, TokenType} from "src/interfaces/IDelegateToken.sol";
+import {IDelegateToken, IDelegateRegistry} from "src/interfaces/IDelegateToken.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 
 import {ExpiryType} from "src/interfaces/IWrapOfferer.sol";
 
 contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
-    using LibString for address;
-    using LibString for uint256;
+    using Strings for address;
+    using Strings for uint256;
 
     using SetsLib for AddressSet;
     using SetsLib for TokenSet;
     using SetsLib for UintSet;
 
-    using SafeCastLib for uint256;
+    using SafeCast for uint256;
 
     IDelegateToken public immutable delegateToken;
     PrincipalToken public immutable principal;
@@ -67,7 +67,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
     constructor(address dt) {
         delegateToken = IDelegateToken(dt);
-        principal = PrincipalToken(IDelegateToken(dt).PRINCIPAL_TOKEN());
+        principal = PrincipalToken(IDelegateToken(dt).principalToken());
         for (uint256 i; i < TOTAL_TOKENS; i++) {
             tokenContracts.add(address(new MockERC721(uint(keccak256(abi.encode("start_id", i))))));
         }
@@ -82,8 +82,10 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         uint256 amount = 0;
         uint96 salt = 3;
-        uint256 delegateId =
-            delegateToken.create(currentActor, currentActor, TokenType.ERC721, address(token), id, amount, "", block.timestamp + 1 seconds, salt);
+        uint256 delegateId = delegateToken.create(
+            IDelegateToken.DelegateInfo(currentActor, IDelegateRegistry.DelegationType.ERC721, currentActor, amount, address(token), id, "", block.timestamp + 1 seconds),
+            salt
+        );
         allDelegateTokens.add(delegateId);
         allPrincipalTokens.add(delegateId);
         existingDelegateTokens.add(delegateId);
@@ -94,11 +96,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         vm.stopPrank();
     }
 
-    function transferDTToken(uint256 fromSeed, uint256 toSeed, uint256 rightsSeed, uint256 backupTokenSeed)
-        public
-        useActor(fromSeed)
-        countCall("dt_transfer")
-    {
+    function transferDTToken(uint256 fromSeed, uint256 toSeed, uint256 rightsSeed, uint256 backupTokenSeed) public useActor(fromSeed) countCall("dt_transfer") {
         address to = actors.get(toSeed);
         if (to == address(0)) to = currentActor;
 
@@ -112,7 +110,9 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
             uint256 amount = 0;
             uint96 salt = 3;
-            delegateId = delegateToken.create(to, currentActor, TokenType.ERC721, address(token), id, amount, "", block.timestamp + 1 seconds, salt);
+            delegateId = delegateToken.create(
+                IDelegateToken.DelegateInfo(to, IDelegateRegistry.DelegationType.ERC721, currentActor, amount, address(token), id, "", block.timestamp + 1 seconds), salt
+            );
 
             allDelegateTokens.add(delegateId);
             allPrincipalTokens.add(delegateId);
@@ -134,7 +134,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         if (delegateId != 0) {
             vm.startPrank(currentActor);
 
-            delegateToken.burn(delegateId);
+            delegateToken.rescind(currentActor, delegateId);
             ownedDTTokens[currentActor].remove(delegateId);
             existingDelegateTokens.remove(delegateId);
 
@@ -149,15 +149,15 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         address dtOwner = _getDTOwner(prId);
 
-        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, bytes32 rights, uint256 expiry) = delegateToken.getDelegateInfo(prId);
-        vm.warp(expiry);
+        IDelegateToken.DelegateInfo memory delegateInfo = delegateToken.getDelegateInfo(prId);
+        vm.warp(delegateInfo.expiry);
         vm.startPrank(currentActor);
-        delegateToken.withdrawTo(currentActor, prId);
+        delegateToken.withdraw(currentActor, prId);
         vm.stopPrank();
 
         existingPrincipalTokens.remove(prId);
         ownedPrTokens[currentActor].remove(prId);
-        depositedTokens.remove(tokenContract, tokenId);
+        depositedTokens.remove(delegateInfo.tokenContract, delegateInfo.tokenId);
 
         if (dtOwner != address(0)) {
             existingDelegateTokens.remove(prId);
@@ -172,30 +172,30 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         address dtOwner = _getDTOwner(prId);
         if (dtOwner != address(0)) {
             vm.prank(dtOwner);
-            delegateToken.burn(prId);
+            delegateToken.rescind(dtOwner, prId);
 
             existingDelegateTokens.remove(prId);
             ownedDTTokens[dtOwner].remove(prId);
         }
 
-        (TokenType tokenType, address tokenContract, uint256 tokenId, uint256 tokenAmount, bytes32 rights, uint256 expiry) = delegateToken.getDelegateInfo(prId);
+        IDelegateToken.DelegateInfo memory delegateInfo = delegateToken.getDelegateInfo(prId);
         vm.prank(currentActor);
-        delegateToken.withdrawTo(currentActor, prId);
+        delegateToken.withdraw(currentActor, prId);
 
         existingPrincipalTokens.remove(prId);
         ownedPrTokens[currentActor].remove(prId);
-        depositedTokens.remove(tokenContract, tokenId);
+        depositedTokens.remove(delegateInfo.tokenContract, delegateInfo.tokenId);
     }
 
     function extend(uint256 prSeed, uint8 rawExpiryType, uint40 expiryValue) public countCall("extend") {
         uint256 prId = existingPrincipalTokens.get(prSeed);
         if (prId == 0) return;
 
-        (,,,,, uint256 expiry) = delegateToken.getDelegateInfo(prId);
+        IDelegateToken.DelegateInfo memory delegateInfo = delegateToken.getDelegateInfo(prId);
 
         ExpiryType expiryType = ExpiryType(bound(rawExpiryType, uint256(type(ExpiryType).min), uint256(type(ExpiryType).max)).toUint8());
 
-        uint256 minTime = (expiry > block.timestamp ? expiry : block.timestamp) + 1;
+        uint256 minTime = (delegateInfo.expiry > block.timestamp ? delegateInfo.expiry : block.timestamp) + 1;
         uint256 maxTime = expiryType == ExpiryType.RELATIVE ? type(uint40).max - block.timestamp : type(uint40).max;
         // No possible extension
         if (maxTime < minTime) return;
@@ -204,7 +204,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         address owner = principal.ownerOf(prId);
         vm.prank(owner);
-        delegateToken.extend(prId, expiry);
+        delegateToken.extend(prId, delegateInfo.expiry);
     }
 
     function callSummary() external view {

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.21;
 
 import {Test} from "forge-std/Test.sol";
 
-import {LibRLP} from "solady/utils/LibRLP.sol";
+import {ComputeAddress} from "../../script/ComputeAddress.s.sol";
 
 import {DelegateToken} from "src/DelegateToken.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
@@ -23,7 +23,7 @@ contract BaseLiquidDelegateTest is Test {
         vm.startPrank(dtDeployer);
         dt = new DelegateToken(
             address(registry),
-            LibRLP.computeAddress(dtDeployer, vm.getNonce(dtDeployer) + 1),
+            ComputeAddress.addressFrom(dtDeployer, vm.getNonce(dtDeployer) + 1),
             "",
             dtOwner
         );

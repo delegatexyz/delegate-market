@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.21;
 
 import {Test} from "forge-std/Test.sol";
-import {OrderParameters} from "seaport-types/src/lib/ConsiderationStructs.sol";
-import {SeaportHashLib} from "./SeaportHashLib.sol";
+import {OrderParameters} from "seaport/contracts/lib/ConsiderationStructs.sol";
+import {SeaportHashLib} from "./SeaportHashLib.t.sol";
 
 struct User {
     address addr;
@@ -25,11 +25,7 @@ abstract contract SeaportHelpers is Test {
         sig = abi.encodePacked(r, s, v);
     }
 
-    function signOrder(User memory _user, bytes32 _domainSeparator, OrderParameters memory _orderParams, uint256 _nonce)
-        internal
-        pure
-        returns (bytes memory sig)
-    {
+    function signOrder(User memory _user, bytes32 _domainSeparator, OrderParameters memory _orderParams, uint256 _nonce) internal pure returns (bytes memory sig) {
         (sig,) = signERC712(_user, _domainSeparator, _orderParams.hash(_nonce));
     }
 }
