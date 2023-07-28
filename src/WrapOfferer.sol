@@ -127,6 +127,7 @@ contract WrapOfferer is IWrapOfferer {
         (, uint256 expiry, address delegateRecipient, address principalRecipient, uint256 salt) = decodeContext(context);
         if (itemType == ItemType.ERC721) {
             IERC721(considerationToken).setApprovalForAll(address(delegateToken), true);
+            //slither-disable-next-line unused-return
             IDelegateToken(delegateToken).create(
                 IDelegateToken.DelegateInfo(
                     principalRecipient,
@@ -142,7 +143,8 @@ contract WrapOfferer is IWrapOfferer {
             );
             IERC721(considerationToken).setApprovalForAll(address(delegateToken), false); // Deleting approval saves gas
         } else if (itemType == ItemType.ERC20) {
-            IERC20(considerationToken).approve(address(delegateToken), considerationAmount);
+            require(IERC20(considerationToken).approve(address(delegateToken), considerationAmount));
+            //slither-disable-next-line unused-return
             IDelegateToken(delegateToken).create(
                 IDelegateToken.DelegateInfo(
                     principalRecipient,
@@ -159,6 +161,7 @@ contract WrapOfferer is IWrapOfferer {
             require(IERC20(considerationToken).allowance(address(this), address(delegateToken)) == 0, "Approval invariant");
         } else if (itemType == ItemType.ERC1155) {
             IERC1155(considerationToken).setApprovalForAll(address(delegateToken), true);
+            //slither-disable-next-line unused-return
             IDelegateToken(delegateToken).create(
                 IDelegateToken.DelegateInfo(
                     principalRecipient,
@@ -188,6 +191,7 @@ contract WrapOfferer is IWrapOfferer {
         return interfaceId == type(ContractOffererInterface).interfaceId || interfaceId == 0x01ffc9a7; // ERC165 Interface ID for ERC165
     }
 
+    //slither-disable-next-line erc20-interface
     function transferFrom(address from, address, uint256 id) public view {
         if (from != address(this)) revert InvalidReceiptTransfer();
         if (id == 0 || id != transientReceiptHash) revert InvalidReceiptId();

@@ -60,6 +60,7 @@ contract PrincipalToken is ERC721("PrincipalToken", "PT") {
         } catch {}
 
         string memory rightsOwnerStr = rightsOwner == address(0) ? "N/A" : Strings.toHexString(rightsOwner);
+        //slither-disable-next-line timestamp
         string memory status = rightsOwner == address(0) || delegateInfo.expiry <= block.timestamp ? "Unlocked" : "Locked";
 
         string memory firstPartOfMetadataString = string.concat(

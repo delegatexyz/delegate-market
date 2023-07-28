@@ -16,6 +16,7 @@ enum ReceiptFillerType {
 }
 
 interface IWrapOfferer is ContractOffererInterface {
+    //slither-disable-next-line erc20-interface
     function transferFrom(address from, address to, uint256 receiptId) external;
 
     function getReceiptHash(address delegateRecipient, address principalRecipient, address token, uint256 id, uint256 amount, ExpiryType expiryType, uint256 expiryValue)

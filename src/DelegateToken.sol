@@ -161,7 +161,7 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
 
     /// @inheritdoc IERC721
     function setApprovalForAll(address operator, bool approved) external {
-        approvals[keccak256(abi.encode(msg.sender, operator))] = approved == true ? APPROVE_ALL_ENABLED : APPROVE_ALL_DISABLED;
+        approvals[keccak256(abi.encode(msg.sender, operator))] = approved ? APPROVE_ALL_ENABLED : APPROVE_ALL_DISABLED;
         emit ApprovalForAll(msg.sender, operator, approved);
     }
 
@@ -338,6 +338,7 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
         (uint256 underlyingAmount, uint256 underlyingTokenId) =
             _pullAndParse(delegateInfo.tokenType, delegateInfo.amount, delegateInfo.tokenContract, delegateInfo.tokenId);
         // Check expiry
+        //slither-disable-next-line timestamp
         if (delegateInfo.expiry < block.timestamp) revert ExpiryTimeNotInFuture(delegateInfo.expiry, block.timestamp);
         if (delegateInfo.expiry > MAX_EXPIRY) revert ExpiryTooLarge(delegateInfo.expiry, MAX_EXPIRY);
         // Revert if to is the zero address
@@ -446,6 +447,7 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
 
     /// @inheritdoc IDelegateToken
     function rescind(address from, uint256 delegateTokenId) external {
+        //slither-disable-next-line timestamp
         if (_readExpiry(delegateTokenId) < block.timestamp) {
             if (from == address(0)) revert FromIsZero();
             _writeApproved(delegateTokenId, msg.sender); // This should be fine as the approve for the token gets delete in transferFrom
@@ -467,11 +469,12 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
         (address delegateTokenHolder, address underlyingContract) = _loadTokenHolderAndUnderlyingContract(registryLocation);
         // If it still exists the only valid way to withdraw is the delegation having expired or delegateTokenHolder rescinded to this contract
         // Also allows withdraw if the caller is approved or holder of delegate token
-        if (
-            block.timestamp < _readExpiry(delegateTokenId) && delegateTokenHolder != RESCIND_ADDRESS && delegateTokenHolder != msg.sender
-                && msg.sender != _readApproved(delegateTokenId)
-        ) {
-            revert WithdrawNotAvailable(delegateTokenId, _readExpiry(delegateTokenId), block.timestamp);
+        {
+            uint256 expiry = _readExpiry(delegateTokenId);
+            //slither-disable-next-line timestamp
+            if (block.timestamp < expiry && delegateTokenHolder != RESCIND_ADDRESS && delegateTokenHolder != msg.sender && msg.sender != _readApproved(delegateTokenId)) {
+                revert WithdrawNotAvailable(delegateTokenId, expiry, block.timestamp);
+            }
         }
         // Decrement balance of holder
         balances[delegateTokenHolder]--;
@@ -614,6 +617,7 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
     }
 
     function _loadTokenHolderAndUnderlyingContract(bytes32 registryLocation) internal view returns (address delegateTokenHolder, address underlyingContract) {
+        //slither-disable-next-line unused-return
         (, delegateTokenHolder, underlyingContract) = RegistryStorage.unPackAddresses(
             IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(RegistryStorage.Positions.firstPacked))),
             IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(registryLocation) + uint256(RegistryStorage.Positions.secondPacked)))
@@ -659,6 +663,7 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
         string memory idstr = Strings.toString(delegateTokenId);
 
         string memory pownerstr = principalOwner == address(0) ? "N/A" : Strings.toHexString(principalOwner);
+        //slither-disable-next-line timestamp
         string memory status = principalOwner == address(0) || expiry <= block.timestamp ? "Expired" : "Active";
 
         string memory firstPartOfMetadataString = string.concat(
