@@ -3,65 +3,66 @@
 | Deployment Cost                                                          | Deployment Size |        |        |        |         |
 | 2132865                                                                  | 10685           |        |        |        |         |
 | Function Name                                                            | min             | avg    | median | max    | # calls |
-| checkDelegateForERC1155                                                  | 5990            | 6551   | 6113   | 7990   | 4       |
-| checkDelegateForERC20                                                    | 5927            | 6488   | 6050   | 7927   | 4       |
-| checkDelegateForERC721                                                   | 5991            | 6665   | 6007   | 7991   | 6       |
+| checkDelegateForERC1155                                                  | 5990            | 6031   | 5990   | 6113   | 3       |
+| checkDelegateForERC20                                                    | 5927            | 6376   | 6050   | 7927   | 5       |
+| checkDelegateForERC721                                                   | 5991            | 6569   | 6007   | 7991   | 7       |
 | delegateAll                                                              | 157987          | 157987 | 157987 | 157987 | 3       |
-| delegateERC1155                                                          | 3690            | 129842 | 168243 | 179193 | 4       |
-| delegateERC20                                                            | 3341            | 112916 | 145792 | 156742 | 4       |
-| delegateERC721                                                           | 3336            | 125854 | 158836 | 161062 | 17      |
+| delegateERC1155                                                          | 3690            | 104611 | 157293 | 179193 | 5       |
+| delegateERC20                                                            | 3341            | 101958 | 145792 | 156742 | 6       |
+| delegateERC721                                                           | 3336            | 121141 | 158836 | 161062 | 19      |
 | getDelegationsFromHashes                                                 | 2729            | 5929   | 6729   | 6729   | 5       |
-| readSlot                                                                 | 457             | 911    | 457    | 2457   | 44      |
+| readSlot                                                                 | 457             | 1023   | 457    | 2457   | 60      |
 | supportsInterface                                                        | 417             | 417    | 417    | 417    | 1       |
 
 
-| lib/seaport/lib/seaport-core/src/conduit/Conduit.sol:Conduit contract |                 |       |        |       |         |
-|-----------------------------------------------------------------------|-----------------|-------|--------|-------|---------|
-| Deployment Cost                                                       | Deployment Size |       |        |       |         |
-| 658115                                                                | 3335            |       |        |       |         |
-| Function Name                                                         | min             | avg   | median | max   | # calls |
-| execute                                                               | 27637           | 38181 | 38181  | 48726 | 2       |
-| updateChannel                                                         | 24300           | 24300 | 24300  | 24300 | 3       |
+| lib/seaport/contracts/conduit/Conduit.sol:Conduit contract |                 |       |        |       |         |
+|------------------------------------------------------------|-----------------|-------|--------|-------|---------|
+| Deployment Cost                                            | Deployment Size |       |        |       |         |
+| 658115                                                     | 3335            |       |        |       |         |
+| Function Name                                              | min             | avg   | median | max   | # calls |
+| execute                                                    | 27637           | 38181 | 38181  | 48726 | 2       |
+| updateChannel                                              | 24300           | 24300 | 24300  | 24300 | 3       |
 
 
-| lib/seaport/lib/seaport-core/src/conduit/ConduitController.sol:ConduitController contract |                 |        |        |        |         |
-|-------------------------------------------------------------------------------------------|-----------------|--------|--------|--------|---------|
-| Deployment Cost                                                                           | Deployment Size |        |        |        |         |
-| 2364890                                                                                   | 11902           |        |        |        |         |
-| Function Name                                                                             | min             | avg    | median | max    | # calls |
-| createConduit                                                                             | 742439          | 742439 | 742439 | 742439 | 3       |
-| getConduitCodeHashes                                                                      | 241             | 241    | 241    | 241    | 3       |
-| updateChannel                                                                             | 92494           | 92494  | 92494  | 92494  | 3       |
+| lib/seaport/contracts/conduit/ConduitController.sol:ConduitController contract |                 |        |        |        |         |
+|--------------------------------------------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                                                                | Deployment Size |        |        |        |         |
+| 2364890                                                                        | 11902           |        |        |        |         |
+| Function Name                                                                  | min             | avg    | median | max    | # calls |
+| createConduit                                                                  | 742439          | 742439 | 742439 | 742439 | 3       |
+| getConduitCodeHashes                                                           | 241             | 241    | 241    | 241    | 3       |
+| updateChannel                                                                  | 92494           | 92494  | 92494  | 92494  | 3       |
 
 
 | src/DelegateToken.sol:DelegateToken contract    |                 |        |        |        |         |
 |-------------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                                 | Deployment Size |        |        |        |         |
-| 6103429                                         | 31471           |        |        |        |         |
+| 6038958                                         | 31407           |        |        |        |         |
 | Function Name                                   | min             | avg    | median | max    | # calls |
 | approve                                         | 3960            | 4110   | 4066   | 4304   | 3       |
 | balanceOf                                       | 636             | 636    | 636    | 636    | 1       |
-| baseURI                                         | 1295            | 3410   | 1357   | 7580   | 3       |
-| create                                          | 605             | 194098 | 277355 | 340629 | 23      |
+| baseURI                                         | 1295            | 3390   | 1295   | 7580   | 3       |
+| create                                          | 605             | 194726 | 277355 | 340629 | 26      |
 | delegateRegistry                                | 272             | 272    | 272    | 272    | 2       |
 | flashLoan                                       | 51876           | 51876  | 51876  | 51876  | 1       |
 | flashLoanCallBackSuccess                        | 389             | 389    | 389    | 389    | 1       |
 | getApproved                                     | 857             | 2115   | 2632   | 2857   | 3       |
 | getDelegateId                                   | 620             | 620    | 620    | 620    | 2       |
 | getDelegateInfo                                 | 7332            | 9998   | 11332  | 11332  | 3       |
-| isApprovedForAll                                | 905             | 905    | 905    | 905    | 1       |
+| isApprovedForAll                                | 895             | 895    | 895    | 895    | 1       |
 | onERC1155BatchReceived                          | 1309            | 1309   | 1309   | 1309   | 1       |
-| onERC1155Received                               | 816             | 816    | 816    | 816    | 3       |
+| onERC1155Received                               | 816             | 816    | 816    | 816    | 2       |
 | owner                                           | 375             | 375    | 375    | 375    | 1       |
-| ownerOf                                         | 1636            | 2353   | 1636   | 8097   | 9       |
+| ownerOf                                         | 1636            | 2758   | 1636   | 8097   | 11      |
 | principalToken                                  | 294             | 294    | 294    | 294    | 2       |
 | safeTransferFrom(address,address,uint256)       | 2827            | 30789  | 2929   | 139752 | 5       |
 | safeTransferFrom(address,address,uint256,bytes) | 140050          | 140050 | 140050 | 140050 | 1       |
 | setApprovalForAll                               | 4802            | 14747  | 14747  | 24692  | 2       |
 | setBaseURI                                      | 25141           | 25141  | 25141  | 25141  | 1       |
 | tokenURI                                        | 90571           | 90571  | 90571  | 90571  | 1       |
-| transferFrom(address,address,uint256)           | 139347          | 139823 | 139823 | 140300 | 2       |
-| transferFrom(address,address,uint256)(bool)     | 159408          | 159408 | 159408 | 159408 | 1       |
+| transferFrom(address,address,uint256)           | 139347          | 139347 | 139347 | 139347 | 1       |
+| transferFrom(address,address,uint256)(bool)     | 140300          | 149854 | 149854 | 159408 | 2       |
+| withdraw                                        | 38752           | 39416  | 38779  | 40718  | 3       |
 
 
 | src/PrincipalToken.sol:PrincipalToken contract |                 |        |        |        |         |
@@ -69,8 +70,9 @@
 | Deployment Cost                                | Deployment Size |        |        |        |         |
 | 2303245                                        | 11988           |        |        |        |         |
 | Function Name                                  | min             | avg    | median | max    | # calls |
-| mint                                           | 47133           | 47133  | 47133  | 47133  | 15      |
-| ownerOf                                        | 534             | 534    | 534    | 534    | 10      |
+| burnIfAuthorized                               | 4805            | 4805   | 4805   | 4805   | 3       |
+| mint                                           | 47133           | 47133  | 47133  | 47133  | 17      |
+| ownerOf                                        | 534             | 540    | 534    | 559    | 12      |
 | tokenURI                                       | 103413          | 103413 | 103413 | 103413 | 1       |
 
 
@@ -93,9 +95,10 @@
 | Deployment Cost                                 | Deployment Size |       |        |       |         |
 | 1509758                                         | 7902            |       |        |       |         |
 | Function Name                                   | min             | avg   | median | max   | # calls |
-| mint                                            | 26248           | 26248 | 26248  | 26248 | 2       |
-| safeTransferFrom                                | 3347            | 16497 | 23073  | 23073 | 3       |
-| setApprovalForAll                               | 24554           | 24554 | 24554  | 24554 | 2       |
+| balanceOf                                       | 641             | 641   | 641    | 641   | 2       |
+| mint                                            | 6348            | 19614 | 26248  | 26248 | 3       |
+| safeTransferFrom                                | 3347            | 17357 | 21504  | 23073 | 4       |
+| setApprovalForAll                               | 24554           | 24554 | 24554  | 24554 | 3       |
 
 
 | test/mock/MockTokens.t.sol:MockERC20 contract |                 |       |        |       |         |
@@ -103,9 +106,13 @@
 | Deployment Cost                               | Deployment Size |       |        |       |         |
 | 672200                                        | 3642            |       |        |       |         |
 | Function Name                                 | min             | avg   | median | max   | # calls |
-| approve                                       | 24603           | 24603 | 24603  | 24603 | 2       |
-| mint                                          | 46592           | 46592 | 46592  | 46592 | 2       |
-| transferFrom                                  | 2857            | 15623 | 22007  | 22007 | 3       |
+| approve(address,uint256)                      | 24603           | 24603 | 24603  | 24603 | 1       |
+| approve(address,uint256)(bool)                | 24603           | 24603 | 24603  | 24603 | 2       |
+| balanceOf                                     | 561             | 561   | 561    | 561   | 4       |
+| mint                                          | 46592           | 46592 | 46592  | 46592 | 3       |
+| transfer                                      | 18348           | 18348 | 18348  | 18348 | 1       |
+| transferFrom(address,address,uint256)         | 22007           | 22007 | 22007  | 22007 | 1       |
+| transferFrom(address,address,uint256)(bool)   | 2857            | 15623 | 22007  | 22007 | 3       |
 
 
 | test/mock/MockTokens.t.sol:MockERC721 contract |                 |       |        |       |         |
@@ -114,12 +121,12 @@
 | 1329803                                        | 7012            |       |        |       |         |
 | Function Name                                  | min             | avg   | median | max   | # calls |
 | approve                                        | 23036           | 24636 | 25036  | 25036 | 5       |
-| mint                                           | 47111           | 47111 | 47111  | 47111 | 6       |
+| mint                                           | 47111           | 47111 | 47111  | 47111 | 7       |
 | mintNext                                       | 69295           | 69295 | 69295  | 69295 | 5       |
-| ownerOf                                        | 534             | 534   | 534    | 534   | 1       |
-| setApprovalForAll                              | 2124            | 20475 | 24554  | 24554 | 11      |
-| transferFrom(address,address,uint256)          | 1201            | 19753 | 22884  | 23242 | 15      |
-| transferFrom(address,address,uint256)(bool)    | 22884           | 22884 | 22884  | 22884 | 1       |
+| ownerOf                                        | 534             | 534   | 534    | 534   | 3       |
+| setApprovalForAll                              | 2124            | 20815 | 24554  | 24554 | 12      |
+| transferFrom(address,address,uint256)          | 1201            | 20965 | 22884  | 23242 | 14      |
+| transferFrom(address,address,uint256)(bool)    | 2782            | 17005 | 21178  | 22884 | 4       |
 
 
 | test/mock/WETH.t.sol:WETH contract |                 |       |        |       |         |
@@ -157,3 +164,6 @@
 | Function Name                                                   | min             | avg    | median | max    | # calls |
 | flashReentrancyTester                                           | 349593          | 349593 | 349593 | 349593 | 1       |
 | onFlashLoan                                                     | 25369           | 25369  | 25369  | 25369  | 1       |
+
+
+
