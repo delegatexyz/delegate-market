@@ -88,6 +88,7 @@ contract DelegateTokenTest is Test {
         vm.assume(tokenOwner != address(0));
         vm.assume(principalTo != address(0));
         vm.assume(notLdTo != dtTo);
+        vm.assume(tokenOwner != address(dt));
 
         ( /* ExpiryType */ , uint256 expiry, /* expiryValue */ ) = prepareValidExpiry(expiryTypeRelative, time);
 
@@ -125,6 +126,7 @@ contract DelegateTokenTest is Test {
         vm.assume(tokenOwner != address(0));
         vm.assume(principalTo != address(0));
         vm.assume(notLdTo != dtTo);
+        vm.assume(tokenOwner != address(dt));
 
         ( /* ExpiryType */ , uint256 expiry, /* expiryValue */ ) = prepareValidExpiry(expiryTypeRelative, time);
 
