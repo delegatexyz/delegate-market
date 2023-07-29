@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {ComputeAddress} from "../script/ComputeAddress.s.sol";
 import {Strings} from "openzeppelin/utils/Strings.sol";
 import {DelegateToken, IDelegateToken} from "src/DelegateToken.sol";
+import {DelegateTokenErrors} from "src/interfaces/DelegateTokenErrors.sol";
 import {DTHarness} from "./utils/DTHarness.t.sol";
 import {ExpiryType} from "src/interfaces/IWrapOfferer.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
@@ -59,7 +60,6 @@ contract DelegateTokenTest is Test {
     }
 
     function testDTConstantsAndInitialStateVars() public {
-        assertEq(dt.flashLoanCallBackSuccess(), bytes32(uint256(keccak256("INFTFlashBorrower.onFlashLoan")) - 1));
         assertEq(dt.delegateRegistry(), address(reg));
         assertEq(dt.principalToken(), address(pt));
         assertEq(dt.baseURI(), baseURI);
@@ -91,11 +91,11 @@ contract DelegateTokenTest is Test {
     function testDTConstructor(address delegateRegistry, address principalToken, string calldata baseURI_, address initialMetadataOwner) public {
         vm.assume(delegateRegistry != address(0) && principalToken != address(0) && initialMetadataOwner != address(0));
         // Check zero reverts
-        vm.expectRevert(IDelegateToken.DelegateRegistryZero.selector);
+        vm.expectRevert(DelegateTokenErrors.DelegateRegistryZero.selector);
         new DelegateToken(address(0), principalToken, baseURI_, initialMetadataOwner);
-        vm.expectRevert(IDelegateToken.PrincipalTokenZero.selector);
+        vm.expectRevert(DelegateTokenErrors.PrincipalTokenZero.selector);
         new DelegateToken(delegateRegistry, address(0), baseURI_, initialMetadataOwner);
-        vm.expectRevert(IDelegateToken.InitialMetadataOwnerZero.selector);
+        vm.expectRevert(DelegateTokenErrors.InitialMetadataOwnerZero.selector);
         new DelegateToken(delegateRegistry, principalToken, baseURI_, address(0));
         // Check successful constructor
         dt = new DelegateToken(delegateRegistry, principalToken, baseURI_, initialMetadataOwner);
@@ -134,7 +134,7 @@ contract DelegateTokenTest is Test {
     function testBalanceOf(address delegateTokenHolder, uint256 balance) public {
         // Check zero address revert
         if (delegateTokenHolder == address(0)) {
-            vm.expectRevert(IDelegateToken.DelegateTokenHolderZero.selector);
+            vm.expectRevert(DelegateTokenErrors.DelegateTokenHolderZero.selector);
             dt.balanceOf(delegateTokenHolder);
         } else {
             // Check balance is stored correctly, mapping is at slot 7
@@ -145,7 +145,7 @@ contract DelegateTokenTest is Test {
 
     function testOwnerOf(address delegateTokenHolder, uint256 delegateTokenId, bytes32 rights) public {
         // Check zero address revert
-        vm.expectRevert(IDelegateToken.DelegateTokenHolderZero.selector);
+        vm.expectRevert(DelegateTokenErrors.DelegateTokenHolderZero.selector);
         dt.ownerOf(delegateTokenId);
         // Create registry delegation
         vm.prank(address(dt));
@@ -153,7 +153,7 @@ contract DelegateTokenTest is Test {
         // Store registryHash at expected location, mapping is a slot 6
         vm.store(address(dt), keccak256(abi.encode(delegateTokenId, 6)), registryHash);
         if (delegateTokenHolder == address(0)) {
-            vm.expectRevert(IDelegateToken.DelegateTokenHolderZero.selector);
+            vm.expectRevert(DelegateTokenErrors.DelegateTokenHolderZero.selector);
             dt.ownerOf(delegateTokenId);
         } else {
             assertEq(delegateTokenHolder, dt.ownerOf(delegateTokenId));
@@ -220,7 +220,7 @@ contract DelegateTokenTest is Test {
         // Store registryHash at expected location, mapping is at slot 6
         vm.store(address(dt), keccak256(abi.encode(delegateTokenId, 6)), registryHash);
         // Expect revert if caller is not delegateTokenHolder
-        vm.expectRevert(abi.encodeWithSelector(IDelegateToken.NotAuthorized.selector, searchDelegateTokenHolder, delegateTokenId));
+        vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.NotAuthorized.selector, searchDelegateTokenHolder, delegateTokenId));
         vm.prank(searchDelegateTokenHolder);
         dt.approve(spender, delegateTokenId);
         // Store dirty bits at approve location
@@ -263,7 +263,7 @@ contract DelegateTokenTest is Test {
 
     function testGetApproved(address from, address approved, bytes32 rights, uint256 delegateTokenId, uint256 dirtyBits) public {
         // Test revert if not minted
-        vm.expectRevert(abi.encodeWithSelector(IDelegateToken.NotMinted.selector, delegateTokenId));
+        vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.NotMinted.selector, delegateTokenId));
         dt.getApproved(delegateTokenId);
         // Store registryHash at expected location, mapping is at slot 6
         vm.prank(address(dt));
@@ -297,26 +297,26 @@ contract DelegateTokenTest is Test {
         vm.stopPrank();
         // Should revert if to is zero
         if (to == address(0)) {
-            vm.expectRevert(IDelegateToken.ToIsZero.selector);
+            vm.expectRevert(DelegateTokenErrors.ToIsZero.selector);
             vm.prank(from);
             dt.safeTransferFrom(from, to, delegateTokenId, data);
         }
         // Should revert if invalid tokenId
         if (delegateTokenId != searchTokenId && to != address(0)) {
-            vm.expectRevert(abi.encodeWithSelector(IDelegateToken.NotMinted.selector, searchTokenId));
+            vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.NotMinted.selector, searchTokenId));
             vm.prank(from);
             dt.safeTransferFrom(from, to, searchTokenId);
-            vm.expectRevert(abi.encodeWithSelector(IDelegateToken.NotMinted.selector, searchTokenId));
+            vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.NotMinted.selector, searchTokenId));
             vm.prank(searchFrom);
             dt.safeTransferFrom(from, to, searchTokenId);
         }
         if (to != address(0)) {
             // Should revert if from != delegateTokenHolder
-            vm.expectRevert(abi.encodeWithSelector(IDelegateToken.FromNotDelegateTokenHolder.selector, searchFrom, from));
+            vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.FromNotDelegateTokenHolder.selector, searchFrom, from));
             vm.prank(from);
             dt.safeTransferFrom(searchFrom, to, delegateTokenId);
             // Should revert if from != msg.sender
-            vm.expectRevert(abi.encodeWithSelector(IDelegateToken.NotAuthorized.selector, searchFrom, delegateTokenId));
+            vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.NotAuthorized.selector, searchFrom, delegateTokenId));
             vm.prank(searchFrom);
             dt.safeTransferFrom(from, to, delegateTokenId);
         }

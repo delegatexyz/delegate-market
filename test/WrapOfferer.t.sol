@@ -37,6 +37,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
     User user3 = makeUser("user3");
 
     uint96 internal constant SALT = 7;
+    uint256 tokenId;
 
     function setUp() public {
         wrapOfferer = new WrapOfferer(address(seaport), address(dt));
@@ -62,18 +63,16 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         uint256 expiryValue = 30 days;
         uint256 expectedETH = 0.3 ether;
         vm.deal(buyer.addr, expectedETH);
-        uint256 tokenId = 69;
+        tokenId = 69;
         token.mint(seller.addr, tokenId);
         // 2. Create and sign wrap receipt
         bytes32 receiptHash = wrapOfferer.getReceiptHash(address(0), seller.addr, address(token), tokenId, 1, expiryType, expiryValue);
         // 3. Build Order
-        orders[0] = _createSellerOrder(seller, tokenId, uint256(receiptHash), expectedETH, false);
+        orders[0] = _createSellerOrder(seller, uint256(receiptHash), expectedETH, false);
 
         // ============== Create Wrap Order ==============
-        address buyerAddr = buyer.addr;
-        address sellerAddr = seller.addr;
-        bytes memory context = wrapOfferer.encodeContext(ReceiptFillerType.DelegateOpen, expiryType, uint40(expiryValue), buyerAddr, sellerAddr, SALT);
-        orders[1] = _createWrapContractOrder(tokenId, uint256(receiptHash), context);
+        bytes memory context = wrapOfferer.encodeContext(ReceiptFillerType.DelegateOpen, expiryType, uint40(expiryValue), buyer.addr, seller.addr, SALT);
+        orders[1] = _createWrapContractOrder(uint256(receiptHash), context);
 
         // ========== Create Buy Delegate Order ==========
         orders[2] = _createBuyerOrder(buyer, 0, expectedETH, true);
@@ -90,6 +89,9 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         // offer: (2, 0); consideration: (0, 0); (orderIndex, itemIndex)
         fulfillments[2] = _constructFulfillment(2, 0, 0, 0);
 
+        // Calculate delegateId
+        uint256 delegateId = dt.getDelegateId(address(wrapOfferer), SALT);
+
         // =============== Execute Orders ================
 
         {
@@ -102,15 +104,14 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         }
 
         // Then match the orders for real
-        vm.startPrank(buyerAddr);
-        seaport.matchAdvancedOrders{value: expectedETH}(orders, new CriteriaResolver[](0), fulfillments, buyerAddr);
+        vm.startPrank(buyer.addr);
+        seaport.matchAdvancedOrders{value: expectedETH}(orders, new CriteriaResolver[](0), fulfillments, buyer.addr);
 
         // =========== Verify Correct Receipt ===========
         assertEq(seller.addr.balance, expectedETH);
-        uint256 delegateId = dt.getDelegateId(address(wrapOfferer), SALT);
         IDelegateToken.DelegateInfo memory delegateInfo = dt.getDelegateInfo(delegateId);
-        assertEq(dt.ownerOf(delegateId), buyerAddr);
-        assertEq(principal.ownerOf(delegateId), sellerAddr);
+        assertEq(dt.ownerOf(delegateId), buyer.addr);
+        assertEq(principal.ownerOf(delegateId), seller.addr);
         assertEq(delegateInfo.expiry, block.timestamp + expiryValue);
     }
 
@@ -160,7 +161,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         weth.mint(buyer.addr, expectedETH);
         vm.prank(buyer.addr);
         weth.approve(address(conduit), type(uint256).max);
-        uint256 tokenId = 34;
+        tokenId = 34;
         token.mint(seller.addr, tokenId);
 
         // 2. Create and sign wrap receipt
@@ -170,15 +171,12 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         orders[0] = _createBuyerOrder(buyer, uint256(receiptHash), expectedETH, false);
 
         // ============== Create Wrap Order ==============
-        // stack2deep cache
-        address buyerAddr = buyer.addr;
-        address sellerAddr = seller.addr;
         orders[1] = _createWrapContractOrder(
-            tokenId, uint256(receiptHash), wrapOfferer.encodeContext(ReceiptFillerType.PrincipalOpen, expiryType, uint40(expiryValue), buyerAddr, sellerAddr, SALT)
+            uint256(receiptHash), wrapOfferer.encodeContext(ReceiptFillerType.PrincipalOpen, expiryType, uint40(expiryValue), buyer.addr, seller.addr, SALT)
         );
 
         // ========= Create Sell Delegate Order ==========
-        orders[2] = _createSellerOrder(seller, tokenId, 0, expectedETH, true);
+        orders[2] = _createSellerOrder(seller, 0, expectedETH, true);
 
         // ============== Set Fulfillments ===============
         // Fulfillments tells Seaport how to match the different order components to ensure
@@ -191,24 +189,22 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         // Buyer ETH => Seller
         fulfillments[2] = _constructFulfillment(0, 0, 2, 0);
 
+        // Calculate delegateId
+        uint256 delegateId = dt.getDelegateId(address(wrapOfferer), SALT);
+
         // =============== Execute Orders ================
         vm.prank(seller.addr);
         seaport.matchAdvancedOrders(orders, new CriteriaResolver[](0), fulfillments, seller.addr);
 
         // =========== Verify Correct Receival ===========
         assertEq(weth.balanceOf(seller.addr), expectedETH);
-        uint256 delegateId = dt.getDelegateId(address(wrapOfferer), SALT);
         IDelegateToken.DelegateInfo memory delegateInfo = dt.getDelegateInfo(delegateId);
         assertEq(dt.ownerOf(delegateId), buyer.addr);
         assertEq(principal.ownerOf(delegateId), seller.addr);
         assertEq(delegateInfo.expiry, expiryValue);
     }
 
-    function _createSellerOrder(User memory user, uint256 tokenId, uint256 receiptId, uint256 expectedETH, bool submittingAsCaller)
-        internal
-        view
-        returns (AdvancedOrder memory)
-    {
+    function _createSellerOrder(User memory user, uint256 receiptId, uint256 expectedETH, bool submittingAsCaller) internal view returns (AdvancedOrder memory) {
         OfferItem[] memory offer = new OfferItem[](1);
         offer[0] = OfferItem({itemType: ItemType.ERC721, token: address(token), identifierOrCriteria: tokenId, startAmount: 1, endAmount: 1});
         uint256 totalConsiders = receiptId == 0 ? 1 : 2;
@@ -254,7 +250,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
         });
     }
 
-    function _createWrapContractOrder(uint256 tokenId, uint256 receiptId, bytes memory context) internal view returns (AdvancedOrder memory) {
+    function _createWrapContractOrder(uint256 receiptId, bytes memory context) internal view returns (AdvancedOrder memory) {
         // Wrap Offerer, offers gives a certain receipt as a commitment that certain parties
         // received principal / delegate tokens with certain terms
         OfferItem[] memory offer = new OfferItem[](1);

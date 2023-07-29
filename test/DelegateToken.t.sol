@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {ComputeAddress} from "../script/ComputeAddress.s.sol";
 import {Strings} from "openzeppelin/utils/Strings.sol";
 import {DelegateToken, IDelegateToken} from "src/DelegateToken.sol";
+import {DelegateTokenErrors} from "src/interfaces/DelegateTokenErrors.sol";
 import {ExpiryType} from "src/interfaces/IWrapOfferer.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 import {DelegateRegistry, IDelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
@@ -68,7 +69,7 @@ contract DelegateTokenTest is Test {
         vm.startPrank(tokenOwner);
         mock721.setApprovalForAll(address(dt), true);
 
-        if (dtTo == address(0)) vm.expectRevert(IDelegateToken.ToIsZero.selector);
+        if (dtTo == address(0)) vm.expectRevert(DelegateTokenErrors.ToIsZero.selector);
         uint256 delegateId =
             dt.create(IDelegateToken.DelegateInfo(principalTo, IDelegateRegistry.DelegationType.ERC721, dtTo, 0, address(mock721), tokenId, "", expiry), SALT);
 
@@ -94,8 +95,8 @@ contract DelegateTokenTest is Test {
         vm.startPrank(tokenOwner);
         mock20.approve(address(dt), amount);
 
-        if (dtTo == address(0) && amount != 0) vm.expectRevert(IDelegateToken.ToIsZero.selector);
-        if (amount == 0) vm.expectRevert(abi.encodeWithSelector(IDelegateToken.WrongAmountForType.selector, IDelegateRegistry.DelegationType.ERC20, 0));
+        if (dtTo == address(0) && amount != 0) vm.expectRevert(DelegateTokenErrors.ToIsZero.selector);
+        if (amount == 0) vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.WrongAmountForType.selector, IDelegateRegistry.DelegationType.ERC20, 0));
         uint256 delegateId =
             dt.create(IDelegateToken.DelegateInfo(principalTo, IDelegateRegistry.DelegationType.ERC20, dtTo, amount, address(mock20), 0, "", expiry), SALT);
 
@@ -132,8 +133,8 @@ contract DelegateTokenTest is Test {
         vm.startPrank(tokenOwner);
         mock1155.setApprovalForAll(address(dt), true);
 
-        if (dtTo == address(0) && amount != 0) vm.expectRevert(IDelegateToken.ToIsZero.selector);
-        if (amount == 0) vm.expectRevert(abi.encodeWithSelector(IDelegateToken.WrongAmountForType.selector, IDelegateRegistry.DelegationType.ERC1155, 0));
+        if (dtTo == address(0) && amount != 0) vm.expectRevert(DelegateTokenErrors.ToIsZero.selector);
+        if (amount == 0) vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.WrongAmountForType.selector, IDelegateRegistry.DelegationType.ERC1155, 0));
         uint256 delegateId =
             dt.create(IDelegateToken.DelegateInfo(principalTo, IDelegateRegistry.DelegationType.ERC1155, dtTo, amount, address(mock1155), tokenId, "", expiry), SALT);
 
@@ -160,7 +161,7 @@ contract DelegateTokenTest is Test {
         mock721.setApprovalForAll(address(dt), true);
         uint256 delegateId =
             dt.create(IDelegateToken.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 0, address(mock721), underlyingTokenId, "", expiry), SALT);
-        if (to == address(0)) vm.expectRevert(IDelegateToken.ToIsZero.selector);
+        if (to == address(0)) vm.expectRevert(DelegateTokenErrors.ToIsZero.selector);
         dt.transferFrom(from, to, delegateId);
         if (to == address(0)) return;
 
@@ -182,7 +183,7 @@ contract DelegateTokenTest is Test {
         mock20.approve(address(dt), underlyingAmount);
         uint256 delegateId =
             dt.create(IDelegateToken.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC20, from, underlyingAmount, address(mock20), 0, "", expiry), SALT);
-        if (to == address(0)) vm.expectRevert(IDelegateToken.ToIsZero.selector);
+        if (to == address(0)) vm.expectRevert(DelegateTokenErrors.ToIsZero.selector);
         dt.transferFrom(from, to, delegateId);
         if (to == address(0)) return;
 
@@ -207,7 +208,7 @@ contract DelegateTokenTest is Test {
         uint256 delegateId = dt.create(
             IDelegateToken.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC1155, from, underlyingAmount, address(mock1155), underlyingTokenId, "", expiry), SALT
         );
-        if (to == address(0)) vm.expectRevert(IDelegateToken.ToIsZero.selector);
+        if (to == address(0)) vm.expectRevert(DelegateTokenErrors.ToIsZero.selector);
         dt.transferFrom(from, to, delegateId);
         if (to == address(0)) return;
 
@@ -231,7 +232,7 @@ contract DelegateTokenTest is Test {
             dt.create(IDelegateToken.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 0, address(mock721), underlyingTokenId, "", expiry), SALT);
         dt.withdraw(from, delegateId);
 
-        vm.expectRevert(IDelegateToken.DelegateTokenHolderZero.selector);
+        vm.expectRevert(DelegateTokenErrors.DelegateTokenHolderZero.selector);
         dt.ownerOf(delegateId);
         vm.expectRevert();
         principal.ownerOf(delegateId);
@@ -254,7 +255,7 @@ contract DelegateTokenTest is Test {
             dt.create(IDelegateToken.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC20, from, underlyingAmount, address(mock20), 0, "", expiry), SALT);
         dt.withdraw(from, delegateId);
 
-        vm.expectRevert(IDelegateToken.DelegateTokenHolderZero.selector);
+        vm.expectRevert(DelegateTokenErrors.DelegateTokenHolderZero.selector);
         dt.ownerOf(delegateId);
         vm.expectRevert();
         principal.ownerOf(delegateId);
@@ -281,7 +282,7 @@ contract DelegateTokenTest is Test {
         );
         dt.withdraw(from, delegateId);
 
-        vm.expectRevert(IDelegateToken.DelegateTokenHolderZero.selector);
+        vm.expectRevert(DelegateTokenErrors.DelegateTokenHolderZero.selector);
         dt.ownerOf(delegateId);
         vm.expectRevert();
         principal.ownerOf(delegateId);

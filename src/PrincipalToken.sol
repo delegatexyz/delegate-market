@@ -1,40 +1,49 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.21;
 
-import {IDelegateToken, IDelegateRegistry} from "./interfaces/IDelegateToken.sol";
+import {IDelegateToken} from "./interfaces/IDelegateToken.sol";
+import {DelegateTokenErrors} from "./interfaces/DelegateTokenErrors.sol";
+
+import {ERC721} from "openzeppelin/token/ERC721/ERC721.sol";
 
 import {Strings} from "openzeppelin/utils/Strings.sol";
 import {Base64} from "openzeppelin/utils/Base64.sol";
-
-import {ERC721} from "openzeppelin/token/ERC721/ERC721.sol";
 
 /// @notice A simple NFT that doesn't store any user data itself, being tightly linked to the more stateful Delegate Token.
 /// @notice The holder of the PT is eligible to reclaim the escrowed NFT when the DT expires or is burned.
 contract PrincipalToken is ERC721("PrincipalToken", "PT") {
     address public immutable delegateToken;
 
-    error CallerNotDelegateToken();
-    error NotAuthorized();
-    error NotMinted();
-    error NotDelegateToken();
-
     constructor(address delegateToken_) {
-        if (delegateToken_ == address(0)) revert NotDelegateToken();
+        if (delegateToken_ == address(0)) revert DelegateTokenErrors.DelegateTokenZero();
         delegateToken = delegateToken_;
     }
 
+    function _checkDelegateTokenCaller() internal view {
+        if (msg.sender != delegateToken) revert DelegateTokenErrors.CallerNotDelegateToken();
+    }
+
+    /// @notice exposes _mint method
+    /// @dev must revert if caller is not delegate token
+    /// @dev must revert if delegate token has not authorized the mint
     function mint(address to, uint256 id) external {
-        if (msg.sender != delegateToken) revert CallerNotDelegateToken();
+        _checkDelegateTokenCaller();
         _mint(to, id);
+        IDelegateToken(delegateToken).mintAuthorizedCallback();
     }
 
-    function burnIfAuthorized(address burner, uint256 id) external {
-        if (msg.sender != delegateToken) revert CallerNotDelegateToken();
-        if (!_isApprovedOrOwner(burner, id)) revert NotAuthorized();
+    /// @notice exposes _burn method
+    /// @dev must revert if spender fails isApprovedOrOwner for the token
+    /// @dev must revert if caller is not delegate token
+    /// @dev must revert if delegate token has not authorized the burn
+    function burn(address spender, uint256 id) external {
+        if (!_isApprovedOrOwner(spender, id)) revert DelegateTokenErrors.NotAuthorized(spender, id);
+        _checkDelegateTokenCaller();
         _burn(id);
+        IDelegateToken(delegateToken).burnAuthorizedCallback();
     }
 
-    /// @dev expose _isApprovedOrOwner method
+    /// @notice exposes _isApprovedOrOwner method
     function isApprovedOrOwner(address account, uint256 id) external view returns (bool) {
         return _isApprovedOrOwner(account, id);
     }
@@ -45,7 +54,7 @@ contract PrincipalToken is ERC721("PrincipalToken", "PT") {
 
     /// TODO: implement support for ERC20 and ERC1155 metadata
     function tokenURI(uint256 id) public view override returns (string memory) {
-        if (_ownerOf(id) == address(0)) revert NotMinted();
+        _requireMinted(id);
 
         IDelegateToken dt = IDelegateToken(delegateToken);
 

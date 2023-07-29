@@ -2,10 +2,11 @@
 pragma solidity ^0.8.4;
 
 import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
+import {DelegateTokenErrors} from "./DelegateTokenErrors.sol";
 import {IERC721Metadata} from "openzeppelin/token/ERC721/extensions/IERC721Metadata.sol";
 import {IERC1155Receiver} from "openzeppelin/token/ERC1155/IERC1155Receiver.sol";
 
-interface IDelegateToken is IERC721Metadata, IERC1155Receiver {
+interface IDelegateToken is DelegateTokenErrors, IERC721Metadata, IERC1155Receiver {
     /*//////////////////////////////////////////////////////////////
                              EVENTS
     //////////////////////////////////////////////////////////////*/
@@ -22,47 +23,11 @@ interface IDelegateToken is IERC721Metadata, IERC1155Receiver {
     event ExpiryExtended(uint256 indexed delegateTokenId, uint256 previousExpiry, uint256 newExpiry);
 
     /*//////////////////////////////////////////////////////////////
-                             ERRORS
-    //////////////////////////////////////////////////////////////*/
-
-    error DelegateRegistryZero();
-    error PrincipalTokenZero();
-    error DelegateTokenHolderZero();
-    error InitialMetadataOwnerZero();
-    error ToIsZero();
-    error FromIsZero();
-    error TokenAmountIsZero();
-
-    error NotERC721Receiver(address to);
-
-    error NotAuthorized(address caller, uint256 delegateTokenId);
-
-    error FromNotDelegateTokenHolder(address from, address delegateTokenHolder);
-
-    error HashMismatch();
-
-    error NotMinted(uint256 delegateTokenId);
-    error AlreadyExisted(uint256 delegateTokenId);
-    error WithdrawNotAvailable(uint256 delegateTokenId, uint256 expiry, uint256 timestamp);
-
-    error ExpiryTimeNotInFuture(uint256 expiry, uint256 timestamp);
-    error ExpiryTooLarge(uint256 expiry, uint256 maximum);
-    error ExpiryTooSmall(uint256 expiry, uint256 minimum);
-
-    error WrongAmountForType(IDelegateRegistry.DelegationType tokenType, uint256 wrongAmount);
-    error InvalidTokenType(IDelegateRegistry.DelegationType tokenType);
-
-    error InvalidFlashloan();
-
-    /*//////////////////////////////////////////////////////////////
                       VIEW & INTROSPECTION
     //////////////////////////////////////////////////////////////*/
 
     /// @dev see https://eips.ethereum.org/EIPS/eip-165
     function supportsInterface(bytes4 interfaceId) external view returns (bool);
-
-    /// @notice The value flash borrowers need to return from `onFlashLoan` for the call to be successful.
-    function flashLoanCallBackSuccess() external pure returns (bytes32);
 
     /// @notice The v2 delegate registry address
     function delegateRegistry() external view returns (address);
@@ -98,7 +63,6 @@ interface IDelegateToken is IERC721Metadata, IERC1155Receiver {
     /**
      * @notice Deterministic function for generating a delegateId. Because msg.sender is fixed in addition to the freely chosen salt, addresses cannot grief each other.
      * The WrapOfferer is a special case, but trivial to regenerate a unique salt
-     * @dev TODO: reverts if the delegate id has been used
      * @param creator should be the caller of create
      * @param salt allows the creation of a new unique id
      * @return delegateId
@@ -148,18 +112,36 @@ interface IDelegateToken is IERC721Metadata, IERC1155Receiver {
     function withdraw(address recipient, uint256 delegateTokenId) external;
 
     /**
-     * @notice Allows delegate token owner or approved operator to borrow their underlying token for the
-     * duration of a single atomic transaction
-     * @param receiver Recipient of borrowed token, must implement the `INFTFlashBorrower` interface
-     * @param delegateId ID of the rights the underlying token is being borrowed from
-     * @param data Added metadata to be relayed to borrower
-     * @dev TODO: implement ERC20 and ERC1155 versions of this
+     * @notice Allows delegate token owner or approved operator to borrow their underlying tokens for the duration of a single atomic transaction.
+     * @param owner of the delegate token holder.
+     * @param receiver Recipient of borrowed tokens, must implement the `IDelegateFlashloan` interface
+     * @param delegationType Type of the underlying token being borrowed.
+     * @param underlyingContract Contract of the underlying token being borrowed.
+     * @param underlyingTokenId TokenId of the underlying token being borrowed, if applicable.
+     * @param data Arbitrary data to be relayed to receiver.
      */
-    function flashLoan(address receiver, uint256 delegateId, bytes calldata data) external payable;
+    function flashloan(
+        address owner,
+        address receiver,
+        IDelegateRegistry.DelegationType delegationType,
+        address underlyingContract,
+        uint256 underlyingTokenId,
+        bytes calldata data
+    ) external payable;
 
     /**
      * @notice Allows the owner of DelegateToken contract to set baseURI
      * @param uri will be set as the new baseURI
      */
     function setBaseURI(string calldata uri) external;
+
+    /**
+     * @notice Callback function for principal token during the create flow
+     */
+    function burnAuthorizedCallback() external;
+
+    /**
+     * @notice Callback function for principal token during the withdraw flow
+     */
+    function mintAuthorizedCallback() external;
 }

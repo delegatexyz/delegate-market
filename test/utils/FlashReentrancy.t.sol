@@ -4,9 +4,9 @@ pragma solidity ^0.8.21;
 import {IDelegateToken} from "src/interfaces/IDelegateToken.sol";
 import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
 import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
-import {INFTFlashBorrower} from "src/interfaces/INFTFlashBorrower.sol";
+import {IDelegateFlashloan} from "src/interfaces/IDelegateFlashloan.sol";
 
-contract FlashReentrancyTester is INFTFlashBorrower {
+contract FlashReentrancyTester is IDelegateFlashloan {
     IDelegateToken immutable dt;
 
     uint256 secondDelegateTokenId;
@@ -17,7 +17,7 @@ contract FlashReentrancyTester is INFTFlashBorrower {
 
     function flashReentrancyTester(address tokenContract, uint256 tokenId) external {
         IERC721(tokenContract).approve(address(dt), tokenId);
-        uint256 firstDelegateTokenId = dt.create(
+        dt.create(
             IDelegateToken.DelegateInfo(
                 address(42), // Sends principal token to a burn address
                 IDelegateRegistry.DelegationType.ERC721,
@@ -30,25 +30,29 @@ contract FlashReentrancyTester is INFTFlashBorrower {
             ),
             0
         );
-        dt.flashLoan{value: 0}(address(this), firstDelegateTokenId, "");
+        dt.flashloan{value: 0}(address(this), address(this), IDelegateRegistry.DelegationType.ERC721, tokenContract, tokenId, "");
         dt.withdraw(msg.sender, secondDelegateTokenId);
     }
 
-    function onFlashLoan(address, address tokenContract, uint256 tokenId, bytes calldata) external payable returns (bytes32) {
-        IERC721(tokenContract).approve(address(dt), tokenId);
+    function onFlashloan(address, IDelegateRegistry.DelegationType, address underlyingContract, uint256 underlyingTokenId, uint256, bytes calldata)
+        external
+        payable
+        returns (bytes32)
+    {
+        IERC721(underlyingContract).approve(address(dt), underlyingTokenId);
         secondDelegateTokenId = dt.create(
             IDelegateToken.DelegateInfo(
                 address(this), // Sends principal token to this contract
                 IDelegateRegistry.DelegationType.ERC721,
                 address(this),
                 1,
-                tokenContract,
-                tokenId,
+                underlyingContract,
+                underlyingTokenId,
                 "",
                 1 days
             ),
             1
         );
-        return dt.flashLoanCallBackSuccess();
+        return IDelegateFlashloan.onFlashloan.selector;
     }
 }
