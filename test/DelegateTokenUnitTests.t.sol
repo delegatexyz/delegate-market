@@ -11,6 +11,7 @@ import {ExpiryType} from "src/interfaces/IWrapOfferer.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 import {DelegateRegistry, IDelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
 import {MockERC721, MockERC20, MockERC1155} from "./mock/MockTokens.t.sol";
+import {DelegateTokenConstants} from "src/libraries/DelegateTokenConstants.sol";
 import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
 import {ERC721Holder} from "openzeppelin/token/ERC721/utils/ERC721Holder.sol";
 import {IERC721Metadata} from "openzeppelin/token/ERC721/extensions/IERC721Metadata.sol";
@@ -68,14 +69,6 @@ contract DelegateTokenTest is Test {
         assertEq(dtHarness.exposedDelegateTokenInfo(0, 2), 3);
         vm.expectRevert();
         dtHarness.exposedDelegateTokenInfo(0, 3);
-        assertEq(dtHarness.exposedStoragePositionsMin(), 0);
-        assertEq(dtHarness.exposedStoragePositionsMax(), 2);
-        assertEq(dtHarness.exposedMaxExpiry(), type(uint256).max >> 160);
-        assertEq(dtHarness.exposedDelegateTokenIdAvailable(), 0);
-        assertEq(dtHarness.exposedDelegateTokenIdUsed(), 1);
-        assertEq(dtHarness.exposedApproveAllDisabled(), 0);
-        assertEq(dtHarness.exposedApproveAllEnabled(), 1);
-        assertEq(dtHarness.exposedRescindAddress(), address(1));
         // Check slots
         assertEq(dtHarness.exposedSlotUint256(0), 1); // OpenZep reentrancy guard (not entered)
         assertEq(dtHarness.exposedSlotUint256(1), uint256(uint160(dtOwner))); // OpenZep ownable2step owner
@@ -118,16 +111,32 @@ contract DelegateTokenTest is Test {
         }
     }
 
-    function testTokenReceiverMethods(address operator, address from, uint256[] calldata ids, uint256[] calldata amounts, bytes calldata data) public {
+    function testTokenReceiverMethods(address operator, address from, uint256[] calldata ids, uint256[] calldata amounts, bytes calldata data, uint256 not1155Pulled)
+        public
+    {
+        vm.assume(not1155Pulled != DelegateTokenConstants.ERC1155_PULLED);
+        // vm.assume(not721Pulled != 4);
         if (ids.length > 0 && amounts.length > 0) {
+            vm.store(address(dt), bytes32(uint256(11)), bytes32(DelegateTokenConstants.ERC1155_PULLED));
             assertEq(dt.onERC1155Received(operator, from, ids[0], amounts[0], data), bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)")));
+            assertEq(dt.onERC721Received(operator, from, ids[0], data), 0);
+            vm.store(address(dt), bytes32(uint256(11)), bytes32(not1155Pulled));
+            assertEq(dt.onERC1155Received(operator, from, ids[0], amounts[0], data), 0);
+            assertEq(dt.onERC721Received(operator, from, ids[0], data), 0);
         }
         if (ids.length == 1 && amounts.length == 1) {
+            vm.store(address(dt), bytes32(uint256(11)), bytes32(DelegateTokenConstants.ERC1155_PULLED));
             assertEq(
                 dt.onERC1155BatchReceived(operator, from, ids, amounts, data), bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))
             );
+            assertEq(dt.onERC721Received(operator, from, ids[0], data), 0);
+            vm.store(address(dt), bytes32(uint256(11)), bytes32(not1155Pulled));
+            assertEq(dt.onERC1155BatchReceived(operator, from, ids, amounts, data), 0);
+            assertEq(dt.onERC721Received(operator, from, ids[0], data), 0);
         } else {
             assertEq(dt.onERC1155BatchReceived(operator, from, ids, amounts, data), 0);
+            assertEq(dt.onERC1155Received(operator, from, 0, 0, data), 0);
+            assertEq(dt.onERC721Received(operator, from, 0, data), 0);
         }
     }
 
@@ -168,7 +177,7 @@ contract DelegateTokenTest is Test {
         vm.startPrank(from);
         mock721.mintNext(from);
         mock721.approve(address(dt), 0);
-        uint256 delegateTokenId = dt.create(IDelegateToken.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 1, address(mock721), 0, rights, expiry), 1);
+        uint256 delegateTokenId = dt.create(IDelegateToken.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 0, address(mock721), 0, rights, expiry), 1);
         vm.stopPrank();
         if (to.code.length != 0) {
             vm.expectRevert();
@@ -192,7 +201,7 @@ contract DelegateTokenTest is Test {
         vm.startPrank(from);
         mock721.mintNext(from);
         mock721.approve(address(dt), 0);
-        uint256 delegateTokenId = dt.create(IDelegateToken.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 1, address(mock721), 0, rights, expiry), 1);
+        uint256 delegateTokenId = dt.create(IDelegateToken.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 0, address(mock721), 0, rights, expiry), 1);
         vm.stopPrank();
         if (to.code.length != 0) {
             vm.expectRevert();
@@ -250,13 +259,11 @@ contract DelegateTokenTest is Test {
         dt.setApprovalForAll(operator, approve);
         vm.stopPrank();
         // Load approvals slot and check it has been set correctly, approvals mapping is at slot 8
-        uint256 approvalSlot = uint256(vm.load(address(dt), keccak256(abi.encode(keccak256(abi.encode(from, operator)), 8))));
+        uint256 approvalSlot = uint256(vm.load(address(dt), keccak256(abi.encode(operator, keccak256(abi.encode(from, 8))))));
         assertEq(approvalSlot >> 1, 0);
         if (approve) {
-            assertEq(approvalSlot, dtHarness.exposedApproveAllEnabled());
             assertEq(approvalSlot, 1);
         } else {
-            assertEq(approvalSlot, dtHarness.exposedApproveAllDisabled());
             assertEq(approvalSlot, 0);
         }
     }
@@ -279,7 +286,7 @@ contract DelegateTokenTest is Test {
     function testIsApprovedForAll(address from, address operator, uint256 approve) public {
         vm.assume(approve <= 1);
         // Store test approval, approvals mapping is at slot 8
-        vm.store(address(dt), keccak256(abi.encode(keccak256(abi.encode(from, operator)), 8)), bytes32(approve));
+        vm.store(address(dt), keccak256(abi.encode(operator, keccak256(abi.encode(from, 8)))), bytes32(approve));
         if (approve == 0) assertFalse(dt.isApprovedForAll(from, operator));
         else assertTrue(dt.isApprovedForAll(from, operator));
     }
@@ -293,7 +300,7 @@ contract DelegateTokenTest is Test {
         vm.startPrank(from);
         mock721.mintNext(from);
         mock721.approve(address(dt), 0);
-        uint256 delegateTokenId = dt.create(IDelegateToken.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 1, address(mock721), 0, rights, expiry), 1);
+        uint256 delegateTokenId = dt.create(IDelegateToken.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 0, address(mock721), 0, rights, expiry), 1);
         vm.stopPrank();
         // Should revert if to is zero
         if (to == address(0)) {

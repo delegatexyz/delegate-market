@@ -5,8 +5,9 @@ import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
 import {DelegateTokenErrors} from "./DelegateTokenErrors.sol";
 import {IERC721Metadata} from "openzeppelin/token/ERC721/extensions/IERC721Metadata.sol";
 import {IERC1155Receiver} from "openzeppelin/token/ERC1155/IERC1155Receiver.sol";
+import {IERC721Receiver} from "openzeppelin/token/ERC721/IERC721Receiver.sol";
 
-interface IDelegateToken is DelegateTokenErrors, IERC721Metadata, IERC1155Receiver {
+interface IDelegateToken is DelegateTokenErrors, IERC721Metadata, IERC1155Receiver, IERC721Receiver {
     /*//////////////////////////////////////////////////////////////
                              EVENTS
     //////////////////////////////////////////////////////////////*/

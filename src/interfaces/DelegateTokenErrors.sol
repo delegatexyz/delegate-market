@@ -15,6 +15,8 @@ interface DelegateTokenErrors {
 
     error NotERC721Receiver(address to);
 
+    error InsufficientAllowanceOrInvalidToken();
+
     error NotAuthorized(address caller, uint256 delegateTokenId);
 
     error FromNotDelegateTokenHolder(address from, address delegateTokenHolder);
@@ -30,6 +32,7 @@ interface DelegateTokenErrors {
     error ExpiryTooSmall(uint256 expiry, uint256 minimum);
 
     error WrongAmountForType(IDelegateRegistry.DelegationType tokenType, uint256 wrongAmount);
+    error WrongTokenIdForType(IDelegateRegistry.DelegationType tokenType, uint256 wrongTokenId);
     error InvalidTokenType(IDelegateRegistry.DelegationType tokenType);
 
     error InvalidFlashloan();
@@ -40,4 +43,9 @@ interface DelegateTokenErrors {
     error CallerNotDelegateToken();
     error BurnAuthorized();
     error MintAuthorized();
+
+    error ERC721Pulled();
+    error ERC721NotPulled();
+    error ERC1155Pulled();
+    error ERC1155NotPulled();
 }

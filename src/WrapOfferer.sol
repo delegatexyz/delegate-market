@@ -130,14 +130,7 @@ contract WrapOfferer is IWrapOfferer {
             //slither-disable-next-line unused-return
             IDelegateToken(delegateToken).create(
                 IDelegateToken.DelegateInfo(
-                    principalRecipient,
-                    IDelegateRegistry.DelegationType.ERC721,
-                    delegateRecipient,
-                    considerationAmount,
-                    considerationToken,
-                    considerationIdentifier,
-                    "",
-                    expiry
+                    principalRecipient, IDelegateRegistry.DelegationType.ERC721, delegateRecipient, 0, considerationToken, considerationIdentifier, "", expiry
                 ),
                 salt
             );

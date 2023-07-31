@@ -22,7 +22,7 @@ contract FlashReentrancyTester is IDelegateFlashloan {
                 address(42), // Sends principal token to a burn address
                 IDelegateRegistry.DelegationType.ERC721,
                 address(this),
-                1,
+                0,
                 tokenContract,
                 tokenId,
                 "", // Default rights to enable flashloan
@@ -45,7 +45,7 @@ contract FlashReentrancyTester is IDelegateFlashloan {
                 address(this), // Sends principal token to this contract
                 IDelegateRegistry.DelegationType.ERC721,
                 address(this),
-                1,
+                0,
                 underlyingContract,
                 underlyingTokenId,
                 "",

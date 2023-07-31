@@ -24,68 +24,18 @@ contract DTHarness is DelegateToken {
         return delegateTokenInfo[delegateTokenId][position];
     }
 
-    function exposedStoragePositionsMin() external pure returns (uint256) {
-        return uint256(type(StoragePositions).min);
-    }
-
-    function exposedStoragePositionsMax() external pure returns (uint256) {
-        return uint256(type(StoragePositions).max);
-    }
-
-    function exposedMaxExpiry() external pure returns (uint256) {
-        return MAX_EXPIRY;
-    }
-
-    function exposedDelegateTokenIdAvailable() external pure returns (uint256) {
-        return DELEGATE_TOKEN_ID_AVAILABLE;
-    }
-
-    function exposedDelegateTokenIdUsed() external pure returns (uint256) {
-        return DELEGATE_TOKEN_ID_USED;
-    }
-
     function exposedBalances(address delegateTokenHolder) external view returns (uint256) {
         return balances[delegateTokenHolder];
     }
 
-    function exposedApprovals(bytes32 approveAllHash) external view returns (uint256) {
-        return approvals[approveAllHash];
+    function exposedTransferByType(address from, uint256 delegateTokenId, uint256 registryHash, address to, address underlyingContract) external {
+        _transferByType(from, delegateTokenId, registryHash, to, underlyingContract);
     }
 
-    function exposedApproveAllDisabled() external pure returns (uint256) {
-        return APPROVE_ALL_DISABLED;
-    }
-
-    function exposedApproveAllEnabled() external pure returns (uint256) {
-        return APPROVE_ALL_ENABLED;
-    }
-
-    function exposedRescindAddress() external pure returns (address) {
-        return RESCIND_ADDRESS;
-    }
-
-    function exposedTransferByType(
-        uint256 delegateTokenId,
-        bytes32 registryLocation,
-        address from,
-        bytes32 delegationHash,
-        address to,
-        IDelegateRegistry.DelegationType underlyingType,
-        address underlyingContract,
-        bytes32 underlyingRights
-    ) external {
-        _transferByType(delegateTokenId, registryLocation, from, delegationHash, to, underlyingType, underlyingContract, underlyingRights);
-    }
-
-    function exposedIsApprovedOrOwner(address spender, uint256 delegateTokenId) external view returns (bool approvedOrOwner, address delegateTokenHolder) {
-        return _isApprovedOrOwner(spender, delegateTokenId);
-    }
-
-    function exposedPullAndParse(IDelegateRegistry.DelegationType underlyingType, uint256 underlyingAmount, address underlyingContract, uint256 underlyingTokenId)
+    function exposedPullAndCheckByType(IDelegateRegistry.DelegationType underlyingType, uint256 underlyingAmount, address underlyingContract, uint256 underlyingTokenId)
         external
-        returns (uint256 parsedUnderlyingAmount, uint256 parsedUnderlyingTokenId)
     {
-        return _pullAndParse(underlyingType, underlyingAmount, underlyingContract, underlyingTokenId);
+        return _pullAndCheckByType(underlyingType, underlyingAmount, underlyingContract, underlyingTokenId);
     }
 
     function exposedCreateByType(
