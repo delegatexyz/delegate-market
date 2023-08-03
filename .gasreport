@@ -37,13 +37,13 @@
 | src/DelegateToken.sol:DelegateToken contract    |                 |        |        |        |         |
 |-------------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                                 | Deployment Size |        |        |        |         |
-| 6004643                                         | 30971           |        |        |        |         |
+| 5961841                                         | 30695           |        |        |        |         |
 | Function Name                                   | min             | avg    | median | max    | # calls |
 | approve                                         | 3936            | 4028   | 3960   | 4190   | 3       |
 | balanceOf                                       | 658             | 658    | 658    | 658    | 1       |
-| baseURI                                         | 1272            | 3367   | 1272   | 7557   | 3       |
+| baseURI                                         | 1272            | 3387   | 1334   | 7557   | 3       |
 | burnAuthorizedCallback                          | 458             | 458    | 458    | 458    | 3       |
-| create                                          | 605             | 211443 | 288858 | 347719 | 26      |
+| create                                          | 605             | 211453 | 288875 | 347724 | 26      |
 | delegateRegistry                                | 294             | 294    | 294    | 294    | 2       |
 | flashloan                                       | 45912           | 45912  | 45912  | 45912  | 1       |
 | getApproved                                     | 858             | 2116   | 2633   | 2858   | 3       |
@@ -55,14 +55,14 @@
 | owner                                           | 397             | 397    | 397    | 397    | 1       |
 | ownerOf                                         | 1563            | 2591   | 1563   | 8024   | 12      |
 | principalToken                                  | 271             | 271    | 271    | 271    | 2       |
-| safeTransferFrom(address,address,uint256)       | 2833            | 30735  | 2878   | 139730 | 5       |
-| safeTransferFrom(address,address,uint256,bytes) | 139895          | 139895 | 139895 | 139895 | 1       |
+| safeTransferFrom(address,address,uint256)       | 2833            | 30736  | 2878   | 139737 | 5       |
+| safeTransferFrom(address,address,uint256,bytes) | 139902          | 139902 | 139902 | 139902 | 1       |
 | setApprovalForAll                               | 4649            | 14599  | 14599  | 24549  | 2       |
 | setBaseURI                                      | 25163           | 25163  | 25163  | 25163  | 1       |
-| tokenURI                                        | 90469           | 90469  | 90469  | 90469  | 1       |
-| transferFrom(address,address,uint256)           | 159357          | 159357 | 159357 | 159357 | 1       |
-| transferFrom(address,address,uint256)(bool)     | 139259          | 139715 | 139715 | 140172 | 2       |
-| withdraw                                        | 43532           | 44278  | 43667  | 45637  | 3       |
+| tokenURI                                        | 90474           | 90474  | 90474  | 90474  | 1       |
+| transferFrom(address,address,uint256)           | 139266          | 139731 | 139731 | 140197 | 2       |
+| transferFrom(address,address,uint256)(bool)     | 159395          | 159395 | 159395 | 159395 | 1       |
+| withdraw                                        | 43493           | 44239  | 43628  | 45598  | 3       |
 
 
 | src/PrincipalToken.sol:PrincipalToken contract |                 |        |        |        |         |
@@ -86,7 +86,7 @@
 | generateOrder                            | 27736           | 27754  | 27754  | 27773  | 2       |
 | getReceiptHash                           | 1229            | 1229   | 1229   | 1229   | 2       |
 | previewOrder                             | 5780            | 5780   | 5780   | 5780   | 1       |
-| ratifyOrder                              | 307744          | 307756 | 307756 | 307769 | 2       |
+| ratifyOrder                              | 307761          | 307773 | 307773 | 307786 | 2       |
 | transferFrom                             | 634             | 634    | 634    | 634    | 2       |
 
 
@@ -107,13 +107,11 @@
 | 672200                                        | 3642            |       |        |       |         |
 | Function Name                                 | min             | avg   | median | max   | # calls |
 | allowance                                     | 756             | 1256  | 756    | 2756  | 4       |
-| approve(address,uint256)                      | 24603           | 24603 | 24603  | 24603 | 1       |
-| approve(address,uint256)(bool)                | 24603           | 24603 | 24603  | 24603 | 2       |
+| approve                                       | 24603           | 24603 | 24603  | 24603 | 3       |
 | balanceOf                                     | 561             | 561   | 561    | 561   | 4       |
 | mint                                          | 46592           | 46592 | 46592  | 46592 | 3       |
 | transfer                                      | 18348           | 18348 | 18348  | 18348 | 1       |
-| transferFrom(address,address,uint256)         | 22007           | 22007 | 22007  | 22007 | 1       |
-| transferFrom(address,address,uint256)(bool)   | 22007           | 22007 | 22007  | 22007 | 2       |
+| transferFrom                                  | 22007           | 22007 | 22007  | 22007 | 3       |
 
 
 | test/mock/MockTokens.t.sol:MockERC721 contract |                 |       |        |       |         |
@@ -144,10 +142,10 @@
 | test/utils/DTHarness.t.sol:DTHarness contract |                 |      |        |      |         |
 |-----------------------------------------------|-----------------|------|--------|------|---------|
 | Deployment Cost                               | Deployment Size |      |        |      |         |
-| 6230273                                       | 31695           |      |        |      |         |
+| 6130993                                       | 31137           |      |        |      |         |
 | Function Name                                 | min             | avg  | median | max  | # calls |
 | exposedDelegateTokenInfo                      | 479             | 2086 | 2622   | 2622 | 4       |
-| exposedSlotUint256                            | 2437            | 2437 | 2437   | 2437 | 8       |
+| exposedSlotUint256                            | 2480            | 2480 | 2480   | 2480 | 8       |
 
 
 | test/utils/FlashReentrancy.t.sol:FlashReentrancyTester contract |                 |        |        |        |         |
@@ -155,5 +153,8 @@
 | Deployment Cost                                                 | Deployment Size |        |        |        |         |
 | 457390                                                          | 2488            |        |        |        |         |
 | Function Name                                                   | min             | avg    | median | max    | # calls |
-| flashReentrancyTester                                           | 347570          | 347570 | 347570 | 347570 | 1       |
+| flashReentrancyTester                                           | 347587          | 347587 | 347587 | 347587 | 1       |
 | onFlashloan                                                     | 25673           | 25673  | 25673  | 25673  | 1       |
+
+
+

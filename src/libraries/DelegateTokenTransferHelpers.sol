@@ -7,7 +7,7 @@ import {DelegateTokenErrors as Errors} from "src/libraries/DelegateTokenErrors.s
 import {DelegateTokenConstants as Constants} from "src/libraries/DelegateTokenConstants.sol";
 import {DelegateTokenStorageHelpers as StorageHelpers} from "src/libraries/DelegateTokenStorageHelpers.sol";
 import {IERC1155} from "openzeppelin/token/ERC1155/IERC1155.sol";
-import {IERC721, IERC721Metadata} from "openzeppelin/token/ERC721/extensions/IERC721Metadata.sol";
+import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
 import {IERC20} from "openzeppelin/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin/token/ERC20/utils/SafeERC20.sol";
 

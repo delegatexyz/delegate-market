@@ -27,20 +27,4 @@ contract DTHarness is DelegateToken {
     function exposedBalances(address delegateTokenHolder) external view returns (uint256) {
         return balances[delegateTokenHolder];
     }
-
-    function exposedTransferByType(address from, uint256 delegateTokenId, address to, bytes32 registryHash, address underlyingContract) external {
-        _transferByType(from, delegateTokenId, to, registryHash, underlyingContract);
-    }
-
-    function exposedCreateByType(DelegateInfo calldata delegateInfo, uint256 delegateTokenId) external {
-        _createByType(delegateInfo, delegateTokenId);
-    }
-
-    function exposedWithdrawByType(address recipient, uint256 delegateTokenId, address delegateTokenHolder, bytes32 registryHash, address underlyingContract) external {
-        _withdrawByType(recipient, delegateTokenId, delegateTokenHolder, registryHash, underlyingContract);
-    }
-
-    function exposedBuildTokenURI(address tokenContract, uint256 delegateTokenId, uint256 expiry, address principalOwner) external view returns (string memory) {
-        return _buildTokenURI(tokenContract, delegateTokenId, expiry, principalOwner);
-    }
 }
