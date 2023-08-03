@@ -6,20 +6,19 @@ import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
 interface IDelegateFlashloan {
     /**
      * @dev Receive a delegate flashloan.
-     * @param initiator The initiator of the delegate flashloan.
-     * @param delegationType The type of delegation contract, e.g. ERC20.
-     * @param underlyingContract The contract of the underlying being loaned.
-     * @param underlyingTokenId The tokenId of the underlying being loaned, if applicable.
-     * @param flashAmount The amount being lent, if applicable.
-     * @param data Arbitrary data structure, intended to contain user-defined parameters.
+     * @param initiator caller of the flashloan
+     * @param flashInfo struct
      * @return The keccak256 hash of "IDelegateFlashloan.onFlashloan"
      */
-    function onFlashloan(
-        address initiator,
-        IDelegateRegistry.DelegationType delegationType,
-        address underlyingContract,
-        uint256 underlyingTokenId,
-        uint256 flashAmount,
-        bytes calldata data
-    ) external payable returns (bytes32);
+    function onFlashloan(address initiator, FlashInfo calldata flashInfo) external payable returns (bytes32);
+
+    struct FlashInfo {
+        address receiver; // The address to receive the loaned assets.
+        address delegateHolder; // The holder of the delegation.
+        IDelegateRegistry.DelegationType tokenType; // The type of contract, e.g. ERC20.
+        address tokenContract; // The contract of the underlying being loaned.
+        uint256 tokenId; // The tokenId of the underlying being loaned, if applicable.
+        uint256 amount; // The amount being lent, if applicable.
+        bytes data; // Arbitrary data structure, intended to contain user-defined parameters.
+    }
 }

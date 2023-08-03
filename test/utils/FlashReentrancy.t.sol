@@ -30,24 +30,20 @@ contract FlashReentrancyTester is IDelegateFlashloan {
             ),
             0
         );
-        dt.flashloan{value: 0}(address(this), address(this), IDelegateRegistry.DelegationType.ERC721, tokenContract, tokenId, "");
+        dt.flashloan{value: 0}(IDelegateFlashloan.FlashInfo(address(this), address(this), IDelegateRegistry.DelegationType.ERC721, tokenContract, tokenId, 0, ""));
         dt.withdraw(msg.sender, secondDelegateTokenId);
     }
 
-    function onFlashloan(address, IDelegateRegistry.DelegationType, address underlyingContract, uint256 underlyingTokenId, uint256, bytes calldata)
-        external
-        payable
-        returns (bytes32)
-    {
-        IERC721(underlyingContract).approve(address(dt), underlyingTokenId);
+    function onFlashloan(address, IDelegateFlashloan.FlashInfo calldata info) external payable returns (bytes32) {
+        IERC721(info.tokenContract).approve(address(dt), info.tokenId);
         secondDelegateTokenId = dt.create(
             IDelegateToken.DelegateInfo(
                 address(this), // Sends principal token to this contract
-                IDelegateRegistry.DelegationType.ERC721,
+                info.tokenType,
                 address(this),
-                0,
-                underlyingContract,
-                underlyingTokenId,
+                info.amount,
+                info.tokenContract,
+                info.tokenId,
                 "",
                 1 days
             ),

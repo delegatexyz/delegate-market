@@ -2,7 +2,7 @@
 pragma solidity ^0.8.21;
 
 import {IDelegateToken} from "./interfaces/IDelegateToken.sol";
-import {DelegateTokenErrors} from "./interfaces/DelegateTokenErrors.sol";
+import {DelegateTokenErrors} from "src/libraries/DelegateTokenErrors.sol";
 
 import {ERC721} from "openzeppelin/token/ERC721/ERC721.sol";
 
@@ -64,7 +64,7 @@ contract PrincipalToken is ERC721("PrincipalToken", "PT") {
         string memory imageUrl = string.concat(dt.baseURI(), "principal/", idstr);
 
         address rightsOwner = address(0);
-        try dt.ownerOf(id) returns (address retrievedOwner) {
+        try ERC721(address(dt)).ownerOf(id) returns (address retrievedOwner) {
             rightsOwner = retrievedOwner;
         } catch {}
 

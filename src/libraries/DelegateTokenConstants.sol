@@ -33,9 +33,7 @@ library DelegateTokenConstants {
     uint256 internal constant MINT_AUTHORIZED = 2;
     uint256 internal constant BURN_NOT_AUTHORIZED = 3;
     uint256 internal constant BURN_AUTHORIZED = 4;
-    /// 721 / 1155 callbacks
+    /// 1155 callbacks
     uint256 internal constant ERC1155_NOT_PULLED = 5;
     uint256 internal constant ERC1155_PULLED = 6;
-    uint256 internal constant ERC721_NOT_PULLED = 7;
-    uint256 internal constant ERC721_PULLED = 8;
 }

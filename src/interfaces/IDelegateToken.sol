@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.0;
 
 import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
-import {DelegateTokenErrors} from "./DelegateTokenErrors.sol";
-import {IERC721Metadata} from "openzeppelin/token/ERC721/extensions/IERC721Metadata.sol";
-import {IERC1155Receiver} from "openzeppelin/token/ERC1155/IERC1155Receiver.sol";
-import {IERC721Receiver} from "openzeppelin/token/ERC721/IERC721Receiver.sol";
+import {IDelegateFlashloan} from "./IDelegateFlashloan.sol";
 
-interface IDelegateToken is DelegateTokenErrors, IERC721Metadata, IERC1155Receiver, IERC721Receiver {
+interface IDelegateToken {
     /*//////////////////////////////////////////////////////////////
                              EVENTS
     //////////////////////////////////////////////////////////////*/
@@ -26,9 +23,6 @@ interface IDelegateToken is DelegateTokenErrors, IERC721Metadata, IERC1155Receiv
     /*//////////////////////////////////////////////////////////////
                       VIEW & INTROSPECTION
     //////////////////////////////////////////////////////////////*/
-
-    /// @dev see https://eips.ethereum.org/EIPS/eip-165
-    function supportsInterface(bytes4 interfaceId) external view returns (bool);
 
     /// @notice The v2 delegate registry address
     function delegateRegistry() external view returns (address);
@@ -114,21 +108,9 @@ interface IDelegateToken is DelegateTokenErrors, IERC721Metadata, IERC1155Receiv
 
     /**
      * @notice Allows delegate token owner or approved operator to borrow their underlying tokens for the duration of a single atomic transaction.
-     * @param owner of the delegate token holder.
-     * @param receiver Recipient of borrowed tokens, must implement the `IDelegateFlashloan` interface
-     * @param delegationType Type of the underlying token being borrowed.
-     * @param underlyingContract Contract of the underlying token being borrowed.
-     * @param underlyingTokenId TokenId of the underlying token being borrowed, if applicable.
-     * @param data Arbitrary data to be relayed to receiver.
+     * @param info IDelegateFlashloan FlashInfo struct
      */
-    function flashloan(
-        address owner,
-        address receiver,
-        IDelegateRegistry.DelegationType delegationType,
-        address underlyingContract,
-        uint256 underlyingTokenId,
-        bytes calldata data
-    ) external payable;
+    function flashloan(IDelegateFlashloan.FlashInfo calldata info) external payable;
 
     /**
      * @notice Allows the owner of DelegateToken contract to set baseURI
@@ -136,13 +118,9 @@ interface IDelegateToken is DelegateTokenErrors, IERC721Metadata, IERC1155Receiv
      */
     function setBaseURI(string calldata uri) external;
 
-    /**
-     * @notice Callback function for principal token during the create flow
-     */
+    /// @notice Callback function for principal token during the create flow
     function burnAuthorizedCallback() external;
 
-    /**
-     * @notice Callback function for principal token during the withdraw flow
-     */
+    /// @notice Callback function for principal token during the withdraw flow
     function mintAuthorizedCallback() external;
 }

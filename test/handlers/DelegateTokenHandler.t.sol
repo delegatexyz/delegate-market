@@ -12,6 +12,7 @@ import {Strings} from "openzeppelin/utils/Strings.sol";
 import {SafeCast} from "openzeppelin/utils/math/SafeCast.sol";
 
 import {IDelegateToken, IDelegateRegistry} from "src/interfaces/IDelegateToken.sol";
+import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 
 import {ExpiryType} from "src/interfaces/IWrapOfferer.sol";
@@ -121,7 +122,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
             ownedPrTokens[currentActor].add(delegateId);
         } else {
             ownedDTTokens[currentActor].remove(delegateId);
-            delegateToken.transferFrom(currentActor, to, delegateId);
+            IERC721(address(delegateToken)).transferFrom(currentActor, to, delegateId);
         }
 
         vm.stopPrank();
@@ -228,7 +229,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
     }
 
     function _getDTOwner(uint256 dtId) internal view returns (address owner) {
-        try delegateToken.ownerOf(dtId) returns (address retrievedOwner) {
+        try IERC721(address(delegateToken)).ownerOf(dtId) returns (address retrievedOwner) {
             owner = retrievedOwner;
         } catch {}
     }

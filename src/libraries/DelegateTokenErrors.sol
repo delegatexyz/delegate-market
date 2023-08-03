@@ -3,7 +3,7 @@ pragma solidity ^0.8.4;
 
 import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
 
-interface DelegateTokenErrors {
+library DelegateTokenErrors {
     error DelegateRegistryZero();
     error PrincipalTokenZero();
     error DelegateTokenZero();
@@ -16,6 +16,7 @@ interface DelegateTokenErrors {
     error NotERC721Receiver(address to);
 
     error InsufficientAllowanceOrInvalidToken();
+    error CallerNotOwnerOrInvalidToken();
 
     error NotAuthorized(address caller, uint256 delegateTokenId);
 
@@ -44,8 +45,6 @@ interface DelegateTokenErrors {
     error BurnAuthorized();
     error MintAuthorized();
 
-    error ERC721Pulled();
-    error ERC721NotPulled();
     error ERC1155Pulled();
     error ERC1155NotPulled();
 }

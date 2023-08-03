@@ -5,7 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {ComputeAddress} from "../script/ComputeAddress.s.sol";
 import {Strings} from "openzeppelin/utils/Strings.sol";
 import {DelegateToken, IDelegateToken} from "src/DelegateToken.sol";
-import {DelegateTokenErrors} from "src/interfaces/DelegateTokenErrors.sol";
+import {DelegateTokenErrors} from "src/libraries/DelegateTokenErrors.sol";
 import {DTHarness} from "./utils/DTHarness.t.sol";
 import {ExpiryType} from "src/interfaces/IWrapOfferer.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
@@ -108,35 +108,6 @@ contract DelegateTokenTest is Test {
             assertTrue(reg.supportsInterface(randomInterface));
         } else {
             assertFalse(reg.supportsInterface(randomInterface));
-        }
-    }
-
-    function testTokenReceiverMethods(address operator, address from, uint256[] calldata ids, uint256[] calldata amounts, bytes calldata data, uint256 not1155Pulled)
-        public
-    {
-        vm.assume(not1155Pulled != DelegateTokenConstants.ERC1155_PULLED);
-        // vm.assume(not721Pulled != 4);
-        if (ids.length > 0 && amounts.length > 0) {
-            vm.store(address(dt), bytes32(uint256(11)), bytes32(DelegateTokenConstants.ERC1155_PULLED));
-            assertEq(dt.onERC1155Received(operator, from, ids[0], amounts[0], data), bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)")));
-            assertEq(dt.onERC721Received(operator, from, ids[0], data), 0);
-            vm.store(address(dt), bytes32(uint256(11)), bytes32(not1155Pulled));
-            assertEq(dt.onERC1155Received(operator, from, ids[0], amounts[0], data), 0);
-            assertEq(dt.onERC721Received(operator, from, ids[0], data), 0);
-        }
-        if (ids.length == 1 && amounts.length == 1) {
-            vm.store(address(dt), bytes32(uint256(11)), bytes32(DelegateTokenConstants.ERC1155_PULLED));
-            assertEq(
-                dt.onERC1155BatchReceived(operator, from, ids, amounts, data), bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))
-            );
-            assertEq(dt.onERC721Received(operator, from, ids[0], data), 0);
-            vm.store(address(dt), bytes32(uint256(11)), bytes32(not1155Pulled));
-            assertEq(dt.onERC1155BatchReceived(operator, from, ids, amounts, data), 0);
-            assertEq(dt.onERC721Received(operator, from, ids[0], data), 0);
-        } else {
-            assertEq(dt.onERC1155BatchReceived(operator, from, ids, amounts, data), 0);
-            assertEq(dt.onERC1155Received(operator, from, 0, 0, data), 0);
-            assertEq(dt.onERC721Received(operator, from, 0, data), 0);
         }
     }
 

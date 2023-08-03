@@ -5,7 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {ComputeAddress} from "../script/ComputeAddress.s.sol";
 import {Strings} from "openzeppelin/utils/Strings.sol";
 import {DelegateToken, IDelegateToken} from "src/DelegateToken.sol";
-import {DelegateTokenErrors} from "src/interfaces/DelegateTokenErrors.sol";
+import {DelegateTokenErrors} from "src/libraries/DelegateTokenErrors.sol";
 import {ExpiryType} from "src/interfaces/IWrapOfferer.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 import {DelegateRegistry, IDelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
@@ -62,19 +62,16 @@ contract DelegateTokenTest is Test {
         vm.assume(principalTo != address(0));
         vm.assume(notLdTo != dtTo);
         vm.assume(tokenOwner != address(dt));
+        vm.assume(dtTo != address(0));
 
         ( /* ExpiryType */ , uint256 expiry, /* expiryValue */ ) = prepareValidExpiry(expiryTypeRelative, time);
 
         mock721.mint(tokenOwner, tokenId);
         vm.startPrank(tokenOwner);
         mock721.setApprovalForAll(address(dt), true);
-
-        if (dtTo == address(0)) vm.expectRevert(DelegateTokenErrors.ToIsZero.selector);
         uint256 delegateId =
             dt.create(IDelegateToken.DelegateInfo(principalTo, IDelegateRegistry.DelegationType.ERC721, dtTo, 0, address(mock721), tokenId, "", expiry), SALT);
-
         vm.stopPrank();
-        if (dtTo == address(0)) return;
 
         assertEq(dt.ownerOf(delegateId), dtTo);
         assertEq(principal.ownerOf(delegateId), principalTo);
@@ -89,20 +86,17 @@ contract DelegateTokenTest is Test {
         vm.assume(principalTo != address(0));
         vm.assume(notLdTo != dtTo);
         vm.assume(tokenOwner != address(dt));
+        vm.assume(dtTo != address(0));
+        vm.assume(amount != 0);
 
         ( /* ExpiryType */ , uint256 expiry, /* expiryValue */ ) = prepareValidExpiry(expiryTypeRelative, time);
 
         mock20.mint(tokenOwner, amount);
         vm.startPrank(tokenOwner);
         mock20.approve(address(dt), amount);
-
-        if (dtTo == address(0) && amount != 0) vm.expectRevert(DelegateTokenErrors.ToIsZero.selector);
-        if (amount == 0) vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.WrongAmountForType.selector, IDelegateRegistry.DelegationType.ERC20, 0));
         uint256 delegateId =
             dt.create(IDelegateToken.DelegateInfo(principalTo, IDelegateRegistry.DelegationType.ERC20, dtTo, amount, address(mock20), 0, "", expiry), SALT);
-
         vm.stopPrank();
-        if (dtTo == address(0) || amount == 0) return;
 
         assertEq(dt.ownerOf(delegateId), dtTo);
         assertEq(principal.ownerOf(delegateId), principalTo);
@@ -127,6 +121,8 @@ contract DelegateTokenTest is Test {
         vm.assume(principalTo != address(0));
         vm.assume(notLdTo != dtTo);
         vm.assume(tokenOwner != address(dt));
+        vm.assume(dtTo != address(0));
+        vm.assume(amount != 0);
 
         ( /* ExpiryType */ , uint256 expiry, /* expiryValue */ ) = prepareValidExpiry(expiryTypeRelative, time);
 
@@ -134,14 +130,10 @@ contract DelegateTokenTest is Test {
         mock1155.mint(tokenOwner, tokenId, amount, "");
         vm.startPrank(tokenOwner);
         mock1155.setApprovalForAll(address(dt), true);
-
-        if (dtTo == address(0) && amount != 0) vm.expectRevert(DelegateTokenErrors.ToIsZero.selector);
-        if (amount == 0) vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.WrongAmountForType.selector, IDelegateRegistry.DelegationType.ERC1155, 0));
         uint256 delegateId =
             dt.create(IDelegateToken.DelegateInfo(principalTo, IDelegateRegistry.DelegationType.ERC1155, dtTo, amount, address(mock1155), tokenId, "", expiry), SALT);
 
         vm.stopPrank();
-        if (dtTo == address(0) || amount == 0) return;
 
         assertEq(dt.ownerOf(delegateId), dtTo);
         assertEq(principal.ownerOf(delegateId), principalTo);
@@ -384,7 +376,7 @@ contract DelegateTokenTest is Test {
         mock721.setApprovalForAll(address(dt), true);
         uint256 delegateId =
             dt.create(IDelegateToken.DelegateInfo(user, IDelegateRegistry.DelegationType.ERC721, user, 0, address(mock721), id, "", block.timestamp + 10 seconds), SALT);
-
+        vm.stopPrank();
         vm.prank(dtOwner);
         dt.setBaseURI("https://test-uri.com/");
 

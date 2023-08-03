@@ -2,10 +2,6 @@
 	path = lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
 	branch = master
-[submodule "lib/delegate-registry"]
-	path = lib/delegate-registry
-	url = https://github.com/delegatecash/delegate-registry
-	branch = v2
 [submodule "lib/openzeppelin-contracts"]
 	path = lib/openzeppelin-contracts
 	url = https://github.com/openzeppelin/openzeppelin-contracts
@@ -14,3 +10,7 @@
 	path = lib/seaport
 	url = https://github.com/projectopensea/seaport
 	branch = 1.5 # Use latest release
+[submodule "lib/delegate-registry"]
+	path = lib/delegate-registry
+	url = https://github.com/delegatexyz/delegate-registry
+	branch = v2
