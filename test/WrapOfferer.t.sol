@@ -5,7 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {BaseSeaportTest} from "./base/BaseSeaportTest.t.sol";
 import {BaseLiquidDelegateTest} from "./base/BaseLiquidDelegateTest.t.sol";
 import {SeaportHelpers, User} from "./utils/SeaportHelpers.t.sol";
-import {IDelegateToken} from "../src/interfaces/IDelegateToken.sol";
+import {IDelegateToken, Structs as IDelegateTokenStructs} from "src/interfaces/IDelegateToken.sol";
 
 import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
 import {
@@ -109,7 +109,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
 
         // =========== Verify Correct Receipt ===========
         assertEq(seller.addr.balance, expectedETH);
-        IDelegateToken.DelegateInfo memory delegateInfo = dt.getDelegateInfo(delegateId);
+        IDelegateTokenStructs.DelegateInfo memory delegateInfo = dt.getDelegateInfo(delegateId);
         assertEq(dt.ownerOf(delegateId), buyer.addr);
         assertEq(principal.ownerOf(delegateId), seller.addr);
         assertEq(delegateInfo.expiry, block.timestamp + expiryValue);
@@ -198,7 +198,7 @@ contract WrapOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Seapo
 
         // =========== Verify Correct Receival ===========
         assertEq(weth.balanceOf(seller.addr), expectedETH);
-        IDelegateToken.DelegateInfo memory delegateInfo = dt.getDelegateInfo(delegateId);
+        IDelegateTokenStructs.DelegateInfo memory delegateInfo = dt.getDelegateInfo(delegateId);
         assertEq(dt.ownerOf(delegateId), buyer.addr);
         assertEq(principal.ownerOf(delegateId), seller.addr);
         assertEq(delegateInfo.expiry, expiryValue);

@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.0;
 
-import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
-import {IDelegateFlashloan} from "./IDelegateFlashloan.sol";
+import {IERC721Metadata} from "openzeppelin/token/ERC721/extensions/IERC721Metadata.sol";
+import {IERC721Receiver} from "openzeppelin/token/ERC721/IERC721Receiver.sol";
+import {IERC1155Receiver} from "openzeppelin/token/ERC1155/IERC1155Receiver.sol";
 
-interface IDelegateToken {
+import {DelegateTokenStructs as Structs} from "src/libraries/DelegateTokenStructs.sol";
+
+interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver {
     /*//////////////////////////////////////////////////////////////
                              EVENTS
     //////////////////////////////////////////////////////////////*/
@@ -36,24 +39,12 @@ interface IDelegateToken {
     /// @notice Adapted from solmate's [ERC721](https://github.com/transmissions11/solmate/blob/main/src/tokens/ERC721.sol)
     function isApprovedOrOwner(address spender, uint256 delegateTokenId) external view returns (bool);
 
-    /// @notice Struct for creating delegate tokens and returning their information
-    struct DelegateInfo {
-        address principalHolder;
-        IDelegateRegistry.DelegationType tokenType;
-        address delegateHolder;
-        uint256 amount;
-        address tokenContract;
-        uint256 tokenId;
-        bytes32 rights;
-        uint256 expiry;
-    }
-
     /**
      * @notice Fetches the info struct of a delegate token
      * @param delegateTokenId The id of the delegateToken to query info for
      * @return delegateInfo The DelegateInfo struct
      */
-    function getDelegateInfo(uint256 delegateTokenId) external view returns (DelegateInfo memory delegateInfo);
+    function getDelegateInfo(uint256 delegateTokenId) external view returns (Structs.DelegateInfo memory delegateInfo);
 
     /**
      * @notice Deterministic function for generating a delegateId. Because msg.sender is fixed in addition to the freely chosen salt, addresses cannot grief each other.
@@ -78,7 +69,7 @@ interface IDelegateToken {
      * @return delegateTokenId New rights ID that is also the token ID of both the newly created principal and
      * delegate tokens.
      */
-    function create(DelegateInfo calldata delegateInfo, uint256 salt) external returns (uint256 delegateTokenId);
+    function create(Structs.DelegateInfo calldata delegateInfo, uint256 salt) external returns (uint256 delegateTokenId);
 
     /**
      * @notice Allows the principal token owner or any approved operator to extend the expiry of the
@@ -110,7 +101,7 @@ interface IDelegateToken {
      * @notice Allows delegate token owner or approved operator to borrow their underlying tokens for the duration of a single atomic transaction.
      * @param info IDelegateFlashloan FlashInfo struct
      */
-    function flashloan(IDelegateFlashloan.FlashInfo calldata info) external payable;
+    function flashloan(Structs.FlashInfo calldata info) external payable;
 
     /**
      * @notice Allows the owner of DelegateToken contract to set baseURI

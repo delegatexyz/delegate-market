@@ -4,27 +4,27 @@ pragma solidity ^0.8.0;
 import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
 import {RegistryStorage} from "delegate-registry/src/libraries/RegistryStorage.sol";
 import {RegistryHashes} from "delegate-registry/src/libraries/RegistryHashes.sol";
-import {DelegateTokenStorageHelpers as StorageHelpers} from "src/libraries/DelegateTokenStorageHelpers.sol";
 import {DelegateTokenErrors as Errors} from "src/libraries/DelegateTokenErrors.sol";
-import {IDelegateToken} from "src/interfaces/IDelegateToken.sol";
+import {DelegateTokenStructs as Structs} from "src/libraries/DelegateTokenStructs.sol";
 
 library DelegateTokenRegistryHelpers {
-    /// @dev should not be called if registryHash is being modified elsewhere in the function
-    function loadTokenHolder(address delegateRegistry, mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo, uint256 delegateTokenId)
-        internal
-        view
-        returns (address delegateTokenHolder)
-    {
+    function loadTokenHolder(address delegateRegistry, bytes32 registryHash) internal view returns (address delegateTokenHolder) {
         unchecked {
             return RegistryStorage.unpackAddress(
-                IDelegateRegistry(delegateRegistry).readSlot(
-                    bytes32(
-                        uint256(RegistryHashes.location(bytes32(StorageHelpers.readRegistryHash(delegateTokenInfo, delegateTokenId))))
-                            + uint256(RegistryStorage.Positions.secondPacked)
-                    )
-                )
+                IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(registryHash)) + uint256(RegistryStorage.Positions.secondPacked)))
             );
-        } // Reasonable to not expect this to overflow
+        }
+    }
+
+    function loadContract(address delegateRegistry, bytes32 registryHash) internal view returns (address underlyingContract) {
+        unchecked {
+            uint256 registryLocation = uint256(RegistryHashes.location(registryHash));
+            //slither-disable-next-line unused-return
+            (,, underlyingContract) = RegistryStorage.unPackAddresses(
+                IDelegateRegistry(delegateRegistry).readSlot(bytes32(registryLocation + uint256(RegistryStorage.Positions.firstPacked))),
+                IDelegateRegistry(delegateRegistry).readSlot(bytes32(registryLocation + uint256(RegistryStorage.Positions.secondPacked)))
+            );
+        }
     }
 
     function loadTokenHolderAndContract(address delegateRegistry, bytes32 registryHash) internal view returns (address delegateTokenHolder, address underlyingContract) {
@@ -81,6 +81,36 @@ library DelegateTokenRegistryHelpers {
                 IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(registryHash)) + uint256(RegistryStorage.Positions.amount)))
             ) + increaseAmount;
         }
+    }
+
+    function revertERC721FlashUnavailable(address delegateRegistry, Structs.FlashInfo calldata info) internal view {
+        // We touch registry directly to check for active delegation of the respective hash, as bubbling up to contract and all delegations is not required
+        // Important to notice that we cannot rely on this method for the fungibles since delegate token doesn't ever delete the fungible delegations
+        if (
+            loadFrom(delegateRegistry, RegistryHashes.erc721Hash(address(this), "", info.delegateHolder, info.tokenId, info.tokenContract)) != address(this)
+                && loadFrom(delegateRegistry, RegistryHashes.erc721Hash(address(this), "flashloan", info.delegateHolder, info.tokenId, info.tokenContract)) != address(this)
+        ) {
+            revert Errors.ERC721FlashUnavailable(info.tokenId);
+        }
+    }
+
+    function revertERC20FlashAmountUnavailable(address delegateRegistry, Structs.FlashInfo calldata info) internal view {
+        uint256 availableAmount = 0;
+        unchecked {
+            // We sum the delegation amounts for "flashloan" and "" rights since liquid delegate doesn't allow double spending for different rights
+            availableAmount = loadAmount(delegateRegistry, RegistryHashes.erc20Hash(address(this), "flashloan", info.delegateHolder, info.tokenContract))
+                + loadAmount(delegateRegistry, RegistryHashes.erc20Hash(address(this), "", info.delegateHolder, info.tokenContract));
+        } // Unreasonable that this block will overflow
+        if (info.amount > availableAmount) revert Errors.ERC20FlashAmountUnavailable(info.amount, availableAmount);
+    }
+
+    function revertERC1155FlashAmountUnavailable(address delegateRegistry, Structs.FlashInfo calldata info) internal view {
+        uint256 availableAmount = 0;
+        unchecked {
+            availableAmount = loadAmount(delegateRegistry, RegistryHashes.erc1155Hash(address(this), "flashloan", info.delegateHolder, info.tokenId, info.tokenContract))
+                + loadAmount(delegateRegistry, RegistryHashes.erc1155Hash(address(this), "", info.delegateHolder, info.tokenId, info.tokenContract));
+        } // Unreasonable that this will overflow
+        if (info.amount > availableAmount) revert Errors.ERC1155FlashAmountUnavailable(info.tokenId, info.amount, availableAmount);
     }
 
     function transferERC721(
@@ -142,7 +172,7 @@ library DelegateTokenRegistryHelpers {
         ) revert Errors.HashMismatch();
     }
 
-    function delegateERC721(address delegateRegistry, bytes32 newRegistryHash, IDelegateToken.DelegateInfo calldata delegateInfo) internal {
+    function delegateERC721(address delegateRegistry, bytes32 newRegistryHash, Structs.DelegateInfo calldata delegateInfo) internal {
         if (
             IDelegateRegistry(delegateRegistry).delegateERC721(delegateInfo.delegateHolder, delegateInfo.tokenContract, delegateInfo.tokenId, delegateInfo.rights, true)
                 != newRegistryHash
@@ -151,7 +181,7 @@ library DelegateTokenRegistryHelpers {
         }
     }
 
-    function delegateERC20(address delegateRegistry, bytes32 newRegistryHash, IDelegateToken.DelegateInfo calldata delegateInfo) internal {
+    function delegateERC20(address delegateRegistry, bytes32 newRegistryHash, Structs.DelegateInfo calldata delegateInfo) internal {
         if (
             IDelegateRegistry(delegateRegistry).delegateERC20(
                 delegateInfo.delegateHolder,
@@ -165,7 +195,7 @@ library DelegateTokenRegistryHelpers {
         }
     }
 
-    function delegateERC1155(address delegateRegistry, bytes32 newRegistryHash, IDelegateToken.DelegateInfo calldata delegateInfo) internal {
+    function delegateERC1155(address delegateRegistry, bytes32 newRegistryHash, Structs.DelegateInfo calldata delegateInfo) internal {
         if (
             IDelegateRegistry(delegateRegistry).delegateERC1155(
                 delegateInfo.delegateHolder,
@@ -175,6 +205,55 @@ library DelegateTokenRegistryHelpers {
                 delegateInfo.rights,
                 true
             ) != newRegistryHash
+        ) revert Errors.HashMismatch();
+    }
+
+    function revokeERC721(
+        address delegateRegistry,
+        bytes32 registryHash,
+        address delegateTokenHolder,
+        address underlyingContract,
+        uint256 underlyingTokenId,
+        bytes32 underlyingRights
+    ) internal {
+        if (IDelegateRegistry(delegateRegistry).delegateERC721(delegateTokenHolder, underlyingContract, underlyingTokenId, underlyingRights, false) != registryHash) {
+            revert Errors.HashMismatch();
+        }
+    }
+
+    function revokeERC20(
+        address delegateRegistry,
+        bytes32 registryHash,
+        address delegateTokenHolder,
+        address underlyingContract,
+        uint256 underlyingAmount,
+        bytes32 underlyingRights
+    ) internal {
+        if (
+            IDelegateRegistry(delegateRegistry).delegateERC20(
+                delegateTokenHolder, underlyingContract, calculateDecreasedAmount(delegateRegistry, registryHash, underlyingAmount), underlyingRights, true
+            ) != registryHash
+        ) revert Errors.HashMismatch();
+    }
+
+    function revokeERC1155(
+        address delegateRegistry,
+        bytes32 registryHash,
+        address delegateTokenHolder,
+        address underlyingContract,
+        uint256 underlyingTokenId,
+        uint256 underlyingAmount,
+        bytes32 underlyingRights
+    ) internal {
+        if (
+            IDelegateRegistry(delegateRegistry).delegateERC1155(
+                delegateTokenHolder,
+                underlyingContract,
+                underlyingTokenId,
+                calculateDecreasedAmount(delegateRegistry, registryHash, underlyingAmount),
+                underlyingRights,
+                true
+            ) != registryHash
         ) revert Errors.HashMismatch();
     }
 }

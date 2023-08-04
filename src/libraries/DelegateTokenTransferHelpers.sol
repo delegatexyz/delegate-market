@@ -1,18 +1,17 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.0;
 
-import {IDelegateToken} from "src/interfaces/IDelegateToken.sol";
-import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
 import {DelegateTokenErrors as Errors} from "src/libraries/DelegateTokenErrors.sol";
 import {DelegateTokenConstants as Constants} from "src/libraries/DelegateTokenConstants.sol";
-import {DelegateTokenStorageHelpers as StorageHelpers} from "src/libraries/DelegateTokenStorageHelpers.sol";
+import {DelegateTokenStructs as Structs} from "src/libraries/DelegateTokenStructs.sol";
+import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
 import {IERC1155} from "openzeppelin/token/ERC1155/IERC1155.sol";
 import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
 import {IERC20} from "openzeppelin/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin/token/ERC20/utils/SafeERC20.sol";
 
 library DelegateTokenTransferHelpers {
-    function checkAndPullByType(StorageHelpers.Uint256 storage erc1155Pulled, IDelegateToken.DelegateInfo calldata delegateInfo) internal {
+    function checkAndPullByType(Structs.Uint256 storage erc1155Pulled, Structs.DelegateInfo calldata delegateInfo) internal {
         if (delegateInfo.tokenType == IDelegateRegistry.DelegationType.ERC721) {
             checkERC721BeforePull(delegateInfo.amount, delegateInfo.tokenContract, delegateInfo.tokenId);
             pullERC721AfterCheck(delegateInfo.tokenContract, delegateInfo.tokenId);
@@ -48,7 +47,7 @@ library DelegateTokenTransferHelpers {
         SafeERC20.safeTransferFrom(IERC20(underlyingContract), msg.sender, address(this), pullAmount);
     }
 
-    function checkERC1155BeforePull(StorageHelpers.Uint256 storage erc1155Pulled, uint256 pullAmount) internal {
+    function checkERC1155BeforePull(Structs.Uint256 storage erc1155Pulled, uint256 pullAmount) internal {
         if (pullAmount == 0) revert Errors.WrongAmountForType(IDelegateRegistry.DelegationType.ERC1155, pullAmount);
         if (erc1155Pulled.flag == Constants.ERC1155_NOT_PULLED) {
             erc1155Pulled.flag = Constants.ERC1155_PULLED;
@@ -57,18 +56,22 @@ library DelegateTokenTransferHelpers {
         }
     }
 
-    function pullERC1155AfterCheck(StorageHelpers.Uint256 storage erc1155Pulled, uint256 pullAmount, address underlyingContract, uint256 underlyingTokenId) internal {
+    function pullERC1155AfterCheck(Structs.Uint256 storage erc1155Pulled, uint256 pullAmount, address underlyingContract, uint256 underlyingTokenId) internal {
         IERC1155(underlyingContract).safeTransferFrom(msg.sender, address(this), underlyingTokenId, pullAmount, "");
         if (erc1155Pulled.flag == Constants.ERC1155_PULLED) {
             revert Errors.ERC1155NotPulled();
         }
     }
 
-    function checkERC1155Pulled(StorageHelpers.Uint256 storage erc1155Pulled, address operator) internal returns (bool) {
+    function checkERC1155Pulled(Structs.Uint256 storage erc1155Pulled, address operator) internal returns (bool) {
         if (erc1155Pulled.flag == Constants.ERC1155_PULLED && address(this) == operator) {
             erc1155Pulled.flag = Constants.ERC1155_NOT_PULLED;
             return true;
         }
         return false;
+    }
+
+    function revertInvalidERC1155PullCheck(Structs.Uint256 storage erc1155PullAuthorization, address operator) internal {
+        if (!checkERC1155Pulled(erc1155PullAuthorization, operator)) revert Errors.ERC1155PullNotRequested(operator);
     }
 }

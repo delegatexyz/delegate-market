@@ -6,7 +6,8 @@ import {ContractOffererInterface, IWrapOfferer, ReceiptFillerType, ExpiryType} f
 import {ReceivedItem, SpentItem, Schema} from "seaport/contracts/interfaces/ContractOffererInterface.sol";
 import {ItemType} from "seaport/contracts/lib/ConsiderationEnums.sol";
 
-import {IDelegateToken, IDelegateRegistry} from "./interfaces/IDelegateToken.sol";
+import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
+import {IDelegateToken, Structs as IDelegateTokenStructs} from "src/interfaces/IDelegateToken.sol";
 
 import {IERC20} from "openzeppelin/token/ERC20/IERC20.sol";
 import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
@@ -129,7 +130,7 @@ contract WrapOfferer is IWrapOfferer {
             IERC721(considerationToken).setApprovalForAll(address(delegateToken), true);
             //slither-disable-next-line unused-return
             IDelegateToken(delegateToken).create(
-                IDelegateToken.DelegateInfo(
+                IDelegateTokenStructs.DelegateInfo(
                     principalRecipient, IDelegateRegistry.DelegationType.ERC721, delegateRecipient, 0, considerationToken, considerationIdentifier, "", expiry
                 ),
                 salt
@@ -139,7 +140,7 @@ contract WrapOfferer is IWrapOfferer {
             require(IERC20(considerationToken).approve(address(delegateToken), considerationAmount));
             //slither-disable-next-line unused-return
             IDelegateToken(delegateToken).create(
-                IDelegateToken.DelegateInfo(
+                IDelegateTokenStructs.DelegateInfo(
                     principalRecipient,
                     IDelegateRegistry.DelegationType.ERC20,
                     delegateRecipient,
@@ -156,7 +157,7 @@ contract WrapOfferer is IWrapOfferer {
             IERC1155(considerationToken).setApprovalForAll(address(delegateToken), true);
             //slither-disable-next-line unused-return
             IDelegateToken(delegateToken).create(
-                IDelegateToken.DelegateInfo(
+                IDelegateTokenStructs.DelegateInfo(
                     principalRecipient,
                     IDelegateRegistry.DelegationType.ERC1155,
                     delegateRecipient,

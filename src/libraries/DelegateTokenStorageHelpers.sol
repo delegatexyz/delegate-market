@@ -5,10 +5,6 @@ import {DelegateTokenConstants as Constants} from "src/libraries/DelegateTokenCo
 import {DelegateTokenErrors as Errors} from "src/libraries/DelegateTokenErrors.sol";
 
 library DelegateTokenStorageHelpers {
-    struct Uint256 {
-        uint256 flag;
-    }
-
     function writeApproved(mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo, uint256 delegateTokenId, address approved) internal {
         uint96 expiry = uint96(delegateTokenInfo[delegateTokenId][Constants.PACKED_INFO_POSITION]);
         delegateTokenInfo[delegateTokenId][Constants.PACKED_INFO_POSITION] = (uint256(uint160(approved)) << 96) | expiry;
@@ -30,6 +26,18 @@ library DelegateTokenStorageHelpers {
         delegateTokenInfo[delegateTokenId][Constants.UNDERLYING_AMOUNT_POSITION] = underlyingAmount;
     }
 
+    function incrementBalance(mapping(address delegateTokenHolder => uint256 balance) storage balances, address delegateTokenHolder) internal {
+        unchecked {
+            balances[delegateTokenHolder]++;
+        } // Infeasible that this will overflow
+    }
+
+    function decrementBalance(mapping(address delegateTokenHolder => uint256 balance) storage balances, address delegateTokenHolder) internal {
+        unchecked {
+            balances[delegateTokenHolder]--;
+        } // Reasonable to expect this not to underflow
+    }
+
     function readApproved(mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo, uint256 delegateTokenId) internal view returns (address) {
         return address(uint160(delegateTokenInfo[delegateTokenId][Constants.PACKED_INFO_POSITION] >> 96));
     }
@@ -48,5 +56,37 @@ library DelegateTokenStorageHelpers {
         returns (uint256)
     {
         return delegateTokenInfo[delegateTokenId][Constants.UNDERLYING_AMOUNT_POSITION];
+    }
+
+    function revertNotApprovedOrOperator(
+        mapping(address account => mapping(address operator => bool enabled)) storage accountOperator,
+        mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo,
+        address account,
+        uint256 delegateTokenId
+    ) internal view {
+        if (!(msg.sender == account || accountOperator[account][msg.sender] || msg.sender == readApproved(delegateTokenInfo, delegateTokenId))) {
+            revert Errors.NotApproved(msg.sender, delegateTokenId);
+        }
+    }
+
+    function revertInvalidExpiryUpdate(mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo, uint256 delegateTokenId, uint256 newExpiry)
+        internal
+        view
+    {
+        uint256 currentExpiry = readExpiry(delegateTokenInfo, delegateTokenId);
+        if (newExpiry <= currentExpiry) revert Errors.ExpiryTooSmall(newExpiry, currentExpiry);
+    }
+
+    function revertInvalidWithdrawalConditions(
+        mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo,
+        uint256 delegateTokenId,
+        address delegateTokenHolder
+    ) internal view {
+        //slither-disable-next-line timestamp
+        if (block.timestamp < readExpiry(delegateTokenInfo, delegateTokenId)) {
+            if (delegateTokenHolder != Constants.RESCIND_ADDRESS && delegateTokenHolder != msg.sender && msg.sender != readApproved(delegateTokenInfo, delegateTokenId)) {
+                revert Errors.WithdrawNotAvailable(delegateTokenId, readExpiry(delegateTokenInfo, delegateTokenId), block.timestamp);
+            }
+        }
     }
 }

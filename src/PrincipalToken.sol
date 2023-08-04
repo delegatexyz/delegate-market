@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.21;
 
-import {IDelegateToken} from "./interfaces/IDelegateToken.sol";
-import {DelegateTokenErrors} from "src/libraries/DelegateTokenErrors.sol";
+import {IDelegateToken} from "src/interfaces/IDelegateToken.sol";
+
+import {DelegateTokenStructs as Structs} from "src/libraries/DelegateTokenStructs.sol";
+import {DelegateTokenErrors as Errors} from "src/libraries/DelegateTokenErrors.sol";
 
 import {ERC721} from "openzeppelin/token/ERC721/ERC721.sol";
 
@@ -15,12 +17,12 @@ contract PrincipalToken is ERC721("PrincipalToken", "PT") {
     address public immutable delegateToken;
 
     constructor(address delegateToken_) {
-        if (delegateToken_ == address(0)) revert DelegateTokenErrors.DelegateTokenZero();
+        if (delegateToken_ == address(0)) revert Errors.DelegateTokenZero();
         delegateToken = delegateToken_;
     }
 
     function _checkDelegateTokenCaller() internal view {
-        if (msg.sender != delegateToken) revert DelegateTokenErrors.CallerNotDelegateToken();
+        if (msg.sender != delegateToken) revert Errors.CallerNotDelegateToken();
     }
 
     /// @notice exposes _mint method
@@ -37,7 +39,7 @@ contract PrincipalToken is ERC721("PrincipalToken", "PT") {
     /// @dev must revert if caller is not delegate token
     /// @dev must revert if delegate token has not authorized the burn
     function burn(address spender, uint256 id) external {
-        if (!_isApprovedOrOwner(spender, id)) revert DelegateTokenErrors.NotAuthorized(spender, id);
+        if (!_isApprovedOrOwner(spender, id)) revert Errors.NotApproved(spender, id);
         _checkDelegateTokenCaller();
         _burn(id);
         IDelegateToken(delegateToken).burnAuthorizedCallback();
@@ -58,7 +60,7 @@ contract PrincipalToken is ERC721("PrincipalToken", "PT") {
 
         IDelegateToken dt = IDelegateToken(delegateToken);
 
-        IDelegateToken.DelegateInfo memory delegateInfo = dt.getDelegateInfo(id);
+        Structs.DelegateInfo memory delegateInfo = dt.getDelegateInfo(id);
 
         string memory idstr = Strings.toString(delegateInfo.tokenId);
         string memory imageUrl = string.concat(dt.baseURI(), "principal/", idstr);

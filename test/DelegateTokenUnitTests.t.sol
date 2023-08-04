@@ -4,7 +4,7 @@ pragma solidity ^0.8.21;
 import {Test} from "forge-std/Test.sol";
 import {ComputeAddress} from "../script/ComputeAddress.s.sol";
 import {Strings} from "openzeppelin/utils/Strings.sol";
-import {DelegateToken, IDelegateToken} from "src/DelegateToken.sol";
+import {DelegateToken, Structs as DelegateTokenStructs} from "src/DelegateToken.sol";
 import {DelegateTokenErrors} from "src/libraries/DelegateTokenErrors.sol";
 import {DTHarness} from "./utils/DTHarness.t.sol";
 import {ExpiryType} from "src/interfaces/IWrapOfferer.sol";
@@ -148,7 +148,8 @@ contract DelegateTokenTest is Test {
         vm.startPrank(from);
         mock721.mintNext(from);
         mock721.approve(address(dt), 0);
-        uint256 delegateTokenId = dt.create(IDelegateToken.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 0, address(mock721), 0, rights, expiry), 1);
+        uint256 delegateTokenId =
+            dt.create(DelegateTokenStructs.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 0, address(mock721), 0, rights, expiry), 1);
         vm.stopPrank();
         if (to.code.length != 0) {
             vm.expectRevert();
@@ -172,7 +173,8 @@ contract DelegateTokenTest is Test {
         vm.startPrank(from);
         mock721.mintNext(from);
         mock721.approve(address(dt), 0);
-        uint256 delegateTokenId = dt.create(IDelegateToken.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 0, address(mock721), 0, rights, expiry), 1);
+        uint256 delegateTokenId =
+            dt.create(DelegateTokenStructs.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 0, address(mock721), 0, rights, expiry), 1);
         vm.stopPrank();
         if (to.code.length != 0) {
             vm.expectRevert();
@@ -200,7 +202,7 @@ contract DelegateTokenTest is Test {
         // Store registryHash at expected location, mapping is at slot 6
         vm.store(address(dt), keccak256(abi.encode(delegateTokenId, 6)), registryHash);
         // Expect revert if caller is not delegateTokenHolder
-        vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.NotAuthorized.selector, searchDelegateTokenHolder, delegateTokenId));
+        vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.NotOperator.selector, searchDelegateTokenHolder, delegateTokenHolder));
         vm.prank(searchDelegateTokenHolder);
         dt.approve(spender, delegateTokenId);
         // Store dirty bits at approve location
@@ -271,7 +273,8 @@ contract DelegateTokenTest is Test {
         vm.startPrank(from);
         mock721.mintNext(from);
         mock721.approve(address(dt), 0);
-        uint256 delegateTokenId = dt.create(IDelegateToken.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 0, address(mock721), 0, rights, expiry), 1);
+        uint256 delegateTokenId =
+            dt.create(DelegateTokenStructs.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 0, address(mock721), 0, rights, expiry), 1);
         vm.stopPrank();
         // Should revert if to is zero
         if (to == address(0)) {
@@ -294,7 +297,7 @@ contract DelegateTokenTest is Test {
             vm.prank(from);
             dt.safeTransferFrom(searchFrom, to, delegateTokenId);
             // Should revert if from != msg.sender
-            vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.NotAuthorized.selector, searchFrom, delegateTokenId));
+            vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.NotApproved.selector, searchFrom, delegateTokenId));
             vm.prank(searchFrom);
             dt.safeTransferFrom(from, to, delegateTokenId);
         }

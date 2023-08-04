@@ -11,7 +11,8 @@ import {MockERC721} from "../mock/MockTokens.t.sol";
 import {Strings} from "openzeppelin/utils/Strings.sol";
 import {SafeCast} from "openzeppelin/utils/math/SafeCast.sol";
 
-import {IDelegateToken, IDelegateRegistry} from "src/interfaces/IDelegateToken.sol";
+import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
+import {IDelegateToken, Structs as IDelegateTokenStructs} from "src/interfaces/IDelegateToken.sol";
 import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 
@@ -84,7 +85,9 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         uint256 amount = 0;
         uint96 salt = 3;
         uint256 delegateId = delegateToken.create(
-            IDelegateToken.DelegateInfo(currentActor, IDelegateRegistry.DelegationType.ERC721, currentActor, amount, address(token), id, "", block.timestamp + 1 seconds),
+            IDelegateTokenStructs.DelegateInfo(
+                currentActor, IDelegateRegistry.DelegationType.ERC721, currentActor, amount, address(token), id, "", block.timestamp + 1 seconds
+            ),
             salt
         );
         allDelegateTokens.add(delegateId);
@@ -112,7 +115,8 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
             uint256 amount = 0;
             uint96 salt = 3;
             delegateId = delegateToken.create(
-                IDelegateToken.DelegateInfo(to, IDelegateRegistry.DelegationType.ERC721, currentActor, amount, address(token), id, "", block.timestamp + 1 seconds), salt
+                IDelegateTokenStructs.DelegateInfo(to, IDelegateRegistry.DelegationType.ERC721, currentActor, amount, address(token), id, "", block.timestamp + 1 seconds),
+                salt
             );
 
             allDelegateTokens.add(delegateId);
@@ -150,7 +154,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         address dtOwner = _getDTOwner(prId);
 
-        IDelegateToken.DelegateInfo memory delegateInfo = delegateToken.getDelegateInfo(prId);
+        IDelegateTokenStructs.DelegateInfo memory delegateInfo = delegateToken.getDelegateInfo(prId);
         vm.warp(delegateInfo.expiry);
         vm.startPrank(currentActor);
         delegateToken.withdraw(currentActor, prId);
@@ -179,7 +183,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
             ownedDTTokens[dtOwner].remove(prId);
         }
 
-        IDelegateToken.DelegateInfo memory delegateInfo = delegateToken.getDelegateInfo(prId);
+        IDelegateTokenStructs.DelegateInfo memory delegateInfo = delegateToken.getDelegateInfo(prId);
         vm.prank(currentActor);
         delegateToken.withdraw(currentActor, prId);
 
@@ -192,7 +196,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         uint256 prId = existingPrincipalTokens.get(prSeed);
         if (prId == 0) return;
 
-        IDelegateToken.DelegateInfo memory delegateInfo = delegateToken.getDelegateInfo(prId);
+        IDelegateTokenStructs.DelegateInfo memory delegateInfo = delegateToken.getDelegateInfo(prId);
 
         ExpiryType expiryType = ExpiryType(bound(rawExpiryType, uint256(type(ExpiryType).min), uint256(type(ExpiryType).max)).toUint8());
 

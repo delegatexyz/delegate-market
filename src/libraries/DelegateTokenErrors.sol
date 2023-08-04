@@ -14,11 +14,15 @@ library DelegateTokenErrors {
     error TokenAmountIsZero();
 
     error NotERC721Receiver(address to);
+    error InvalidERC721TransferOperator(address operator, address expectedOperator);
+    error ERC1155PullNotRequested(address operator);
+    error BatchERC1155TransferUnsupported();
 
     error InsufficientAllowanceOrInvalidToken();
     error CallerNotOwnerOrInvalidToken();
 
-    error NotAuthorized(address caller, uint256 delegateTokenId);
+    error NotOperator(address caller, address account);
+    error NotApproved(address caller, uint256 delegateTokenId);
 
     error FromNotDelegateTokenHolder(address from, address delegateTokenHolder);
 
@@ -36,7 +40,9 @@ library DelegateTokenErrors {
     error WrongTokenIdForType(IDelegateRegistry.DelegationType tokenType, uint256 wrongTokenId);
     error InvalidTokenType(IDelegateRegistry.DelegationType tokenType);
 
-    error InvalidFlashloan();
+    error ERC721FlashUnavailable(uint256 tokenId);
+    error ERC20FlashAmountUnavailable(uint256 flashAmount, uint256 amountAvailable);
+    error ERC1155FlashAmountUnavailable(uint256 tokenId, uint256 flashAmount, uint256 amountAvailable);
 
     error BurnNotAuthorized();
     error MintNotAuthorized();
