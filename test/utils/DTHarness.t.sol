@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.21;
 
-import {DelegateToken} from "src/DelegateToken.sol";
+import {DelegateToken, Structs} from "src/DelegateToken.sol";
 import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
 
 /// Harness for DelegateToken that exposes internal methods
@@ -12,9 +12,7 @@ contract DTHarness is DelegateToken {
         }
     }
 
-    constructor(address delegateRegistry_, address principalToken_, string memory basURI_, address initialMetadataOwner)
-        DelegateToken(delegateRegistry_, principalToken_, basURI_, initialMetadataOwner)
-    {
+    constructor(Structs.DelegateTokenParameters memory parameters) DelegateToken(parameters) {
         // Initialize info struct with test info
         uint256[3] memory testInfo = [uint256(1), uint256(2), uint256(3)];
         delegateTokenInfo[0] = testInfo;

@@ -6,7 +6,6 @@ import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
 library DelegateTokenErrors {
     error DelegateRegistryZero();
     error PrincipalTokenZero();
-    error DelegateTokenZero();
     error DelegateTokenHolderZero();
     error InitialMetadataOwnerZero();
     error ToIsZero();
@@ -47,7 +46,6 @@ library DelegateTokenErrors {
     error BurnNotAuthorized();
     error MintNotAuthorized();
     error CallerNotPrincipalToken();
-    error CallerNotDelegateToken();
     error BurnAuthorized();
     error MintAuthorized();
 

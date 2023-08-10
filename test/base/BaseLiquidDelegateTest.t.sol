@@ -5,7 +5,7 @@ import {Test} from "forge-std/Test.sol";
 
 import {ComputeAddress} from "../../script/ComputeAddress.s.sol";
 
-import {DelegateToken} from "src/DelegateToken.sol";
+import {DelegateToken, Structs as DelegateTokenStructs} from "src/DelegateToken.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 import {DelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
 
@@ -21,12 +21,13 @@ contract BaseLiquidDelegateTest is Test {
         registry = new DelegateRegistry();
 
         vm.startPrank(dtDeployer);
-        dt = new DelegateToken(
-            address(registry),
-            ComputeAddress.addressFrom(dtDeployer, vm.getNonce(dtDeployer) + 1),
-            "",
-            dtOwner
-        );
+        DelegateTokenStructs.DelegateTokenParameters memory delegateTokenParameters = DelegateTokenStructs.DelegateTokenParameters({
+            delegateRegistry: address(registry),
+            principalToken: ComputeAddress.addressFrom(dtDeployer, vm.getNonce(dtDeployer) + 1),
+            baseURI: "",
+            initialMetadataOwner: dtOwner
+        });
+        dt = new DelegateToken(delegateTokenParameters);
         principal = new PrincipalToken(address(dt));
         vm.stopPrank();
     }

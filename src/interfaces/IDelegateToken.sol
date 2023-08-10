@@ -13,7 +13,8 @@ interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver {
     //////////////////////////////////////////////////////////////*/
 
     /**
-     * To prevent doubled event emissions, the latest version of the DelegateToken uses the ERC721 Transfer(from, to, id) event standard to infer meaning that was
+     * To prevent doubled event emissions, the latest version of the DelegateToken uses the ERC721 Transfer(from, to,
+     * id) event standard to infer meaning that was
      * previously double covered by "RightsCreated" and "RightsBurned" events
      * A Transfer event with from = address(0) is a "create" event
      * A Transfer event with to = address(0) is a "withdraw" event
@@ -36,7 +37,8 @@ interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver {
     /// @notice Image metadata location, but attributes are stored onchain
     function baseURI() external view returns (string memory);
 
-    /// @notice Adapted from solmate's [ERC721](https://github.com/transmissions11/solmate/blob/main/src/tokens/ERC721.sol)
+    /// @notice Adapted from solmate's
+    /// [ERC721](https://github.com/transmissions11/solmate/blob/main/src/tokens/ERC721.sol)
     function isApprovedOrOwner(address spender, uint256 delegateTokenId) external view returns (bool);
 
     /**
@@ -47,7 +49,8 @@ interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver {
     function getDelegateInfo(uint256 delegateTokenId) external view returns (Structs.DelegateInfo memory delegateInfo);
 
     /**
-     * @notice Deterministic function for generating a delegateId. Because msg.sender is fixed in addition to the freely chosen salt, addresses cannot grief each other.
+     * @notice Deterministic function for generating a delegateId. Because msg.sender is fixed in addition to the freely
+     * chosen salt, addresses cannot grief each other.
      * The WrapOfferer is a special case, but trivial to regenerate a unique salt
      * @param creator should be the caller of create
      * @param salt allows the creation of a new unique id
@@ -55,7 +58,8 @@ interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver {
      */
     function getDelegateId(address creator, uint256 salt) external view returns (uint256 delegateId);
 
-    /// @notice Returns contract-level metadata URI for OpenSea (reference)[https://docs.opensea.io/docs/contract-level-metadata]
+    /// @notice Returns contract-level metadata URI for OpenSea
+    /// (reference)[https://docs.opensea.io/docs/contract-level-metadata]
     function contractURI() external view returns (string memory);
 
     /*//////////////////////////////////////////////////////////////
@@ -65,7 +69,8 @@ interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver {
     /**
      * @notice Create rights token pair pulling underlying token from `msg.sender`.
      * @param delegateInfo struct containing the details of the delegate token to be created
-     * @param salt A randomly chosen value, never repeated, to generate unique delegateIds for a particular `msg.sender`.
+     * @param salt A randomly chosen value, never repeated, to generate unique delegateIds for a particular
+     * `msg.sender`.
      * @return delegateTokenId New rights ID that is also the token ID of both the newly created principal and
      * delegate tokens.
      */
@@ -80,7 +85,8 @@ interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver {
     function extend(uint256 delegateTokenId, uint256 newExpiry) external;
 
     /**
-     * @notice Allows the delegate owner or any approved operator to rescind their right early, allowing the principal rights owner to redeem the underlying token early.
+     * @notice Allows the delegate owner or any approved operator to rescind their right early, allowing the principal
+     * rights owner to redeem the underlying token early.
      * Allows anyone to forcefully rescind the delegate token if it has expired
      * @param from The delegate token holder of the token to be rescinded
      * @param delegateTokenId ID of the delegate right to be rescinded
@@ -90,7 +96,8 @@ interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver {
     /**
      * @notice Allows principal rights owner or approved operator to withdraw the underlying token
      * once the delegation rights have either met their expiration or been rescinded.
-     * Can also be called early if the caller is approved or owner of the delegate token (i.e. they wouldn't need to call rescind & withdraw)
+     * Can also be called early if the caller is approved or owner of the delegate token (i.e. they wouldn't need to
+     * call rescind & withdraw)
      * "Burns" the delegate token, principal token, and returns the underlying tokens.
      * @param recipient Recipient of the underlying tokens.
      * @param delegateTokenId id of the corresponding delegate token
@@ -98,7 +105,8 @@ interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver {
     function withdraw(address recipient, uint256 delegateTokenId) external;
 
     /**
-     * @notice Allows delegate token owner or approved operator to borrow their underlying tokens for the duration of a single atomic transaction.
+     * @notice Allows delegate token owner or approved operator to borrow their underlying tokens for the duration of a
+     * single atomic transaction.
      * @param info IDelegateFlashloan FlashInfo struct
      */
     function flashloan(Structs.FlashInfo calldata info) external payable;

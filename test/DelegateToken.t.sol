@@ -6,10 +6,10 @@ import {ComputeAddress} from "../script/ComputeAddress.s.sol";
 import {Strings} from "openzeppelin/utils/Strings.sol";
 import {DelegateToken, Structs as DelegateTokenStructs} from "src/DelegateToken.sol";
 import {DelegateTokenErrors} from "src/libraries/DelegateTokenErrors.sol";
-import {ExpiryType} from "src/interfaces/IWrapOfferer.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 import {DelegateRegistry, IDelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
 import {MockERC721, MockERC20, MockERC1155} from "./mock/MockTokens.t.sol";
+import {CreateOffererEnums} from "src/libraries/CreateOffererLib.sol";
 
 contract DelegateTokenTest is Test {
     using Strings for uint256;
@@ -35,12 +35,13 @@ contract DelegateTokenTest is Test {
         registry = new DelegateRegistry();
 
         vm.startPrank(coreDeployer);
-        dt = new DelegateToken(
-            address(registry),
-            ComputeAddress.addressFrom(coreDeployer, vm.getNonce(coreDeployer) + 1),
-            "",
-            dtOwner
-        );
+        DelegateTokenStructs.DelegateTokenParameters memory delegateTokenParameters = DelegateTokenStructs.DelegateTokenParameters({
+            delegateRegistry: address(registry),
+            principalToken: ComputeAddress.addressFrom(coreDeployer, vm.getNonce(coreDeployer) + 1),
+            baseURI: "",
+            initialMetadataOwner: dtOwner
+        });
+        dt = new DelegateToken(delegateTokenParameters);
         principal = new PrincipalToken(
             address(dt)
         );
@@ -399,10 +400,10 @@ contract DelegateTokenTest is Test {
         return users[bound(i, 0, TOTAL_USERS - 1)];
     }
 
-    function prepareValidExpiry(bool expiryTypeRelative, uint256 time) internal view returns (ExpiryType, uint256, uint256) {
-        ExpiryType expiryType = expiryTypeRelative ? ExpiryType.RELATIVE : ExpiryType.ABSOLUTE;
+    function prepareValidExpiry(bool expiryTypeRelative, uint256 time) internal view returns (CreateOffererEnums.ExpiryType, uint256, uint256) {
+        CreateOffererEnums.ExpiryType expiryType = expiryTypeRelative ? CreateOffererEnums.ExpiryType.relative : CreateOffererEnums.ExpiryType.absolute;
         time = bound(time, block.timestamp + 1, type(uint40).max);
-        uint256 expiryValue = expiryType == ExpiryType.RELATIVE ? time - block.timestamp : time;
+        uint256 expiryValue = expiryType == CreateOffererEnums.ExpiryType.relative ? time - block.timestamp : time;
         return (expiryType, time, expiryValue);
     }
 }

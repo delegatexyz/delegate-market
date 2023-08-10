@@ -20,7 +20,7 @@ library DelegateTokenRegistryHelpers {
         unchecked {
             uint256 registryLocation = uint256(RegistryHashes.location(registryHash));
             //slither-disable-next-line unused-return
-            (,, underlyingContract) = RegistryStorage.unPackAddresses(
+            (,, underlyingContract) = RegistryStorage.unpackAddresses(
                 IDelegateRegistry(delegateRegistry).readSlot(bytes32(registryLocation + uint256(RegistryStorage.Positions.firstPacked))),
                 IDelegateRegistry(delegateRegistry).readSlot(bytes32(registryLocation + uint256(RegistryStorage.Positions.secondPacked)))
             );
@@ -31,7 +31,7 @@ library DelegateTokenRegistryHelpers {
         unchecked {
             uint256 registryLocation = uint256(RegistryHashes.location(registryHash));
             //slither-disable-next-line unused-return
-            (, delegateTokenHolder, underlyingContract) = RegistryStorage.unPackAddresses(
+            (, delegateTokenHolder, underlyingContract) = RegistryStorage.unpackAddresses(
                 IDelegateRegistry(delegateRegistry).readSlot(bytes32(registryLocation + uint256(RegistryStorage.Positions.firstPacked))),
                 IDelegateRegistry(delegateRegistry).readSlot(bytes32(registryLocation + uint256(RegistryStorage.Positions.secondPacked)))
             );
@@ -84,8 +84,10 @@ library DelegateTokenRegistryHelpers {
     }
 
     function revertERC721FlashUnavailable(address delegateRegistry, Structs.FlashInfo calldata info) internal view {
-        // We touch registry directly to check for active delegation of the respective hash, as bubbling up to contract and all delegations is not required
-        // Important to notice that we cannot rely on this method for the fungibles since delegate token doesn't ever delete the fungible delegations
+        // We touch registry directly to check for active delegation of the respective hash, as bubbling up to contract
+        // and all delegations is not required
+        // Important to notice that we cannot rely on this method for the fungibles since delegate token doesn't ever
+        // delete the fungible delegations
         if (
             loadFrom(delegateRegistry, RegistryHashes.erc721Hash(address(this), "", info.delegateHolder, info.tokenId, info.tokenContract)) != address(this)
                 && loadFrom(delegateRegistry, RegistryHashes.erc721Hash(address(this), "flashloan", info.delegateHolder, info.tokenId, info.tokenContract)) != address(this)
@@ -97,7 +99,8 @@ library DelegateTokenRegistryHelpers {
     function revertERC20FlashAmountUnavailable(address delegateRegistry, Structs.FlashInfo calldata info) internal view {
         uint256 availableAmount = 0;
         unchecked {
-            // We sum the delegation amounts for "flashloan" and "" rights since liquid delegate doesn't allow double spending for different rights
+            // We sum the delegation amounts for "flashloan" and "" rights since liquid delegate doesn't allow double
+            // spending for different rights
             availableAmount = loadAmount(delegateRegistry, RegistryHashes.erc20Hash(address(this), "flashloan", info.delegateHolder, info.tokenContract))
                 + loadAmount(delegateRegistry, RegistryHashes.erc20Hash(address(this), "", info.delegateHolder, info.tokenContract));
         } // Unreasonable that this block will overflow
@@ -110,7 +113,9 @@ library DelegateTokenRegistryHelpers {
             availableAmount = loadAmount(delegateRegistry, RegistryHashes.erc1155Hash(address(this), "flashloan", info.delegateHolder, info.tokenId, info.tokenContract))
                 + loadAmount(delegateRegistry, RegistryHashes.erc1155Hash(address(this), "", info.delegateHolder, info.tokenId, info.tokenContract));
         } // Unreasonable that this will overflow
-        if (info.amount > availableAmount) revert Errors.ERC1155FlashAmountUnavailable(info.tokenId, info.amount, availableAmount);
+        if (info.amount > availableAmount) {
+            revert Errors.ERC1155FlashAmountUnavailable(info.tokenId, info.amount, availableAmount);
+        }
     }
 
     function transferERC721(

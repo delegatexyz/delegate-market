@@ -46,6 +46,8 @@ library DelegateTokenPrincipalTokenHelpers {
     }
 
     function notPrincipalOperator(address principalToken, uint256 delegateTokenId) internal view {
-        if (!PrincipalToken(principalToken).isApprovedOrOwner(msg.sender, delegateTokenId)) revert Errors.NotApproved(msg.sender, delegateTokenId);
+        if (!PrincipalToken(principalToken).isApprovedOrOwner(msg.sender, delegateTokenId)) {
+            revert Errors.NotApproved(msg.sender, delegateTokenId);
+        }
     }
 }

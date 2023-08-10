@@ -16,7 +16,7 @@ import {IDelegateToken, Structs as IDelegateTokenStructs} from "src/interfaces/I
 import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 
-import {ExpiryType} from "src/interfaces/IWrapOfferer.sol";
+import {CreateOffererEnums} from "src/libraries/CreateOffererLib.sol";
 
 contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
     using Strings for address;
@@ -198,10 +198,12 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         IDelegateTokenStructs.DelegateInfo memory delegateInfo = delegateToken.getDelegateInfo(prId);
 
-        ExpiryType expiryType = ExpiryType(bound(rawExpiryType, uint256(type(ExpiryType).min), uint256(type(ExpiryType).max)).toUint8());
+        CreateOffererEnums.ExpiryType expiryType = CreateOffererEnums.ExpiryType(
+            bound(rawExpiryType, uint256(type(CreateOffererEnums.ExpiryType).min), uint256(type(CreateOffererEnums.ExpiryType).max)).toUint8()
+        );
 
         uint256 minTime = (delegateInfo.expiry > block.timestamp ? delegateInfo.expiry : block.timestamp) + 1;
-        uint256 maxTime = expiryType == ExpiryType.RELATIVE ? type(uint40).max - block.timestamp : type(uint40).max;
+        uint256 maxTime = expiryType == CreateOffererEnums.ExpiryType.relative ? type(uint40).max - block.timestamp : type(uint40).max;
         // No possible extension
         if (maxTime < minTime) return;
 

@@ -20,7 +20,9 @@ library DelegateTokenReverts {
     }
 
     function alreadyExisted(mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo, uint256 delegateTokenId) internal view {
-        if (delegateTokenInfo[delegateTokenId][Constants.REGISTRY_HASH_POSITION] != Constants.ID_AVAILABLE) revert Errors.AlreadyExisted(delegateTokenId);
+        if (delegateTokenInfo[delegateTokenId][Constants.REGISTRY_HASH_POSITION] != Constants.ID_AVAILABLE) {
+            revert Errors.AlreadyExisted(delegateTokenId);
+        }
     }
 
     function notOperator(mapping(address account => mapping(address operator => bool enabled)) storage accountOperator, address account) internal view {
@@ -39,7 +41,9 @@ library DelegateTokenReverts {
     }
 
     function notMinted(bytes32 registryHash, uint256 delegateTokenId) internal pure {
-        if (uint256(registryHash) == Constants.ID_AVAILABLE || uint256(registryHash) == Constants.ID_USED) revert Errors.NotMinted(delegateTokenId);
+        if (uint256(registryHash) == Constants.ID_AVAILABLE || uint256(registryHash) == Constants.ID_USED) {
+            revert Errors.NotMinted(delegateTokenId);
+        }
     }
 
     function toIsZero(address to) internal pure {

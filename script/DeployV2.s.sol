@@ -4,12 +4,12 @@ pragma solidity ^0.8.21;
 import {Script} from "forge-std/Script.sol";
 import {console2} from "forge-std/console2.sol";
 import {DelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
-import {DelegateToken} from "../src/DelegateToken.sol";
-import {PrincipalToken} from "../src/PrincipalToken.sol";
-import {WrapOfferer} from "../src/WrapOfferer.sol";
+import {DelegateToken, Structs as DelegateTokenStructs} from "src/DelegateToken.sol";
+import {PrincipalToken} from "src/PrincipalToken.sol";
+import {CreateOfferer, Structs as OffererStructs} from "src/CreateOfferer.sol";
 import {Strings} from "openzeppelin/utils/Strings.sol";
 import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
-import {ComputeAddress} from "./ComputeAddress.s.sol";
+import {ComputeAddress} from "script/ComputeAddress.s.sol";
 
 contract DeployV2 is Script {
     using Strings for uint256;
@@ -18,11 +18,12 @@ contract DeployV2 is Script {
     address payable constant ZERO = payable(address(0x0));
     DelegateRegistry registry = DelegateRegistry(0x00000000000076A84feF008CDAbe6409d2FE638B);
     address seaport15 = 0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC;
+    address seaportConduit = 0x1E0049783F008A0085193E00003D00cd54003c71;
     address deployer = 0xe5ee2B9d5320f2D1492e16567F36b578372B3d9F;
 
     string baseURI = "https://metadata.delegate.cash/liquid/";
 
-    WrapOfferer market;
+    CreateOfferer createOfferer;
 
     function deploy() external {
         console2.log("msg.sender:", msg.sender);
@@ -39,15 +40,27 @@ contract DeployV2 is Script {
 
         vm.startBroadcast();
 
-        PrincipalToken pt = new PrincipalToken(dtPrediction);
-        DelegateToken dt = new DelegateToken(address(registry), ptPrediction, baseURI, deployer);
-        market = new WrapOfferer(seaport15, dtPrediction);
+        PrincipalToken principalToken = new PrincipalToken(dtPrediction);
+        DelegateTokenStructs.DelegateTokenParameters memory delegateTokenParameters = DelegateTokenStructs.DelegateTokenParameters({
+            delegateRegistry: address(registry),
+            principalToken: ptPrediction,
+            baseURI: baseURI,
+            initialMetadataOwner: deployer
+        });
+        DelegateToken delegateToken = new DelegateToken(delegateTokenParameters);
+        OffererStructs.Parameters memory createOffererParameters = OffererStructs.Parameters({
+            seaport: seaport15,
+            seaportConduit: seaportConduit,
+            delegateToken: address(delegateToken),
+            principalToken: address(principalToken)
+        });
+        createOfferer = new CreateOfferer(createOffererParameters);
 
-        console2.log("ptAddress:", address(pt));
-        console2.log("dtAddress:", address(dt));
+        console2.log("ptAddress:", address(principalToken));
+        console2.log("dtAddress:", address(delegateToken));
 
-        require(address(pt) == ptPrediction, "wrong sim");
-        require(address(dt) == dtPrediction, "wrong sim");
+        require(address(principalToken) == ptPrediction, "wrong sim");
+        require(address(delegateToken) == dtPrediction, "wrong sim");
 
         vm.stopBroadcast();
     }
@@ -57,7 +70,8 @@ contract DeployV2 is Script {
 
         vm.startBroadcast();
 
-        // string memory baseURI = string.concat("https://metadata.delegate.cash/liquid/", block.chainid.toString(), "/", address(rights).toHexString(), "/");
+        // string memory baseURI = string.concat("https://metadata.delegate.cash/liquid/", block.chainid.toString(),
+        // "/", address(rights).toHexString(), "/");
         // rights.setBaseURI(baseURI);
         // uint256 creationFee = 0.01 ether;
         // uint256 creationFee = 0 ether;

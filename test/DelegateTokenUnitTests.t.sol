@@ -7,11 +7,11 @@ import {Strings} from "openzeppelin/utils/Strings.sol";
 import {DelegateToken, Structs as DelegateTokenStructs} from "src/DelegateToken.sol";
 import {DelegateTokenErrors} from "src/libraries/DelegateTokenErrors.sol";
 import {DTHarness} from "./utils/DTHarness.t.sol";
-import {ExpiryType} from "src/interfaces/IWrapOfferer.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 import {DelegateRegistry, IDelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
 import {MockERC721, MockERC20, MockERC1155} from "./mock/MockTokens.t.sol";
 import {DelegateTokenConstants} from "src/libraries/DelegateTokenConstants.sol";
+import {DelegateTokenStructs} from "src/libraries/DelegateTokenStructs.sol";
 import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
 import {ERC721Holder} from "openzeppelin/token/ERC721/utils/ERC721Holder.sol";
 import {IERC721Metadata} from "openzeppelin/token/ERC721/extensions/IERC721Metadata.sol";
@@ -35,22 +35,19 @@ contract DelegateTokenTest is Test {
 
     function setUp() public {
         reg = new DelegateRegistry();
-        dt = new DelegateToken(
-            address(reg),
-            ComputeAddress.addressFrom(address(this), vm.getNonce(address(this)) + 1),
-            baseURI,
-            dtOwner
-        );
+        DelegateTokenStructs.DelegateTokenParameters memory delegateTokenParameters = DelegateTokenStructs.DelegateTokenParameters({
+            delegateRegistry: address(reg),
+            principalToken: ComputeAddress.addressFrom(address(this), vm.getNonce(address(this)) + 1),
+            baseURI: baseURI,
+            initialMetadataOwner: dtOwner
+        });
+        dt = new DelegateToken(delegateTokenParameters);
         pt = new PrincipalToken(
             address(dt)
         );
+        delegateTokenParameters.principalToken = ComputeAddress.addressFrom(address(this), vm.getNonce(address(this)) + 1);
+        dtHarness = new DTHarness(delegateTokenParameters);
 
-        dtHarness = new DTHarness(
-            address(reg),
-            ComputeAddress.addressFrom(address(this), vm.getNonce(address(this)) + 1),
-            baseURI,
-            dtOwner
-        );
         ptShadow = new PrincipalToken(
             address(dtHarness)
         );
@@ -85,13 +82,29 @@ contract DelegateTokenTest is Test {
         vm.assume(delegateRegistry != address(0) && principalToken != address(0) && initialMetadataOwner != address(0));
         // Check zero reverts
         vm.expectRevert(DelegateTokenErrors.DelegateRegistryZero.selector);
-        new DelegateToken(address(0), principalToken, baseURI_, initialMetadataOwner);
+        new DelegateToken(DelegateTokenStructs.DelegateTokenParameters({
+            delegateRegistry: address(0), 
+            principalToken: principalToken, 
+            baseURI: baseURI_, 
+            initialMetadataOwner: initialMetadataOwner
+            }));
         vm.expectRevert(DelegateTokenErrors.PrincipalTokenZero.selector);
-        new DelegateToken(delegateRegistry, address(0), baseURI_, initialMetadataOwner);
+        new DelegateToken(DelegateTokenStructs.DelegateTokenParameters({
+            delegateRegistry: delegateRegistry, 
+            principalToken: address(0), 
+            baseURI: baseURI_, 
+            initialMetadataOwner: initialMetadataOwner
+            }));
         vm.expectRevert(DelegateTokenErrors.InitialMetadataOwnerZero.selector);
-        new DelegateToken(delegateRegistry, principalToken, baseURI_, address(0));
+        new DelegateToken(DelegateTokenStructs.DelegateTokenParameters({
+            delegateRegistry: delegateRegistry, 
+            principalToken: principalToken, 
+            baseURI: baseURI_, 
+            initialMetadataOwner: address(0)
+            }));
         // Check successful constructor
-        dt = new DelegateToken(delegateRegistry, principalToken, baseURI_, initialMetadataOwner);
+        dt =
+        new DelegateToken(DelegateTokenStructs.DelegateTokenParameters({delegateRegistry: delegateRegistry, principalToken: principalToken, baseURI: baseURI_, initialMetadataOwner: initialMetadataOwner}));
         assertEq(delegateRegistry, dt.delegateRegistry());
         assertEq(principalToken, dt.principalToken());
         assertEq(baseURI_, dt.baseURI());

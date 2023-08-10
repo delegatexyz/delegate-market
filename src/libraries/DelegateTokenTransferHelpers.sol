@@ -28,8 +28,12 @@ library DelegateTokenTransferHelpers {
 
     /// @dev should revert for a typical 20 / 1155, and pass for a typical 721
     function checkERC721BeforePull(uint256 underlyingAmount, address underlyingContract, uint256 underlyingTokenId) internal view {
-        if (underlyingAmount != 0) revert Errors.WrongAmountForType(IDelegateRegistry.DelegationType.ERC721, underlyingAmount);
-        if (IERC721(underlyingContract).ownerOf(underlyingTokenId) != msg.sender) revert Errors.CallerNotOwnerOrInvalidToken();
+        if (underlyingAmount != 0) {
+            revert Errors.WrongAmountForType(IDelegateRegistry.DelegationType.ERC721, underlyingAmount);
+        }
+        if (IERC721(underlyingContract).ownerOf(underlyingTokenId) != msg.sender) {
+            revert Errors.CallerNotOwnerOrInvalidToken();
+        }
     }
 
     function pullERC721AfterCheck(address underlyingContract, uint256 underlyingTokenId) internal {
@@ -38,9 +42,15 @@ library DelegateTokenTransferHelpers {
 
     /// @dev should revert for a typical 721 / 1155 and pass for a typical 20
     function checkERC20BeforePull(uint256 underlyingAmount, address underlyingContract, uint256 underlyingTokenId) internal view {
-        if (underlyingTokenId != 0) revert Errors.WrongTokenIdForType(IDelegateRegistry.DelegationType.ERC20, underlyingTokenId);
-        if (underlyingAmount == 0) revert Errors.WrongAmountForType(IDelegateRegistry.DelegationType.ERC20, underlyingAmount);
-        if (IERC20(underlyingContract).allowance(msg.sender, address(this)) < underlyingAmount) revert Errors.InsufficientAllowanceOrInvalidToken();
+        if (underlyingTokenId != 0) {
+            revert Errors.WrongTokenIdForType(IDelegateRegistry.DelegationType.ERC20, underlyingTokenId);
+        }
+        if (underlyingAmount == 0) {
+            revert Errors.WrongAmountForType(IDelegateRegistry.DelegationType.ERC20, underlyingAmount);
+        }
+        if (IERC20(underlyingContract).allowance(msg.sender, address(this)) < underlyingAmount) {
+            revert Errors.InsufficientAllowanceOrInvalidToken();
+        }
     }
 
     function pullERC20AfterCheck(address underlyingContract, uint256 pullAmount) internal {

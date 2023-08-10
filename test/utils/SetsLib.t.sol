@@ -21,7 +21,8 @@ struct TokenSet {
     Token[] tokens;
 }
 
-/// @author Adapted from horsefact's [AddressSet](https://github.com/horsefacts/weth-invariant-testing/blob/main/test/helpers/AddressSet.sol)
+/// @author Adapted from horsefact's
+/// [AddressSet](https://github.com/horsefacts/weth-invariant-testing/blob/main/test/helpers/AddressSet.sol)
 library SetsLib {
     function add(TokenSet storage s, address addr, uint256 id) internal returns (bool) {
         if (s.index[addr][id] == 0) {

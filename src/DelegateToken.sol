@@ -57,14 +57,14 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
     /                      Constructor                             /
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address delegateRegistry_, address principalToken_, string memory baseURI_, address initialMetadataOwner) {
-        if (delegateRegistry_ == address(0)) revert Errors.DelegateRegistryZero();
-        if (principalToken_ == address(0)) revert Errors.PrincipalTokenZero();
-        if (initialMetadataOwner == address(0)) revert Errors.InitialMetadataOwnerZero();
-        delegateRegistry = delegateRegistry_;
-        principalToken = principalToken_;
-        baseURI = baseURI_;
-        _transferOwnership(initialMetadataOwner);
+    constructor(Structs.DelegateTokenParameters memory parameters) {
+        if (parameters.delegateRegistry == address(0)) revert Errors.DelegateRegistryZero();
+        if (parameters.principalToken == address(0)) revert Errors.PrincipalTokenZero();
+        if (parameters.initialMetadataOwner == address(0)) revert Errors.InitialMetadataOwnerZero();
+        delegateRegistry = parameters.delegateRegistry;
+        principalToken = parameters.principalToken;
+        baseURI = parameters.baseURI;
+        _transferOwnership(parameters.initialMetadataOwner);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -166,14 +166,16 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
     /// @dev must emit the ERC721 Transfer(from, to, delegateTokenId) event
     /// @dev toAmount stored in the related registry delegation must be retrieved directly from registry storage and
     ///      not via the CheckDelegate method to avoid invariants with "[specific rights]" and "" classes
-    /// @dev registryHash for the DelegateTokenId must point to the new registry delegation associated with the to address
+    /// @dev registryHash for the DelegateTokenId must point to the new registry delegation associated with the to
+    /// address
     function transferFrom(address from, address to, uint256 delegateTokenId) public {
         Reverts.toIsZero(to);
         bytes32 registryHash = StorageHelpers.readRegistryHash(delegateTokenInfo, delegateTokenId);
         Reverts.notMinted(registryHash, delegateTokenId);
         (address delegateTokenHolder, address underlyingContract) = RegistryHelpers.loadTokenHolderAndContract(delegateRegistry, registryHash);
         Reverts.fromNotDelegateTokenHolder(from, delegateTokenHolder);
-        // We can use from here instead of delegateTokenHolder since we've just verified that from == delegateTokenHolder
+        // We can use from here instead of delegateTokenHolder since we've just verified that from ==
+        // delegateTokenHolder
         StorageHelpers.revertNotApprovedOrOperator(accountOperator, delegateTokenInfo, from, delegateTokenId);
         StorageHelpers.incrementBalance(balances, to);
         StorageHelpers.decrementBalance(balances, from);
@@ -311,7 +313,6 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
     /// @inheritdoc IDelegateToken
     function create(Structs.DelegateInfo calldata delegateInfo, uint256 salt) external nonReentrant returns (uint256 delegateTokenId) {
         TransferHelpers.checkAndPullByType(erc1155PullAuthorization, delegateInfo);
-        //slither-disable-next-line timestamp
         Reverts.invalidExpiry(delegateInfo.expiry);
         Reverts.toIsZero(delegateInfo.delegateHolder);
         delegateTokenId = getDelegateId(msg.sender, salt);
@@ -350,14 +351,17 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
     /// @inheritdoc IDelegateToken
     function rescind(address from, uint256 delegateTokenId) external {
         //slither-disable-next-line timestamp
-        if (StorageHelpers.readExpiry(delegateTokenInfo, delegateTokenId) < block.timestamp) StorageHelpers.writeApproved(delegateTokenInfo, delegateTokenId, msg.sender);
+        if (StorageHelpers.readExpiry(delegateTokenInfo, delegateTokenId) < block.timestamp) {
+            StorageHelpers.writeApproved(delegateTokenInfo, delegateTokenId, msg.sender);
+        }
         transferFrom(from, Constants.RESCIND_ADDRESS, delegateTokenId); // approve gets deleted in transferFrom
     }
 
     /// @inheritdoc IDelegateToken
     function withdraw(address recipient, uint256 delegateTokenId) external nonReentrant {
         bytes32 registryHash = StorageHelpers.readRegistryHash(delegateTokenInfo, delegateTokenId);
-        StorageHelpers.writeRegistryHash(delegateTokenInfo, delegateTokenId, bytes32(Constants.ID_USED)); // Sets registry pointer to used flag
+        StorageHelpers.writeRegistryHash(delegateTokenInfo, delegateTokenId, bytes32(Constants.ID_USED)); // Sets
+            // registry pointer to used flag
         Reverts.notMinted(registryHash, delegateTokenId);
         (address delegateTokenHolder, address underlyingContract) = RegistryHelpers.loadTokenHolderAndContract(delegateRegistry, registryHash);
         StorageHelpers.revertInvalidWithdrawalConditions(delegateTokenInfo, delegateTokenId, delegateTokenHolder);

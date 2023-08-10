@@ -5,9 +5,10 @@ import {Test} from "forge-std/Test.sol";
 import {FlashReentrancyTester} from "./utils/FlashReentrancy.t.sol";
 import {DelegateToken} from "src/DelegateToken.sol";
 import {DelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
-import {ComputeAddress} from "../script/ComputeAddress.s.sol";
+import {ComputeAddress} from "script/ComputeAddress.s.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 import {MockERC721} from "./mock/MockTokens.t.sol";
+import {DelegateTokenStructs} from "src/libraries/DelegateTokenStructs.sol";
 
 contract ReentrancyTest is Test {
     DelegateToken dt;
@@ -19,12 +20,13 @@ contract ReentrancyTest is Test {
         address deployer = address(100);
 
         vm.startPrank(deployer);
-        dt = new DelegateToken(
-            address(registry),
-            ComputeAddress.addressFrom(deployer, vm.getNonce(deployer) + 1),
-            "",
-            deployer
-        );
+        DelegateTokenStructs.DelegateTokenParameters memory delegateTokenParameters = DelegateTokenStructs.DelegateTokenParameters({
+            delegateRegistry: address(registry),
+            principalToken: ComputeAddress.addressFrom(deployer, vm.getNonce(deployer) + 1),
+            baseURI: "",
+            initialMetadataOwner: deployer
+        });
+        dt = new DelegateToken(delegateTokenParameters);
         new PrincipalToken(
             address(dt)
         );

@@ -1,28 +1,30 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.21;
 
-import {IDelegateToken} from "src/interfaces/IDelegateToken.sol";
-
-import {DelegateTokenStructs as Structs} from "src/libraries/DelegateTokenStructs.sol";
-import {DelegateTokenErrors as Errors} from "src/libraries/DelegateTokenErrors.sol";
+import {IDelegateToken, Structs as IDelegateTokenStructs} from "src/interfaces/IDelegateToken.sol";
 
 import {ERC721} from "openzeppelin/token/ERC721/ERC721.sol";
 
 import {Strings} from "openzeppelin/utils/Strings.sol";
 import {Base64} from "openzeppelin/utils/Base64.sol";
 
-/// @notice A simple NFT that doesn't store any user data itself, being tightly linked to the more stateful Delegate Token.
+/// @notice A simple NFT that doesn't store any user data itself, being tightly linked to the more stateful Delegate
+/// Token.
 /// @notice The holder of the PT is eligible to reclaim the escrowed NFT when the DT expires or is burned.
 contract PrincipalToken is ERC721("PrincipalToken", "PT") {
     address public immutable delegateToken;
 
-    constructor(address delegateToken_) {
-        if (delegateToken_ == address(0)) revert Errors.DelegateTokenZero();
-        delegateToken = delegateToken_;
+    error DelegateTokenZero();
+    error CallerNotDelegateToken();
+    error NotApproved(address spender, uint256 id);
+
+    constructor(address setDelegateToken) {
+        if (setDelegateToken == address(0)) revert DelegateTokenZero();
+        delegateToken = setDelegateToken;
     }
 
     function _checkDelegateTokenCaller() internal view {
-        if (msg.sender != delegateToken) revert Errors.CallerNotDelegateToken();
+        if (msg.sender != delegateToken) revert CallerNotDelegateToken();
     }
 
     /// @notice exposes _mint method
@@ -39,7 +41,7 @@ contract PrincipalToken is ERC721("PrincipalToken", "PT") {
     /// @dev must revert if caller is not delegate token
     /// @dev must revert if delegate token has not authorized the burn
     function burn(address spender, uint256 id) external {
-        if (!_isApprovedOrOwner(spender, id)) revert Errors.NotApproved(spender, id);
+        if (!_isApprovedOrOwner(spender, id)) revert NotApproved(spender, id);
         _checkDelegateTokenCaller();
         _burn(id);
         IDelegateToken(delegateToken).burnAuthorizedCallback();
@@ -60,7 +62,7 @@ contract PrincipalToken is ERC721("PrincipalToken", "PT") {
 
         IDelegateToken dt = IDelegateToken(delegateToken);
 
-        Structs.DelegateInfo memory delegateInfo = dt.getDelegateInfo(id);
+        IDelegateTokenStructs.DelegateInfo memory delegateInfo = dt.getDelegateInfo(id);
 
         string memory idstr = Strings.toString(delegateInfo.tokenId);
         string memory imageUrl = string.concat(dt.baseURI(), "principal/", idstr);
