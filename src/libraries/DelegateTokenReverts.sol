@@ -32,6 +32,7 @@ library DelegateTokenReverts {
     }
 
     function invalidExpiry(uint256 expiry) internal view {
+        //slither-disable-next-line timestamp
         if (expiry < block.timestamp) revert Errors.ExpiryTimeNotInFuture(expiry, block.timestamp);
         if (expiry > Constants.MAX_EXPIRY) revert Errors.ExpiryTooLarge(expiry, Constants.MAX_EXPIRY);
     }
