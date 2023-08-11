@@ -11,7 +11,7 @@ library DelegateTokenRegistryHelpers {
     function loadTokenHolder(address delegateRegistry, bytes32 registryHash) internal view returns (address delegateTokenHolder) {
         unchecked {
             return RegistryStorage.unpackAddress(
-                IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(registryHash)) + uint256(RegistryStorage.Positions.secondPacked)))
+                IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(registryHash)) + RegistryStorage.POSITIONS_SECOND_PACKED))
             );
         }
     }
@@ -21,8 +21,8 @@ library DelegateTokenRegistryHelpers {
             uint256 registryLocation = uint256(RegistryHashes.location(registryHash));
             //slither-disable-next-line unused-return
             (,, underlyingContract) = RegistryStorage.unpackAddresses(
-                IDelegateRegistry(delegateRegistry).readSlot(bytes32(registryLocation + uint256(RegistryStorage.Positions.firstPacked))),
-                IDelegateRegistry(delegateRegistry).readSlot(bytes32(registryLocation + uint256(RegistryStorage.Positions.secondPacked)))
+                IDelegateRegistry(delegateRegistry).readSlot(bytes32(registryLocation + RegistryStorage.POSITIONS_FIRST_PACKED)),
+                IDelegateRegistry(delegateRegistry).readSlot(bytes32(registryLocation + RegistryStorage.POSITIONS_SECOND_PACKED))
             );
         }
     }
@@ -32,8 +32,8 @@ library DelegateTokenRegistryHelpers {
             uint256 registryLocation = uint256(RegistryHashes.location(registryHash));
             //slither-disable-next-line unused-return
             (, delegateTokenHolder, underlyingContract) = RegistryStorage.unpackAddresses(
-                IDelegateRegistry(delegateRegistry).readSlot(bytes32(registryLocation + uint256(RegistryStorage.Positions.firstPacked))),
-                IDelegateRegistry(delegateRegistry).readSlot(bytes32(registryLocation + uint256(RegistryStorage.Positions.secondPacked)))
+                IDelegateRegistry(delegateRegistry).readSlot(bytes32(registryLocation + RegistryStorage.POSITIONS_FIRST_PACKED)),
+                IDelegateRegistry(delegateRegistry).readSlot(bytes32(registryLocation + RegistryStorage.POSITIONS_SECOND_PACKED))
             );
         }
     }
@@ -41,45 +41,40 @@ library DelegateTokenRegistryHelpers {
     function loadFrom(address delegateRegistry, bytes32 registryHash) internal view returns (address) {
         unchecked {
             return RegistryStorage.unpackAddress(
-                IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(registryHash)) + uint256(RegistryStorage.Positions.firstPacked)))
+                IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(registryHash)) + RegistryStorage.POSITIONS_FIRST_PACKED))
             );
         }
     }
 
     function loadAmount(address delegateRegistry, bytes32 registryHash) internal view returns (uint256) {
         unchecked {
-            return
-                uint256(IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(registryHash)) + uint256(RegistryStorage.Positions.amount))));
+            return uint256(IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(registryHash)) + RegistryStorage.POSITIONS_AMOUNT)));
         }
     }
 
     function loadRights(address delegateRegistry, bytes32 registryHash) internal view returns (bytes32) {
         unchecked {
-            return IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(registryHash)) + uint256(RegistryStorage.Positions.rights)));
+            return IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(registryHash)) + RegistryStorage.POSITIONS_RIGHTS));
         }
     }
 
     function loadTokenId(address delegateRegistry, bytes32 registryHash) internal view returns (uint256) {
         unchecked {
-            return uint256(
-                IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(registryHash)) + uint256(RegistryStorage.Positions.tokenId)))
-            );
+            return uint256(IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(registryHash)) + RegistryStorage.POSITIONS_TOKEN_ID)));
         }
     }
 
     function calculateDecreasedAmount(address delegateRegistry, bytes32 registryHash, uint256 decreaseAmount) internal view returns (uint256) {
         unchecked {
-            return uint256(
-                IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(registryHash)) + uint256(RegistryStorage.Positions.amount)))
-            ) - decreaseAmount;
+            return uint256(IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(registryHash)) + RegistryStorage.POSITIONS_AMOUNT)))
+                - decreaseAmount;
         }
     }
 
     function calculateIncreasedAmount(address delegateRegistry, bytes32 registryHash, uint256 increaseAmount) internal view returns (uint256) {
         unchecked {
-            return uint256(
-                IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(registryHash)) + uint256(RegistryStorage.Positions.amount)))
-            ) + increaseAmount;
+            return uint256(IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(registryHash)) + RegistryStorage.POSITIONS_AMOUNT)))
+                + increaseAmount;
         }
     }
 

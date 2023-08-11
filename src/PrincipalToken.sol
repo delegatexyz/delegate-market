@@ -3,10 +3,10 @@ pragma solidity ^0.8.21;
 
 import {IDelegateToken, Structs as IDelegateTokenStructs} from "src/interfaces/IDelegateToken.sol";
 
-import {ERC721} from "openzeppelin/token/ERC721/ERC721.sol";
+import {ERC721} from "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
 
-import {Strings} from "openzeppelin/utils/Strings.sol";
-import {Base64} from "openzeppelin/utils/Base64.sol";
+import {Strings} from "openzeppelin-contracts/contracts/utils/Strings.sol";
+import {Base64} from "openzeppelin-contracts/contracts/utils/Base64.sol";
 
 /// @notice A simple NFT that doesn't store any user data itself, being tightly linked to the more stateful Delegate
 /// Token.
