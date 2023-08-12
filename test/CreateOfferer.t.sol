@@ -33,7 +33,7 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
 
     function setUp() public {
         OffererStructs.Parameters memory createOffererParameters =
-            OffererStructs.Parameters({seaport: address(seaport), seaportConduit: address(conduit), delegateToken: address(dt), principalToken: address(principal)});
+            OffererStructs.Parameters({seaport: address(seaport), delegateToken: address(dt), principalToken: address(principal)});
         createOfferer = new CreateOfferer(createOffererParameters);
         token = new MockERC721(0);
         weth = new WETH();
@@ -66,7 +66,7 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
         token.mint(seller.addr, erc721Order.tokenId);
 
         // Create order hash
-        uint256 createOrderHash = createOfferer.calculateCreateOrderHash(seller.addr, abi.encode(erc721Order), IDelegateRegistry.DelegationType.ERC721);
+        uint256 createOrderHash = createOfferer.calculateCreateOrderHash(seller.addr, address(conduit), abi.encode(erc721Order), IDelegateRegistry.DelegationType.ERC721);
 
         // Build Order
         AdvancedOrder[] memory orders = new AdvancedOrder[](3);
@@ -134,7 +134,7 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
         token.mint(seller.addr, erc721Order.tokenId);
 
         // Create order hash
-        uint256 createOrderHash = createOfferer.calculateCreateOrderHash(buyer.addr, abi.encode(erc721Order), IDelegateRegistry.DelegationType.ERC721);
+        uint256 createOrderHash = createOfferer.calculateCreateOrderHash(buyer.addr, address(conduit), abi.encode(erc721Order), IDelegateRegistry.DelegationType.ERC721);
 
         // Build Order
         AdvancedOrder[] memory orders = new AdvancedOrder[](3);

@@ -19,7 +19,7 @@
 | Deployment Cost                                            | Deployment Size |        |        |        |         |
 | 658115                                                     | 3335            |        |        |        |         |
 | Function Name                                              | min             | avg    | median | max    | # calls |
-| execute                                                    | 323351          | 328823 | 328823 | 334296 | 2       |
+| execute                                                    | 323322          | 328797 | 328797 | 334273 | 2       |
 | updateChannel                                              | 24300           | 24300  | 24300  | 24300  | 2       |
 
 
@@ -36,12 +36,12 @@
 | src/CreateOfferer.sol:CreateOfferer contract |                 |        |        |        |         |
 |----------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                              | Deployment Size |        |        |        |         |
-| 3193114                                      | 15657           |        |        |        |         |
+| 3156873                                      | 15308           |        |        |        |         |
 | Function Name                                | min             | avg    | median | max    | # calls |
-| calculateCreateOrderHash                     | 1929            | 1929   | 1929   | 1929   | 2       |
+| calculateCreateOrderHash                     | 2109            | 2109   | 2109   | 2109   | 2       |
 | generateOrder                                | 46352           | 46378  | 46378  | 46405  | 2       |
 | ratifyOrder                                  | 34057           | 34057  | 34057  | 34057  | 2       |
-| transferFrom                                 | 309339          | 309368 | 309368 | 309397 | 2       |
+| transferFrom                                 | 309310          | 309339 | 309339 | 309368 | 2       |
 
 
 | src/DelegateToken.sol:DelegateToken contract    |                 |        |        |        |         |
@@ -51,7 +51,7 @@
 | Function Name                                   | min             | avg    | median | max    | # calls |
 | approve                                         | 3989            | 4082   | 4016   | 4243   | 3       |
 | balanceOf                                       | 687             | 687    | 687    | 687    | 1       |
-| baseURI                                         | 1272            | 3387   | 1334   | 7557   | 3       |
+| baseURI                                         | 1272            | 3610   | 2003   | 7557   | 3       |
 | burnAuthorizedCallback                          | 458             | 458    | 458    | 458    | 3       |
 | create                                          | 605             | 211296 | 288627 | 347549 | 26      |
 | delegateRegistry                                | 294             | 294    | 294    | 294    | 2       |
@@ -119,8 +119,8 @@
 | mintNext                                       | 69295           | 69295 | 69295  | 69295 | 5       |
 | ownerOf                                        | 534             | 653   | 534    | 2559  | 17      |
 | setApprovalForAll                              | 2124            | 20815 | 24554  | 24554 | 12      |
-| transferFrom(address,address,uint256)          | 19472           | 22485 | 22884  | 23242 | 13      |
-| transferFrom(address,address,uint256)(bool)    | 19472           | 21746 | 22884  | 22884 | 3       |
+| transferFrom(address,address,uint256)          | 19472           | 22311 | 22884  | 23242 | 15      |
+| transferFrom(address,address,uint256)(bool)    | 22884           | 22884 | 22884  | 22884 | 1       |
 
 
 | test/mock/WETH.t.sol:WETH contract |                 |       |        |       |         |

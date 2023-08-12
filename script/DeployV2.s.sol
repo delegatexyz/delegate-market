@@ -18,7 +18,6 @@ contract DeployV2 is Script {
     address payable constant ZERO = payable(address(0x0));
     DelegateRegistry registry = DelegateRegistry(0x00000000000076A84feF008CDAbe6409d2FE638B);
     address seaport15 = 0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC;
-    address seaportConduit = 0x1E0049783F008A0085193E00003D00cd54003c71;
     address deployer = 0xe5ee2B9d5320f2D1492e16567F36b578372B3d9F;
 
     string baseURI = "https://metadata.delegate.cash/liquid/";
@@ -48,12 +47,8 @@ contract DeployV2 is Script {
             initialMetadataOwner: deployer
         });
         DelegateToken delegateToken = new DelegateToken(delegateTokenParameters);
-        OffererStructs.Parameters memory createOffererParameters = OffererStructs.Parameters({
-            seaport: seaport15,
-            seaportConduit: seaportConduit,
-            delegateToken: address(delegateToken),
-            principalToken: address(principalToken)
-        });
+        OffererStructs.Parameters memory createOffererParameters =
+            OffererStructs.Parameters({seaport: seaport15, delegateToken: address(delegateToken), principalToken: address(principalToken)});
         createOfferer = new CreateOfferer(createOffererParameters);
 
         console2.log("ptAddress:", address(principalToken));

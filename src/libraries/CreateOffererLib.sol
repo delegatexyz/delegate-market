@@ -41,7 +41,6 @@ library CreateOffererStructs {
 
     struct Parameters {
         address seaport;
-        address seaportConduit;
         address principalToken;
         address delegateToken;
     }

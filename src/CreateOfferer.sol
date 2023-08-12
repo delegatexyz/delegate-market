@@ -22,7 +22,6 @@ import {ReentrancyGuard} from "openzeppelin/security/ReentrancyGuard.sol";
 /// @dev experimental way to create delegate tokens with seaport and existing seaport conduit approvals
 contract CreateOfferer is ReentrancyGuard, ContractOffererInterface {
     address public immutable seaport;
-    address public immutable seaportConduit;
     address public immutable delegateToken;
     address public immutable principalToken;
     uint256 nonce;
@@ -35,8 +34,6 @@ contract CreateOfferer is ReentrancyGuard, ContractOffererInterface {
     constructor(Structs.Parameters memory parameters) {
         require(parameters.seaport != address(0), "seaportIsZero");
         seaport = parameters.seaport;
-        require(parameters.seaportConduit != address(0), "seaportConduitIsZero");
-        seaportConduit = parameters.seaportConduit;
         require(parameters.delegateToken != address(0), "delegateTokenIsZero");
         delegateToken = parameters.delegateToken;
         require(parameters.principalToken != address(0), "principalTokenIsZero");
@@ -164,7 +161,6 @@ contract CreateOfferer is ReentrancyGuard, ContractOffererInterface {
      */
     //slither-disable-next-line erc20-interface
     function transferFrom(address from, address targetTokenReceiver, uint256 createOrderHashAsTokenId) external nonReentrant {
-        require(msg.sender == seaportConduit, "caller not conduit");
         require(from == address(this), "from not create offerer");
         require(stage.flag == Enums.Stage.transfer, "unlocked");
         stage.flag = Enums.Stage.ratify;
@@ -176,7 +172,7 @@ contract CreateOfferer is ReentrancyGuard, ContractOffererInterface {
             Structs.ERC721Order memory erc721Order = transientERC721Order;
             processedReceivers = Process.receivers(erc721Order.info.targetToken, targetTokenReceiver, transientReceivers);
             require(
-                calculateCreateOrderHash(targetTokenReceiver, abi.encode(erc721Order), IDelegateRegistry.DelegationType.ERC721) == createOrderHashAsTokenId,
+                calculateCreateOrderHash(targetTokenReceiver, msg.sender, abi.encode(erc721Order), IDelegateRegistry.DelegationType.ERC721) == createOrderHashAsTokenId,
                 "createOrderHash invariant"
             );
             IERC721(erc721Order.info.tokenContract).setApprovalForAll(address(delegateToken), true);
@@ -200,7 +196,7 @@ contract CreateOfferer is ReentrancyGuard, ContractOffererInterface {
             Structs.ERC20Order memory erc20Order = transientERC20Order;
             processedReceivers = Process.receivers(erc20Order.info.targetToken, targetTokenReceiver, transientReceivers);
             require(
-                calculateCreateOrderHash(targetTokenReceiver, abi.encode(erc20Order), IDelegateRegistry.DelegationType.ERC20) == createOrderHashAsTokenId,
+                calculateCreateOrderHash(targetTokenReceiver, msg.sender, abi.encode(erc20Order), IDelegateRegistry.DelegationType.ERC20) == createOrderHashAsTokenId,
                 "createOrderHash invariant"
             );
             require(IERC20(erc20Order.info.tokenContract).approve(address(delegateToken), erc20Order.amount));
@@ -224,7 +220,7 @@ contract CreateOfferer is ReentrancyGuard, ContractOffererInterface {
             Structs.ERC1155Order memory erc1155Order = transientERC1155Order;
             processedReceivers = Process.receivers(erc1155Order.info.targetToken, targetTokenReceiver, transientReceivers);
             require(
-                calculateCreateOrderHash(targetTokenReceiver, abi.encode(erc1155Order), IDelegateRegistry.DelegationType.ERC1155) == createOrderHashAsTokenId,
+                calculateCreateOrderHash(targetTokenReceiver, msg.sender, abi.encode(erc1155Order), IDelegateRegistry.DelegationType.ERC1155) == createOrderHashAsTokenId,
                 "createOrderHash invariant"
             );
             IERC1155(erc1155Order.info.tokenContract).setApprovalForAll(address(delegateToken), true);
@@ -277,12 +273,12 @@ contract CreateOfferer is ReentrancyGuard, ContractOffererInterface {
      * @param createOrderInfo Bytes of abi encode run on the create order struct for a given token type
      * @param tokenType IDelegateRegistry.DelegationType corresponding to the create order struct token type
      */
-    function calculateCreateOrderHash(address targetTokenReceiver, bytes memory createOrderInfo, IDelegateRegistry.DelegationType tokenType)
+    function calculateCreateOrderHash(address targetTokenReceiver, address conduit, bytes memory createOrderInfo, IDelegateRegistry.DelegationType tokenType)
         public
         pure
         returns (uint256)
     {
-        uint256 hashWithoutType = uint256(keccak256(abi.encode(targetTokenReceiver, createOrderInfo)));
+        uint256 hashWithoutType = uint256(keccak256(abi.encode(targetTokenReceiver, conduit, createOrderInfo)));
         return (hashWithoutType << 8) | uint256(tokenType);
     }
 }

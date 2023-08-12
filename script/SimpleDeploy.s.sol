@@ -11,7 +11,6 @@ import {ComputeAddress} from "script/ComputeAddress.s.sol";
 
 contract SimpleDeploy is Script {
     address seaport15 = 0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC;
-    address seaportConduit = 0x1E0049783F008A0085193E00003D00cd54003c71;
 
     string baseURI = "https://metadata.delegate.cash/liquid/";
 
@@ -34,7 +33,7 @@ contract SimpleDeploy is Script {
         });
         address delegateToken = address(new DelegateToken(delegateTokenParameters));
         OffererStructs.Parameters memory createOffererParameters =
-            OffererStructs.Parameters({seaport: seaport15, seaportConduit: seaportConduit, delegateToken: delegateToken, principalToken: principalToken});
+            OffererStructs.Parameters({seaport: seaport15, delegateToken: delegateToken, principalToken: principalToken});
         address createOfferer = address(new CreateOfferer(createOffererParameters));
 
         console2.log("Delegate Registry", delegateRegistry);
