@@ -65,8 +65,8 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
         vm.deal(buyer.addr, expectedETH);
         token.mint(seller.addr, erc721Order.tokenId);
 
-        // Create order hash
-        uint256 createOrderHash = createOfferer.calculateCreateOrderHash(seller.addr, address(conduit), abi.encode(erc721Order), IDelegateRegistry.DelegationType.ERC721);
+        // Create order hash and id
+        (uint256 createOrderHash, uint256 delegateId) = createOfferer.calculateERC721OrderHashAndId(seller.addr, address(conduit), erc721Order);
 
         // Build Order
         AdvancedOrder[] memory orders = new AdvancedOrder[](3);
@@ -85,9 +85,6 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
         // Buyer ETH => Seller, blue line, order 2 offer item 0 matches with order 0 consideration item 0
         // offer: (2, 0); consideration: (0, 0); (orderIndex, itemIndex)
         fulfillments[2] = _constructFulfillment(2, 0, 0, 0);
-
-        // Calculate delegateId
-        uint256 delegateId = dt.getDelegateId(address(createOfferer), createOrderHash);
 
         // Match orders
         vm.startPrank(buyer.addr);
@@ -134,7 +131,7 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
         token.mint(seller.addr, erc721Order.tokenId);
 
         // Create order hash
-        uint256 createOrderHash = createOfferer.calculateCreateOrderHash(buyer.addr, address(conduit), abi.encode(erc721Order), IDelegateRegistry.DelegationType.ERC721);
+        (uint256 createOrderHash, uint256 delegateId) = createOfferer.calculateERC721OrderHashAndId(buyer.addr, address(conduit), erc721Order);
 
         // Build Order
         AdvancedOrder[] memory orders = new AdvancedOrder[](3);
@@ -152,9 +149,6 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
         fulfillments[1] = _constructFulfillment(1, 0, 0, 0);
         // Buyer ETH => Seller
         fulfillments[2] = _constructFulfillment(0, 0, 2, 0);
-
-        // Calculate delegateId
-        uint256 delegateId = dt.getDelegateId(address(createOfferer), createOrderHash);
 
         // Match orders
         vm.startPrank(seller.addr);

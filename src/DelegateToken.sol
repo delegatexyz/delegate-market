@@ -17,7 +17,7 @@ import {DelegateTokenStorageHelpers as StorageHelpers} from "src/libraries/Deleg
 import {DelegateTokenRegistryHelpers as RegistryHelpers, RegistryHashes} from "src/libraries/DelegateTokenRegistryHelpers.sol";
 import {DelegateTokenTransferHelpers as TransferHelpers, SafeERC20, IERC721, IERC20, IERC1155} from "src/libraries/DelegateTokenTransferHelpers.sol";
 import {DelegateTokenPrincipalTokenHelpers as PrincipalTokenHelpers, PrincipalToken} from "src/libraries/DelegateTokenPrincipalTokenHelpers.sol";
-import {DelegateTokenURI} from "src/libraries/DelegateTokenURI.sol";
+import {DelegateTokenEncoding as Encoding} from "src/libraries/DelegateTokenEncoding.sol";
 
 contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken {
     /*//////////////////////////////////////////////////////////////
@@ -238,7 +238,7 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
     function tokenURI(uint256 delegateTokenId) external view returns (string memory) {
         bytes32 registryHash = StorageHelpers.readRegistryHash(delegateTokenInfo, delegateTokenId);
         Reverts.notMinted(registryHash, delegateTokenId);
-        return DelegateTokenURI.build(
+        return Encoding.tokenURI(
             baseURI,
             RegistryHelpers.loadContract(delegateRegistry, registryHash),
             RegistryHelpers.loadTokenId(delegateRegistry, registryHash),
@@ -295,8 +295,8 @@ contract DelegateToken is ReentrancyGuard, Ownable2Step, ERC2981, IDelegateToken
     }
 
     /// @inheritdoc IDelegateToken
-    function getDelegateId(address creator, uint256 salt) public view returns (uint256 delegateTokenId) {
-        delegateTokenId = uint256(keccak256(abi.encode(creator, salt)));
+    function getDelegateId(address caller, uint256 salt) public view returns (uint256 delegateTokenId) {
+        delegateTokenId = Encoding.delegateId(caller, salt);
         Reverts.alreadyExisted(delegateTokenInfo, delegateTokenId);
     }
 

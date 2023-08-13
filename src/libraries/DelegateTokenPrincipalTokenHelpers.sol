@@ -45,6 +45,7 @@ library DelegateTokenPrincipalTokenHelpers {
         if (msg.sender != principalToken) revert Errors.CallerNotPrincipalToken();
     }
 
+    /// @notice Helper function to revert if caller is not approved or owner of a principal token with delegateTokenId
     function notPrincipalOperator(address principalToken, uint256 delegateTokenId) internal view {
         if (!PrincipalToken(principalToken).isApprovedOrOwner(msg.sender, delegateTokenId)) {
             revert Errors.NotApproved(msg.sender, delegateTokenId);

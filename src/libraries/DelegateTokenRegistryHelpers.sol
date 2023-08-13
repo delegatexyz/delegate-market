@@ -8,6 +8,12 @@ import {DelegateTokenErrors as Errors} from "src/libraries/DelegateTokenErrors.s
 import {DelegateTokenStructs as Structs} from "src/libraries/DelegateTokenStructs.sol";
 
 library DelegateTokenRegistryHelpers {
+    /**
+     * @notice Loads a delegateTokenHolder directly from a given registryHash.
+     * @param delegateRegistry Should be the address of the DelegateRegistry v2 contract.
+     * @param registryHash The hash of the delegation to retrieve data for.
+     * @return delegateTokenHolder Which is the delegate "to" address corresponding to the registryHash.
+     */
     function loadTokenHolder(address delegateRegistry, bytes32 registryHash) internal view returns (address delegateTokenHolder) {
         unchecked {
             return RegistryStorage.unpackAddress(
@@ -16,6 +22,13 @@ library DelegateTokenRegistryHelpers {
         }
     }
 
+    /**
+     * @notice Loads a underlyingContract directly from a given registryHash.
+     * @param delegateRegistry Should be the address of the DelegateRegistry v2 contract.
+     * @param registryHash The hash of the delegation to retrieve data for.
+     * @return underlyingContract Which is the "contract_" address corresponding to the registryHash.
+     * @dev Two slots need to be loaded in the registry given the packed configuration, this function should only be used when you don't need "to" or "from".
+     */
     function loadContract(address delegateRegistry, bytes32 registryHash) internal view returns (address underlyingContract) {
         unchecked {
             uint256 registryLocation = uint256(RegistryHashes.location(registryHash));
@@ -27,6 +40,14 @@ library DelegateTokenRegistryHelpers {
         }
     }
 
+    /**
+     * @notice Loads a delegateTokenHolder and a underlyingContract from a given registryHash.
+     * @param delegateRegistry Should be the address of the DelegateRegistry v2 contract.
+     * @param registryHash The hash of the delegation to retrieve data for.
+     * @return delegateTokenHolder Which is the delegate "to" address corresponding to the registryHash.
+     * @return underlyingContract Which is the "contract_" address corresponding to the registryHash.
+     * @dev Two slots need to be loaded from the registry given the packed position.
+     */
     function loadTokenHolderAndContract(address delegateRegistry, bytes32 registryHash) internal view returns (address delegateTokenHolder, address underlyingContract) {
         unchecked {
             uint256 registryLocation = uint256(RegistryHashes.location(registryHash));
@@ -38,6 +59,11 @@ library DelegateTokenRegistryHelpers {
         }
     }
 
+    /**
+     * @notice Loads the "from" address from a given registryHash.
+     * @param delegateRegistry Should be the address of the DelegateRegistry v2 contract.
+     * @param registryHash The hash of the delegation to retrieve data for.
+     */
     function loadFrom(address delegateRegistry, bytes32 registryHash) internal view returns (address) {
         unchecked {
             return RegistryStorage.unpackAddress(
@@ -46,24 +72,46 @@ library DelegateTokenRegistryHelpers {
         }
     }
 
+    /**
+     * @notice Loads the "amount" from a given registryHash.
+     * @param delegateRegistry Should be the address of the DelegateRegistry v2 contract.
+     * @param registryHash The hash of the delegation to retrieve data for.
+     */
     function loadAmount(address delegateRegistry, bytes32 registryHash) internal view returns (uint256) {
         unchecked {
             return uint256(IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(registryHash)) + RegistryStorage.POSITIONS_AMOUNT)));
         }
     }
 
+    /**
+     * @notice Loads the "rights" from a given registryHash.
+     * @param delegateRegistry Should be the address of the DelegateRegistry v2 contract.
+     * @param registryHash The hash of the delegation to retrieve data for.
+     */
     function loadRights(address delegateRegistry, bytes32 registryHash) internal view returns (bytes32) {
         unchecked {
             return IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(registryHash)) + RegistryStorage.POSITIONS_RIGHTS));
         }
     }
 
+    /**
+     * @notice Loads the "tokenId" from a given registryHash.
+     * @param delegateRegistry Should be the address of the DelegateRegistry v2 contract.
+     * @param registryHash The hash of the delegation to retrieve data for.
+     */
     function loadTokenId(address delegateRegistry, bytes32 registryHash) internal view returns (uint256) {
         unchecked {
             return uint256(IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(registryHash)) + RegistryStorage.POSITIONS_TOKEN_ID)));
         }
     }
 
+    /**
+     * @notice Calculates a new decreased value given an "amount" from a given registryHash.
+     * @param delegateRegistry Should be the address of the DelegateRegistry v2 contract.
+     * @param registryHash The hash of the delegation to retrieve data for.
+     * @param decreaseAmount The value to decrement "amount" by.
+     * @dev Assumes the decreased amount won't underflow with "amount".
+     */
     function calculateDecreasedAmount(address delegateRegistry, bytes32 registryHash, uint256 decreaseAmount) internal view returns (uint256) {
         unchecked {
             return uint256(IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(registryHash)) + RegistryStorage.POSITIONS_AMOUNT)))
@@ -71,6 +119,13 @@ library DelegateTokenRegistryHelpers {
         }
     }
 
+    /**
+     * @notice Calculates a new increased value given an "amount" from a given registryHash.
+     * @param delegateRegistry Should be the address of the DelegateRegistry v2 contract.
+     * @param registryHash The hash of the delegation to retrieve data for.
+     * @param increaseAmount The value to increment "amount" by.
+     * @dev Assumes the increased amount won't overflow with "amount".
+     */
     function calculateIncreasedAmount(address delegateRegistry, bytes32 registryHash, uint256 increaseAmount) internal view returns (uint256) {
         unchecked {
             return uint256(IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(registryHash)) + RegistryStorage.POSITIONS_AMOUNT)))

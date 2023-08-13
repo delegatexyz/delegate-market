@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 import {Base64} from "openzeppelin/utils/Base64.sol";
 import {Strings} from "openzeppelin/utils/Strings.sol";
 
-library DelegateTokenURI {
-    function build(string storage baseURI, address tokenContract, uint256 delegateTokenId, uint256 expiry, address principalOwner)
+library DelegateTokenEncoding {
+    function tokenURI(string storage baseURI, address tokenContract, uint256 delegateTokenId, uint256 expiry, address principalOwner)
         internal
         view
         returns (string memory)
@@ -42,5 +42,9 @@ library DelegateTokenURI {
         string memory metadataString = string.concat(firstPartOfMetadataString, secondPartOfMetadataString);
 
         return string.concat("data:application/json;base64,", Base64.encode(bytes(metadataString)));
+    }
+
+    function delegateId(address caller, uint256 salt) internal pure returns (uint256) {
+        return uint256(keccak256(abi.encode(caller, salt)));
     }
 }
