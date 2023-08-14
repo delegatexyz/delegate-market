@@ -26,7 +26,7 @@ library DelegateTokenTransferHelpers {
         }
     }
 
-    /// @dev should revert for a typical 20 / 1155, and pass for a typical 721
+    /// @dev Should revert for a typical 20 / 1155, and pass for a typical 721
     function checkERC721BeforePull(uint256 underlyingAmount, address underlyingContract, uint256 underlyingTokenId) internal view {
         if (underlyingAmount != 0) {
             revert Errors.WrongAmountForType(IDelegateRegistry.DelegationType.ERC721, underlyingAmount);

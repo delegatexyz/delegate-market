@@ -28,13 +28,13 @@ library DelegateTokenStorageHelpers {
 
     function incrementBalance(mapping(address delegateTokenHolder => uint256 balance) storage balances, address delegateTokenHolder) internal {
         unchecked {
-            balances[delegateTokenHolder]++;
+            ++balances[delegateTokenHolder];
         } // Infeasible that this will overflow
     }
 
     function decrementBalance(mapping(address delegateTokenHolder => uint256 balance) storage balances, address delegateTokenHolder) internal {
         unchecked {
-            balances[delegateTokenHolder]--;
+            --balances[delegateTokenHolder];
         } // Reasonable to expect this not to underflow
     }
 

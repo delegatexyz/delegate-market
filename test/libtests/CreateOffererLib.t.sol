@@ -3,7 +3,13 @@ pragma solidity ^0.8.21;
 
 import {Test} from "forge-std/Test.sol";
 import {console2} from "forge-std/console2.sol";
-import {CreateOffererModifiers as Modifiers, CreateOffererEnums as Enums, CreateOffererErrors as Errors} from "src/libraries/CreateOffererLib.sol";
+import {
+    CreateOffererModifiers as Modifiers,
+    CreateOffererEnums as Enums,
+    CreateOffererErrors as Errors,
+    CreateOffererStructs as Structs,
+    CreateOffererHelpers as Helpers
+} from "src/libraries/CreateOffererLib.sol";
 
 contract ModifierTester is Modifiers {
     constructor(address seaport, Enums.Stage firstStage) Modifiers(seaport, firstStage) {}
@@ -137,5 +143,55 @@ contract CreateOffererModifiersTest is Test {
         assertEq(uint8(uint256(stageSlot)), uint8(stage));
         assertEq(uint8(uint256(stageSlot >> 8)), uint8(lock));
         assertEq(uint256(stageSlot >> 16), 0);
+    }
+}
+
+contract CreateOffererHelpersTest is Test {
+    Structs.Receivers receivers;
+    Structs.Nonce nonce;
+    Structs.TransientState transientState;
+
+    function testUpdateReceivers(address initialPT, address initialDT, address targetTokenReceiver, uint256 seed) public {
+        receivers = Structs.Receivers({principal: initialPT, delegate: initialDT});
+        Enums.TargetToken targetToken = createRandomTargetToken(seed);
+        if (targetToken == Enums.TargetToken.none) {
+            vm.expectRevert(abi.encodeWithSelector(Errors.TargetTokenInvalid.selector, targetToken));
+            Helpers.updateReceivers(receivers, targetTokenReceiver, targetToken);
+        } else if (targetToken == Enums.TargetToken.principal) {
+            Structs.Receivers memory updatedReceivers = Helpers.updateReceivers(receivers, targetTokenReceiver, targetToken);
+            assertEq(updatedReceivers.principal, targetTokenReceiver);
+            assertEq(updatedReceivers.delegate, initialDT);
+            assertEq(receivers.principal, targetTokenReceiver);
+            assertEq(receivers.delegate, initialDT);
+        } else if (targetToken == Enums.TargetToken.delegate) {
+            Structs.Receivers memory updatedReceivers = Helpers.updateReceivers(receivers, targetTokenReceiver, targetToken);
+            assertEq(updatedReceivers.principal, initialPT);
+            assertEq(updatedReceivers.delegate, targetTokenReceiver);
+            assertEq(receivers.principal, initialPT);
+            assertEq(receivers.delegate, targetTokenReceiver);
+        }
+    }
+
+    function createRandomTargetToken(uint256 seed) internal pure returns (Enums.TargetToken) {
+        if (seed % 3 == 0) return Enums.TargetToken.none;
+        if (seed % 3 == 1) return Enums.TargetToken.principal;
+        else return Enums.TargetToken.delegate;
+    }
+
+    function testProcessNonce(uint256 initialNonce) public {
+        nonce.value = initialNonce;
+        Helpers.processNonce(nonce, initialNonce);
+        uint256 expectedNonce = initialNonce;
+        unchecked {
+            expectedNonce++;
+        }
+        assertEq(nonce.value, expectedNonce);
+    }
+
+    function testProcessNonceRevert(uint256 initialNonce, uint256 contractNonce) public {
+        nonce.value = initialNonce;
+        vm.assume(initialNonce != contractNonce);
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidContractNonce.selector, initialNonce, contractNonce));
+        Helpers.processNonce(nonce, contractNonce);
     }
 }
