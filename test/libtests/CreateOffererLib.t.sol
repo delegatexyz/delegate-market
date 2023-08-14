@@ -6,6 +6,7 @@ import {console2} from "forge-std/console2.sol";
 import {SpentItem, ReceivedItem} from "seaport/contracts/interfaces/ContractOffererInterface.sol";
 import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
 import {ItemType} from "seaport/contracts/lib/ConsiderationEnums.sol";
+import {BaseLiquidDelegateTest, DelegateTokenStructs} from "test/base/BaseLiquidDelegateTest.t.sol";
 import {
     CreateOffererModifiers as Modifiers,
     CreateOffererEnums as Enums,
@@ -365,5 +366,51 @@ contract CreateOffererHelpersTest is Test {
         if (seed % 3 == 0) return Enums.ExpiryType.none;
         if (seed % 3 == 1) return Enums.ExpiryType.relative;
         else return Enums.ExpiryType.absolute;
+    }
+}
+
+contract CreateOffererDelegateTokenHelpers is BaseLiquidDelegateTest {
+    function testCreateAndValidateDelegateTokenId(uint256 seed, bytes32 rights, address principalHolder, address delegateHolder) public {
+        vm.assume(principalHolder != address(0) && delegateHolder != address(0));
+        IDelegateRegistry.DelegationType tokenType = _createRandomValidDelegationType(seed);
+        uint256 amount;
+        uint256 tokenId;
+        address token;
+        if (tokenType == IDelegateRegistry.DelegationType.ERC721) {
+            amount = 0;
+            tokenId = uint256(keccak256(abi.encode("721tokenId", seed)));
+            token = address(mockERC721);
+            mockERC721.mint(address(this), tokenId);
+            mockERC721.approve(address(dt), tokenId);
+        } else if (tokenType == IDelegateRegistry.DelegationType.ERC20) {
+            amount = uint256(keccak256(abi.encode("20amount", seed)));
+            tokenId = 0;
+            token = address(mockERC20);
+            mockERC20.mint(address(this), amount);
+            mockERC20.approve(address(dt), amount);
+        } else {
+            amount = uint256(keccak256(abi.encode("1155amount", seed)));
+            tokenId = uint256(keccak256(abi.encode("1155tokenId", seed)));
+            token = address(mockERC1155);
+            mockERC1155.mint(address(this), tokenId, amount, "");
+            mockERC1155.setApprovalForAll(address(dt), true);
+        }
+        DelegateTokenStructs.DelegateInfo memory delegateInfo = DelegateTokenStructs.DelegateInfo({
+            principalHolder: principalHolder,
+            tokenType: tokenType,
+            delegateHolder: delegateHolder,
+            amount: amount,
+            tokenContract: token,
+            tokenId: tokenId,
+            rights: rights,
+            expiry: block.timestamp + 100
+        });
+        Helpers.createAndValidateDelegateTokenId(address(dt), seed, delegateInfo);
+    }
+
+    function _createRandomValidDelegationType(uint256 seed) internal returns (IDelegateRegistry.DelegationType) {
+        if (seed % 3 == 0) return IDelegateRegistry.DelegationType.ERC721;
+        if (seed % 3 == 1) return IDelegateRegistry.DelegationType.ERC20;
+        else return IDelegateRegistry.DelegationType.ERC1155;
     }
 }
