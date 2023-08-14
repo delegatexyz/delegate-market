@@ -18,8 +18,10 @@ import {
     CreateOffererModifiers as Modifiers
 } from "src/libraries/CreateOffererLib.sol";
 
+import {ERC1155Holder} from "openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
+
 /// @dev experimental way to create delegate tokens with seaport and existing seaport conduit approvals
-contract CreateOfferer is Modifiers, ContractOffererInterface {
+contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
     address public immutable delegateToken;
     address public immutable principalToken;
     Structs.TransientState internal transientState;
