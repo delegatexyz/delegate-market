@@ -39,7 +39,7 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
         weth = new WETH();
     }
 
-    function testWrapOrderV2FilledByBuyer() public {
+    function test721OrderFilledByBuyer() public {
         // Setup buyer and sell, and approve conduit for token for seller
         User memory seller = makeUser("seller");
         vm.label(seller.addr, "seller");
@@ -101,7 +101,7 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
         assertEq(delegateInfo.expiry, block.timestamp + erc721Order.info.expiryLength);
     }
 
-    function testWrapOrderV2FilledBySeller() public {
+    function test721OfferFilledBySeller() public {
         // Setup buyer and sell, and approve conduit for token for seller
         User memory seller = makeUser("seller");
         vm.label(seller.addr, "seller");

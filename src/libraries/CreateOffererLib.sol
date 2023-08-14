@@ -137,7 +137,7 @@ library CreateOffererStructs {
 abstract contract CreateOffererModifiers {
     address public immutable seaport;
     /// @notice Used by checkStage to track stage sequence and stage locks.
-    CreateOffererStructs.Stage internal stage;
+    CreateOffererStructs.Stage private stage;
 
     /**
      * @param setSeaport Should be the address of the seaport version being used
@@ -156,8 +156,8 @@ abstract contract CreateOffererModifiers {
      */
     modifier checkStage(CreateOffererEnums.Stage currentStage, CreateOffererEnums.Stage nextStage) {
         CreateOffererStructs.Stage memory cacheStage = stage;
-        if (cacheStage.flag != currentStage) revert CreateOffererErrors.WrongStage(currentStage, cacheStage.flag);
         if (cacheStage.lock != CreateOffererEnums.Lock.unlocked) revert CreateOffererErrors.Locked();
+        if (cacheStage.flag != currentStage) revert CreateOffererErrors.WrongStage(currentStage, cacheStage.flag);
         stage.lock = CreateOffererEnums.Lock.locked;
         _;
         stage = CreateOffererStructs.Stage({flag: nextStage, lock: CreateOffererEnums.Lock.unlocked});
