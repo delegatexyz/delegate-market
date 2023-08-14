@@ -3,6 +3,9 @@ pragma solidity ^0.8.21;
 
 import {Test} from "forge-std/Test.sol";
 import {console2} from "forge-std/console2.sol";
+import {SpentItem, ReceivedItem} from "seaport/contracts/interfaces/ContractOffererInterface.sol";
+import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
+import {ItemType} from "seaport/contracts/lib/ConsiderationEnums.sol";
 import {
     CreateOffererModifiers as Modifiers,
     CreateOffererEnums as Enums,
@@ -146,14 +149,31 @@ contract CreateOffererModifiersTest is Test {
     }
 }
 
+contract HelpersCalldataHarness {
+    Structs.TransientState internal transientState_;
+
+    function transientState() external view returns (Structs.TransientState memory) {
+        return transientState_;
+    }
+
+    function updateTransientState(SpentItem calldata minimumReceived, SpentItem calldata maximumSpent, Structs.Context memory decodedContext) external {
+        Structs.TransientState storage ptr = transientState_;
+        Helpers.updateTransientState(ptr, minimumReceived, maximumSpent, decodedContext);
+    }
+}
+
 contract CreateOffererHelpersTest is Test {
     Structs.Receivers receivers;
     Structs.Nonce nonce;
-    Structs.TransientState transientState;
+    HelpersCalldataHarness harness;
+
+    function setUp() public {
+        harness = new HelpersCalldataHarness();
+    }
 
     function testUpdateReceivers(address initialPT, address initialDT, address targetTokenReceiver, uint256 seed) public {
         receivers = Structs.Receivers({principal: initialPT, delegate: initialDT});
-        Enums.TargetToken targetToken = createRandomTargetToken(seed);
+        Enums.TargetToken targetToken = _createRandomTargetToken(seed);
         if (targetToken == Enums.TargetToken.none) {
             vm.expectRevert(abi.encodeWithSelector(Errors.TargetTokenInvalid.selector, targetToken));
             Helpers.updateReceivers(receivers, targetTokenReceiver, targetToken);
@@ -172,7 +192,7 @@ contract CreateOffererHelpersTest is Test {
         }
     }
 
-    function createRandomTargetToken(uint256 seed) internal pure returns (Enums.TargetToken) {
+    function _createRandomTargetToken(uint256 seed) internal pure returns (Enums.TargetToken) {
         if (seed % 3 == 0) return Enums.TargetToken.none;
         if (seed % 3 == 1) return Enums.TargetToken.principal;
         else return Enums.TargetToken.delegate;
@@ -193,5 +213,157 @@ contract CreateOffererHelpersTest is Test {
         vm.assume(initialNonce != contractNonce);
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidContractNonce.selector, initialNonce, contractNonce));
         Helpers.processNonce(nonce, contractNonce);
+    }
+
+    function testUpdateTransientStateERC721(uint256 seed, address token, uint256 tokenId, bytes32 rights, uint256 expiryLength, address ptReceiver, address dtReceiver)
+        public
+    {
+        Structs.TransientState memory transientStateBefore = harness.transientState();
+        SpentItem memory minimumReceived =
+            SpentItem({itemType: ItemType.ERC721, token: address(this), identifier: seed << 8 | uint256(IDelegateRegistry.DelegationType.ERC721), amount: 1});
+        SpentItem memory maximumSpent = SpentItem({itemType: ItemType.ERC721, token: token, identifier: tokenId, amount: 1});
+        Structs.Context memory decodedContext = Structs.Context({
+            rights: rights,
+            signerSalt: uint256(keccak256(abi.encode("salt", seed))),
+            expiryLength: expiryLength,
+            expiryType: _createRandomExpiryType(uint256(keccak256(abi.encode("expiry", seed)))),
+            targetToken: _createRandomTargetToken(uint256(keccak256(abi.encode("targetToken", seed)))),
+            receivers: Structs.Receivers({delegate: dtReceiver, principal: ptReceiver})
+        });
+        harness.updateTransientState(minimumReceived, maximumSpent, decodedContext);
+        assertEq(keccak256(abi.encode(transientStateBefore.erc20Order)), keccak256(abi.encode(harness.transientState().erc20Order)));
+        assertEq(keccak256(abi.encode(transientStateBefore.erc1155Order)), keccak256(abi.encode(harness.transientState().erc1155Order)));
+        assertEq(keccak256(abi.encode(harness.transientState().receivers)), keccak256(abi.encode(Structs.Receivers({delegate: dtReceiver, principal: ptReceiver}))));
+        assertEq(
+            keccak256(abi.encode(harness.transientState().erc721Order)),
+            keccak256(
+                abi.encode(
+                    Structs.ERC721Order({
+                        tokenId: tokenId,
+                        info: Structs.Order({
+                            rights: rights,
+                            expiryLength: expiryLength,
+                            signerSalt: decodedContext.signerSalt,
+                            tokenContract: token,
+                            expiryType: decodedContext.expiryType,
+                            targetToken: decodedContext.targetToken
+                        })
+                    })
+                )
+            )
+        );
+    }
+
+    function testUpdateTransientStateERC20(uint256 seed, address token, uint256 amount, bytes32 rights, uint256 expiryLength, address ptReceiver, address dtReceiver)
+        public
+    {
+        Structs.TransientState memory transientStateBefore = harness.transientState();
+        SpentItem memory minimumReceived =
+            SpentItem({itemType: ItemType.ERC721, token: address(this), identifier: seed << 8 | uint256(IDelegateRegistry.DelegationType.ERC20), amount: 1});
+        SpentItem memory maximumSpent = SpentItem({itemType: ItemType.ERC20, token: token, identifier: 1, amount: amount});
+        Structs.Context memory decodedContext = Structs.Context({
+            rights: rights,
+            signerSalt: uint256(keccak256(abi.encode("salt", seed))),
+            expiryLength: expiryLength,
+            expiryType: _createRandomExpiryType(uint256(keccak256(abi.encode("expiry", seed)))),
+            targetToken: _createRandomTargetToken(uint256(keccak256(abi.encode("targetToken", seed)))),
+            receivers: Structs.Receivers({delegate: dtReceiver, principal: ptReceiver})
+        });
+        harness.updateTransientState(minimumReceived, maximumSpent, decodedContext);
+        assertEq(keccak256(abi.encode(transientStateBefore.erc721Order)), keccak256(abi.encode(harness.transientState().erc721Order)));
+        assertEq(keccak256(abi.encode(transientStateBefore.erc1155Order)), keccak256(abi.encode(harness.transientState().erc1155Order)));
+        assertEq(keccak256(abi.encode(harness.transientState().receivers)), keccak256(abi.encode(Structs.Receivers({delegate: dtReceiver, principal: ptReceiver}))));
+        assertEq(
+            keccak256(abi.encode(harness.transientState().erc20Order)),
+            keccak256(
+                abi.encode(
+                    Structs.ERC20Order({
+                        amount: amount,
+                        info: Structs.Order({
+                            rights: rights,
+                            expiryLength: expiryLength,
+                            signerSalt: decodedContext.signerSalt,
+                            tokenContract: token,
+                            expiryType: decodedContext.expiryType,
+                            targetToken: decodedContext.targetToken
+                        })
+                    })
+                )
+            )
+        );
+    }
+
+    function testUpdateTransientStateERC1155(uint256 seed, address token, uint256 amount, bytes32 rights, uint256 expiryLength, address ptReceiver, address dtReceiver)
+        public
+    {
+        Structs.TransientState memory transientStateBefore = harness.transientState();
+        SpentItem memory minimumReceived =
+            SpentItem({itemType: ItemType.ERC721, token: address(this), identifier: seed << 8 | uint256(IDelegateRegistry.DelegationType.ERC1155), amount: 1});
+        SpentItem memory maximumSpent =
+            SpentItem({itemType: ItemType.ERC1155, token: token, identifier: uint256(keccak256(abi.encode("identifier", seed))), amount: amount});
+        Structs.Context memory decodedContext = Structs.Context({
+            rights: rights,
+            signerSalt: uint256(keccak256(abi.encode("salt", seed))),
+            expiryLength: expiryLength,
+            expiryType: _createRandomExpiryType(uint256(keccak256(abi.encode("expiry", seed)))),
+            targetToken: _createRandomTargetToken(uint256(keccak256(abi.encode("targetToken", seed)))),
+            receivers: Structs.Receivers({delegate: dtReceiver, principal: ptReceiver})
+        });
+        harness.updateTransientState(minimumReceived, maximumSpent, decodedContext);
+        assertEq(keccak256(abi.encode(transientStateBefore.erc721Order)), keccak256(abi.encode(harness.transientState().erc721Order)));
+        assertEq(keccak256(abi.encode(transientStateBefore.erc20Order)), keccak256(abi.encode(harness.transientState().erc20Order)));
+        assertEq(keccak256(abi.encode(harness.transientState().receivers)), keccak256(abi.encode(Structs.Receivers({delegate: dtReceiver, principal: ptReceiver}))));
+        assertEq(
+            keccak256(abi.encode(harness.transientState().erc1155Order)),
+            keccak256(
+                abi.encode(
+                    Structs.ERC1155Order({
+                        tokenId: maximumSpent.identifier,
+                        amount: amount,
+                        info: Structs.Order({
+                            rights: rights,
+                            expiryLength: expiryLength,
+                            signerSalt: decodedContext.signerSalt,
+                            tokenContract: token,
+                            expiryType: decodedContext.expiryType,
+                            targetToken: decodedContext.targetToken
+                        })
+                    })
+                )
+            )
+        );
+    }
+
+    function testUpdateTransientStateRevert(uint256 seed, address token, uint256 amount, bytes32 rights, uint256 expiryLength, address ptReceiver, address dtReceiver)
+        public
+    {
+        Structs.TransientState memory transientStateBefore = harness.transientState();
+        SpentItem memory minimumReceived =
+            SpentItem({itemType: ItemType.ERC721, token: address(this), identifier: uint256(IDelegateRegistry.DelegationType.NONE), amount: 1});
+        SpentItem memory maximumSpent =
+            SpentItem({itemType: ItemType.ERC1155, token: token, identifier: uint256(keccak256(abi.encode("identifier", seed))), amount: amount});
+        Structs.Context memory decodedContext = Structs.Context({
+            rights: rights,
+            signerSalt: uint256(keccak256(abi.encode("salt", seed))),
+            expiryLength: expiryLength,
+            expiryType: _createRandomExpiryType(uint256(keccak256(abi.encode("expiry", seed)))),
+            targetToken: _createRandomTargetToken(uint256(keccak256(abi.encode("targetToken", seed)))),
+            receivers: Structs.Receivers({delegate: dtReceiver, principal: ptReceiver})
+        });
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidTokenType.selector, IDelegateRegistry.DelegationType.NONE));
+        harness.updateTransientState(minimumReceived, maximumSpent, decodedContext);
+        minimumReceived.identifier = uint256(IDelegateRegistry.DelegationType.ALL);
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidTokenType.selector, IDelegateRegistry.DelegationType.ALL));
+        harness.updateTransientState(minimumReceived, maximumSpent, decodedContext);
+        minimumReceived.identifier = uint256(IDelegateRegistry.DelegationType.CONTRACT);
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidTokenType.selector, IDelegateRegistry.DelegationType.CONTRACT));
+        harness.updateTransientState(minimumReceived, maximumSpent, decodedContext);
+        assertEq(keccak256(abi.encode(transientStateBefore)), keccak256(abi.encode(harness.transientState())));
+    }
+
+    function _createRandomExpiryType(uint256 seed) internal pure returns (Enums.ExpiryType) {
+        if (seed % 3 == 0) return Enums.ExpiryType.none;
+        if (seed % 3 == 1) return Enums.ExpiryType.relative;
+        else return Enums.ExpiryType.absolute;
     }
 }

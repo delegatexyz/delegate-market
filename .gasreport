@@ -36,7 +36,7 @@
 | src/CreateOfferer.sol:CreateOfferer contract |                 |        |        |        |         |
 |----------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                              | Deployment Size |        |        |        |         |
-| 3256900                                      | 16027           |        |        |        |         |
+| 3249492                                      | 15990           |        |        |        |         |
 | Function Name                                | min             | avg    | median | max    | # calls |
 | calculateERC721OrderHashAndId                | 8134            | 8134   | 8134   | 8134   | 2       |
 | generateOrder                                | 45387           | 45387  | 45387  | 45387  | 2       |
@@ -47,13 +47,13 @@
 | src/DelegateToken.sol:DelegateToken contract    |                 |        |        |        |         |
 |-------------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                                 | Deployment Size |        |        |        |         |
-| 5696109                                         | 29520           |        |        |        |         |
+| 5760568                                         | 29584           |        |        |        |         |
 | Function Name                                   | min             | avg    | median | max    | # calls |
 | approve                                         | 3989            | 4082   | 4016   | 4243   | 3       |
 | balanceOf                                       | 687             | 687    | 687    | 687    | 1       |
 | baseURI                                         | 1272            | 3462   | 1557   | 7557   | 3       |
 | burnAuthorizedCallback                          | 458             | 458    | 458    | 458    | 3       |
-| create                                          | 605             | 211296 | 288627 | 347549 | 26      |
+| create                                          | 605             | 211090 | 288627 | 347549 | 26      |
 | delegateRegistry                                | 294             | 294    | 294    | 294    | 2       |
 | flashloan                                       | 45922           | 45922  | 45922  | 45922  | 1       |
 | getApproved                                     | 858             | 2116   | 2633   | 2858   | 3       |
@@ -70,8 +70,7 @@
 | setApprovalForAll                               | 4649            | 14599  | 14599  | 24549  | 2       |
 | setBaseURI                                      | 25163           | 25163  | 25163  | 25163  | 1       |
 | tokenURI                                        | 84602           | 84602  | 84602  | 84602  | 1       |
-| transferFrom(address,address,uint256)           | 139231          | 139706 | 139706 | 140182 | 2       |
-| transferFrom(address,address,uint256)(bool)     | 159381          | 159381 | 159381 | 159381 | 1       |
+| transferFrom                                    | 139231          | 146264 | 140182 | 159381 | 3       |
 | withdraw                                        | 43556           | 44311  | 43705  | 45674  | 3       |
 
 
@@ -84,6 +83,15 @@
 | mint                                           | 45204           | 45204  | 45204  | 45204  | 18      |
 | ownerOf                                        | 512             | 517    | 512    | 537    | 15      |
 | tokenURI                                       | 104336          | 104336 | 104336 | 104336 | 1       |
+
+
+| test/libtests/CreateOffererLib.t.sol:HelpersCalldataHarness contract |                 |       |        |        |         |
+|----------------------------------------------------------------------|-----------------|-------|--------|--------|---------|
+| Deployment Cost                                                      | Deployment Size |       |        |        |         |
+| 725360                                                               | 3655            |       |        |        |         |
+| Function Name                                                        | min             | avg   | median | max    | # calls |
+| transientState                                                       | 6087            | 14557 | 6087   | 42087  | 17      |
+| updateTransientState                                                 | 1390            | 75417 | 72056  | 162856 | 6       |
 
 
 | test/libtests/CreateOffererLib.t.sol:ModifierTester contract |                 |      |        |      |         |
@@ -127,13 +135,14 @@
 | Deployment Cost                                | Deployment Size |       |        |       |         |
 | 1329803                                        | 7012            |       |        |       |         |
 | Function Name                                  | min             | avg   | median | max   | # calls |
-| approve                                        | 23036           | 24636 | 25036  | 25036 | 5       |
+| approve(address,uint256)                       | 23036           | 24536 | 25036  | 25036 | 4       |
+| approve(address,uint256)(bool)                 | 25036           | 25036 | 25036  | 25036 | 1       |
 | mint                                           | 47111           | 47111 | 47111  | 47111 | 7       |
 | mintNext                                       | 69295           | 69295 | 69295  | 69295 | 5       |
 | ownerOf                                        | 534             | 653   | 534    | 2559  | 17      |
 | setApprovalForAll                              | 2124            | 20815 | 24554  | 24554 | 12      |
-| transferFrom(address,address,uint256)          | 19472           | 22311 | 22884  | 23242 | 15      |
-| transferFrom(address,address,uint256)(bool)    | 22884           | 22884 | 22884  | 22884 | 1       |
+| transferFrom(address,address,uint256)          | 19472           | 22458 | 22884  | 23242 | 13      |
+| transferFrom(address,address,uint256)(bool)    | 19472           | 21866 | 22884  | 23242 | 3       |
 
 
 | test/mock/WETH.t.sol:WETH contract |                 |       |        |       |         |

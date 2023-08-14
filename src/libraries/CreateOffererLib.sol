@@ -11,6 +11,7 @@ import {DelegateTokenEncoding} from "src/libraries/DelegateTokenEncoding.sol";
 library CreateOffererErrors {
     error DelegateTokenIsZero();
     error PrincipalTokenIsZero();
+    error InvalidTokenType(IDelegateRegistry.DelegationType invalidType);
     error NoBatchWrapping();
     error InvalidExpiryType(CreateOffererEnums.ExpiryType invalidType);
     error SeaportIsZero();
@@ -227,7 +228,6 @@ library CreateOffererHelpers {
         SpentItem calldata maximumSpent,
         CreateOffererStructs.Context memory decodedContext
     ) internal {
-        transientState.receivers = decodedContext.receivers;
         IDelegateRegistry.DelegationType tokenType = RegistryHashes.decodeType(bytes32(minimumReceived.identifier));
         if (tokenType == IDelegateRegistry.DelegationType.ERC721) {
             transientState.erc721Order = CreateOffererStructs.ERC721Order({
@@ -266,7 +266,10 @@ library CreateOffererHelpers {
                     targetToken: decodedContext.targetToken
                 })
             });
+        } else {
+            revert CreateOffererErrors.InvalidTokenType(tokenType);
         }
+        transientState.receivers = decodedContext.receivers;
     }
 
     /**
