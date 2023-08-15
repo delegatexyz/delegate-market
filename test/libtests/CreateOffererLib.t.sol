@@ -192,7 +192,7 @@ contract HelpersCalldataHarness {
         Helpers.updateTransientState(ptr, minimumReceived, maximumSpent, decodedContext);
     }
 
-    function verifyCreate(address delegateToken, SpentItem calldata offer, ReceivedItem calldata consideration, bytes calldata context) external {
+    function verifyCreate(address delegateToken, SpentItem calldata offer, ReceivedItem calldata consideration, bytes calldata context) external view {
         Helpers.verifyCreate(delegateToken, offer, consideration, context);
     }
 }
@@ -506,17 +506,185 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
     function testVerifyCreate(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver) public {
         vm.assume(amount > 0);
         vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
+        (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct) =
+            _generateValidVerifyCreateCase(seed, token, tokenId, amount, rights, ptReceiver, dtReceiver);
+        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
+    }
+
+    function testVerifyCreateRevertOfferIdentifier(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
+        public
+    {
+        vm.assume(amount > 0);
+        vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
+        (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct) =
+            _generateValidVerifyCreateCase(seed, token, tokenId, amount, rights, ptReceiver, dtReceiver);
+        offer.identifier = 10;
+        vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.NotMinted.selector, uint256(keccak256(abi.encode(address(harness), 10)))));
+        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
+    }
+
+    function testVerifyCreateRevertConsiderationToken(
+        uint256 seed,
+        address token,
+        uint256 tokenId,
+        uint256 amount,
+        bytes32 rights,
+        address ptReceiver,
+        address dtReceiver
+    ) public {
+        vm.assume(amount > 0);
+        vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
+        (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct) =
+            _generateValidVerifyCreateCase(seed, token, tokenId, amount, rights, ptReceiver, dtReceiver);
+        consideration.token = address(uint160(uint256(keccak256(abi.encode("cat")))));
+        vm.expectRevert(Errors.DelegateInfoInvariant.selector);
+        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
+    }
+
+    function testVerifyCreateRevertConsiderationIdentifier(
+        uint256 seed,
+        address token,
+        uint256 tokenId,
+        uint256 amount,
+        bytes32 rights,
+        address ptReceiver,
+        address dtReceiver
+    ) public {
+        vm.assume(amount > 0);
+        vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
+        (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct) =
+            _generateValidVerifyCreateCase(seed, token, tokenId, amount, rights, ptReceiver, dtReceiver);
+        if (consideration.itemType != ItemType.ERC20) {
+            consideration.identifier = uint256(keccak256(abi.encode("cat")));
+            vm.expectRevert(Errors.DelegateInfoInvariant.selector);
+        }
+        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
+    }
+
+    function testVerifyCreateRevertConsiderationAmount(
+        uint256 seed,
+        address token,
+        uint256 tokenId,
+        uint256 amount,
+        bytes32 rights,
+        address ptReceiver,
+        address dtReceiver
+    ) public {
+        vm.assume(amount > 0);
+        vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
+        (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct) =
+            _generateValidVerifyCreateCase(seed, token, tokenId, amount, rights, ptReceiver, dtReceiver);
+        if (consideration.itemType != ItemType.ERC721) {
+            consideration.amount = uint256(keccak256(abi.encode("cat")));
+            vm.expectRevert(Errors.DelegateInfoInvariant.selector);
+        }
+        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
+    }
+
+    function testVerifyCreateRevertInvalidContext(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
+        public
+    {
+        vm.assume(amount > 0);
+        vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
+        (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct) =
+            _generateValidVerifyCreateCase(seed, token, tokenId, amount, rights, ptReceiver, dtReceiver);
+        vm.expectRevert();
+        harness.verifyCreate(address(dt), offer, consideration, abi.encode("cat"));
+    }
+
+    function testVerifyCreateRevertPrincipal(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
+        public
+    {
+        vm.assume(amount > 0);
+        vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
+        (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct) =
+            _generateValidVerifyCreateCase(seed, token, tokenId, amount, rights, ptReceiver, dtReceiver);
+        contextStruct.receivers.principal = address(uint160(uint256(keccak256(abi.encode("cat")))));
+        vm.expectRevert(Errors.DelegateInfoInvariant.selector);
+        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
+    }
+
+    function testVerifyCreateRevertDelegate(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
+        public
+    {
+        vm.assume(amount > 0);
+        vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
+        (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct) =
+            _generateValidVerifyCreateCase(seed, token, tokenId, amount, rights, ptReceiver, dtReceiver);
+        contextStruct.receivers.delegate = address(uint160(uint256(keccak256(abi.encode("cat")))));
+        vm.expectRevert(Errors.DelegateInfoInvariant.selector);
+        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
+    }
+
+    function testVerifyCreateRevertExpiryLength(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
+        public
+    {
+        vm.assume(amount > 0);
+        vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
+        (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct) =
+            _generateValidVerifyCreateCase(seed, token, tokenId, amount, rights, ptReceiver, dtReceiver);
+        contextStruct.expiryLength = uint256(keccak256(abi.encode("cat")));
+        vm.expectRevert(Errors.DelegateInfoInvariant.selector);
+        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
+    }
+
+    function testVerifyCreateRevertExpiryType(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
+        public
+    {
+        vm.assume(amount > 0);
+        vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
+        (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct) =
+            _generateValidVerifyCreateCase(seed, token, tokenId, amount, rights, ptReceiver, dtReceiver);
+        contextStruct.expiryType = Enums.ExpiryType.relative;
+        vm.expectRevert(Errors.DelegateInfoInvariant.selector);
+        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
+        contextStruct.expiryType = Enums.ExpiryType.none;
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidExpiryType.selector, contextStruct.expiryType));
+        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
+    }
+
+    function testVerifyCreateRevertRights(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver) public {
+        vm.assume(amount > 0);
+        vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
+        (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct) =
+            _generateValidVerifyCreateCase(seed, token, tokenId, amount, rights, ptReceiver, dtReceiver);
+        contextStruct.rights = keccak256(abi.encode("cat"));
+        vm.expectRevert(Errors.DelegateInfoInvariant.selector);
+        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
+    }
+
+    function testVerifyCreatePassesUnusedData(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
+        public
+    {
+        vm.assume(amount > 0);
+        vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
+        (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct) =
+            _generateValidVerifyCreateCase(seed, token, tokenId, amount, rights, ptReceiver, dtReceiver);
+        offer.token = address(uint160(uint256(keccak256(abi.encode("cat")))));
+        offer.amount = uint256(keccak256(abi.encode("cat")));
+        offer.itemType = ItemType.NATIVE;
+        consideration.itemType = ItemType.ERC20;
+        consideration.recipient = payable(address(uint160(uint256(keccak256(abi.encode("cat"))))));
+        contextStruct.signerSalt = uint256(keccak256(abi.encode("cat")));
+        contextStruct.targetToken = Enums.TargetToken.none;
+        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
+    }
+
+    function _generateValidVerifyCreateCase(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
+        internal
+        returns (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct)
+    {
         (IDelegateRegistry.DelegationType tokenType, ItemType itemType) = _createRandomValidDelegationTypeAndItemType(seed);
         uint256 createOrderHash = seed << 8 | uint256(tokenType);
-        SpentItem memory offer = SpentItem({itemType: ItemType.ERC721, token: address(harness), identifier: createOrderHash, amount: 1});
-        ReceivedItem memory consideration = ReceivedItem({
+        offer = SpentItem({itemType: ItemType.ERC721, token: address(harness), identifier: createOrderHash, amount: 1});
+        consideration = ReceivedItem({
             itemType: itemType,
             token: token,
             identifier: itemType != ItemType.ERC20 ? tokenId : 0,
             amount: itemType != ItemType.ERC721 ? amount : 1,
             recipient: payable(address(harness))
         });
-        Structs.Context memory contextStruct = Structs.Context({
+        contextStruct = Structs.Context({
             rights: rights,
             signerSalt: seed,
             expiryLength: 10 ** 4,
@@ -545,7 +713,5 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
         // Override principal token bytecode with mock 721 and mint delegateId
         vm.etch(address(principal), address(mockERC721).code);
         PrincipalToken(principal).mint(ptReceiver, uint256(keccak256(abi.encode(address(harness), createOrderHash))));
-        // Test
-        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
     }
 }
