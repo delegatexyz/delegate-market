@@ -7,10 +7,10 @@
 | checkDelegateForERC20                                                    | 6049            | 6427   | 6049   | 7942   | 5       |
 | checkDelegateForERC721                                                   | 6006            | 6577   | 6006   | 8006   | 7       |
 | delegateAll                                                              | 157972          | 157972 | 157972 | 157972 | 3       |
-| delegateERC1155                                                          | 3732            | 140434 | 179160 | 203386 | 9       |
-| delegateERC20                                                            | 3371            | 115637 | 156709 | 156709 | 8       |
-| delegateERC721                                                           | 3315            | 124102 | 158803 | 180929 | 20      |
-| readSlot                                                                 | 457             | 921    | 457    | 2457   | 125     |
+| delegateERC1155                                                          | 3732            | 144739 | 179160 | 203386 | 10      |
+| delegateERC20                                                            | 3371            | 140590 | 156709 | 180935 | 13      |
+| delegateERC721                                                           | 3315            | 134671 | 158803 | 180929 | 25      |
+| readSlot                                                                 | 457             | 822    | 457    | 2457   | 164     |
 | supportsInterface                                                        | 425             | 425    | 425    | 425    | 1       |
 
 
@@ -44,8 +44,8 @@
 | generateOrder                                | 45365           | 47323  | 45634  | 50970  | 6       |
 | onERC1155Received                            | 900             | 900    | 900    | 900    | 2       |
 | ratifyOrder                                  | 33628           | 34199  | 34404  | 34565  | 6       |
-| transferFrom(address,address,uint256)        | 310205          | 310205 | 310205 | 310205 | 1       |
-| transferFrom(address,address,uint256)(bool)  | 310147          | 340036 | 334227 | 360848 | 5       |
+| transferFrom(address,address,uint256)        | 310147          | 328842 | 322187 | 360848 | 4       |
+| transferFrom(address,address,uint256)(bool)  | 334227          | 347508 | 347508 | 360790 | 2       |
 
 
 | src/DelegateToken.sol:DelegateToken contract    |                 |        |        |        |         |
@@ -55,14 +55,14 @@
 | Function Name                                   | min             | avg    | median | max    | # calls |
 | approve                                         | 3989            | 4082   | 4016   | 4243   | 3       |
 | balanceOf                                       | 687             | 687    | 687    | 687    | 1       |
-| baseURI                                         | 1272            | 3367   | 1272   | 7557   | 3       |
+| baseURI                                         | 1272            | 3462   | 1557   | 7557   | 3       |
 | burnAuthorizedCallback                          | 458             | 458    | 458    | 458    | 3       |
-| create                                          | 605             | 228674 | 299240 | 347549 | 31      |
+| create                                          | 605             | 228783 | 295240 | 347549 | 31      |
 | delegateRegistry                                | 294             | 294    | 294    | 294    | 2       |
 | flashloan                                       | 45922           | 45922  | 45922  | 45922  | 1       |
 | getApproved                                     | 858             | 2116   | 2633   | 2858   | 3       |
 | getDelegateId                                   | 823             | 2691   | 2835   | 2835   | 14      |
-| getDelegateInfo                                 | 5549            | 7162   | 7029   | 8487   | 14      |
+| getDelegateInfo                                 | 2819            | 6613   | 6347   | 8487   | 25      |
 | isApprovedForAll                                | 751             | 751    | 751    | 751    | 1       |
 | mintAuthorizedCallback                          | 424             | 424    | 424    | 424    | 23      |
 | onERC1155Received                               | 969             | 969    | 969    | 969    | 5       |
@@ -84,19 +84,20 @@
 | 2321482                                        | 12086           |        |        |        |         |
 | Function Name                                  | min             | avg    | median | max    | # calls |
 | burn                                           | 5588            | 5588   | 5588   | 5588   | 3       |
-| mint                                           | 45204           | 45283  | 45204  | 47111  | 24      |
-| ownerOf                                        | 512             | 515    | 512    | 537    | 28      |
+| mint                                           | 45204           | 45857  | 45204  | 47111  | 35      |
+| ownerOf                                        | 512             | 520    | 512    | 537    | 38      |
 | tokenURI                                       | 104336          | 104336 | 104336 | 104336 | 1       |
 
 
 | test/libtests/CreateOffererLib.t.sol:HelpersCalldataHarness contract |                 |       |        |        |         |
 |----------------------------------------------------------------------|-----------------|-------|--------|--------|---------|
 | Deployment Cost                                                      | Deployment Size |       |        |        |         |
-| 1024061                                                              | 5147            |       |        |        |         |
+| 1436899                                                              | 7209            |       |        |        |         |
 | Function Name                                                        | min             | avg   | median | max    | # calls |
+| processSpentItems                                                    | 859             | 2001  | 1617   | 4437   | 12      |
 | transientState                                                       | 6109            | 14579 | 6109   | 42109  | 17      |
-| updateTransientState                                                 | 1469            | 75476 | 72115  | 162895 | 6       |
-| verifyCreate                                                         | 10875           | 10875 | 10875  | 10875  | 1       |
+| updateTransientState                                                 | 1464            | 75473 | 72112  | 162895 | 6       |
+| verifyCreate                                                         | 710             | 9398  | 10746  | 10932  | 13      |
 
 
 | test/libtests/CreateOffererLib.t.sol:ModifierTester contract |                 |      |        |      |         |
@@ -127,14 +128,14 @@
 | Deployment Cost                               | Deployment Size |       |        |       |         |
 | 672200                                        | 3642            |       |        |       |         |
 | Function Name                                 | min             | avg   | median | max   | # calls |
-| allowance                                     | 756             | 1006  | 756    | 2756  | 8       |
-| approve(address,uint256)                      | 24603           | 24603 | 24603  | 24603 | 1       |
-| approve(address,uint256)(bool)                | 24603           | 24603 | 24603  | 24603 | 6       |
+| allowance                                     | 756             | 978   | 756    | 2756  | 9       |
+| approve(address,uint256)                      | 24603           | 24603 | 24603  | 24603 | 5       |
+| approve(address,uint256)(bool)                | 24603           | 24603 | 24603  | 24603 | 3       |
 | balanceOf                                     | 561             | 561   | 561    | 561   | 8       |
-| mint                                          | 46592           | 46592 | 46592  | 46592 | 5       |
+| mint                                          | 46592           | 46592 | 46592  | 46592 | 6       |
 | transfer                                      | 18348           | 18348 | 18348  | 18348 | 1       |
-| transferFrom(address,address,uint256)         | 22007           | 22007 | 22007  | 22007 | 1       |
-| transferFrom(address,address,uint256)(bool)   | 20256           | 21423 | 22007  | 22007 | 6       |
+| transferFrom(address,address,uint256)         | 20256           | 21656 | 22007  | 22007 | 5       |
+| transferFrom(address,address,uint256)(bool)   | 20256           | 21423 | 22007  | 22007 | 3       |
 
 
 | test/mock/MockTokens.t.sol:MockERC721 contract |                 |       |        |       |         |
@@ -142,13 +143,14 @@
 | Deployment Cost                                | Deployment Size |       |        |       |         |
 | 1329803                                        | 7012            |       |        |       |         |
 | Function Name                                  | min             | avg   | median | max   | # calls |
-| approve                                        | 23036           | 24702 | 25036  | 25036 | 6       |
-| mint                                           | 47111           | 47111 | 47111  | 47111 | 8       |
+| approve(address,uint256)                       | 23036           | 24369 | 25036  | 25036 | 3       |
+| approve(address,uint256)(bool)                 | 25036           | 25036 | 25036  | 25036 | 2       |
+| mint                                           | 47111           | 47111 | 47111  | 47111 | 7       |
 | mintNext                                       | 69295           | 69295 | 69295  | 69295 | 5       |
-| ownerOf                                        | 534             | 635   | 534    | 2559  | 20      |
+| ownerOf                                        | 534             | 640   | 534    | 2559  | 19      |
 | setApprovalForAll                              | 2124            | 20815 | 24554  | 24554 | 12      |
-| transferFrom(address,address,uint256)          | 19472           | 22410 | 22884  | 23242 | 14      |
-| transferFrom(address,address,uint256)(bool)    | 21284           | 22350 | 22884  | 22884 | 3       |
+| transferFrom(address,address,uint256)          | 19472           | 22219 | 22884  | 23242 | 14      |
+| transferFrom(address,address,uint256)(bool)    | 23242           | 23242 | 23242  | 23242 | 2       |
 
 
 | test/mock/WETH.t.sol:WETH contract          |                 |       |        |       |         |
@@ -156,12 +158,12 @@
 | Deployment Cost                             | Deployment Size |       |        |       |         |
 | 862387                                      | 4569            |       |        |       |         |
 | Function Name                               | min             | avg   | median | max   | # calls |
-| approve(address,uint256)                    | 24604           | 24604 | 24604  | 24604 | 1       |
-| approve(address,uint256)(bool)              | 24604           | 24604 | 24604  | 24604 | 2       |
+| approve(address,uint256)                    | 24604           | 24604 | 24604  | 24604 | 2       |
+| approve(address,uint256)(bool)              | 24604           | 24604 | 24604  | 24604 | 1       |
 | balanceOf                                   | 561             | 561   | 561    | 561   | 3       |
 | mint                                        | 47043           | 47043 | 47043  | 47043 | 3       |
-| transferFrom(address,address,uint256)       | 20256           | 20256 | 20256  | 20256 | 1       |
-| transferFrom(address,address,uint256)(bool) | 20256           | 20256 | 20256  | 20256 | 2       |
+| transferFrom(address,address,uint256)       | 20256           | 20256 | 20256  | 20256 | 2       |
+| transferFrom(address,address,uint256)(bool) | 20256           | 20256 | 20256  | 20256 | 1       |
 
 
 | test/utils/DTHarness.t.sol:DTHarness contract |                 |      |        |      |         |

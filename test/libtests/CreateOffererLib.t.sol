@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.21;
 
-import {Test} from "forge-std/Test.sol";
+import {Test, stdError} from "forge-std/Test.sol";
 import {SpentItem, ReceivedItem} from "seaport/contracts/interfaces/ContractOffererInterface.sol";
 import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
 import {ItemType} from "seaport/contracts/lib/ConsiderationEnums.sol";
@@ -194,6 +194,14 @@ contract HelpersCalldataHarness {
 
     function verifyCreate(address delegateToken, SpentItem calldata offer, ReceivedItem calldata consideration, bytes calldata context) external view {
         Helpers.verifyCreate(delegateToken, offer, consideration, context);
+    }
+
+    function processSpentItems(SpentItem[] calldata minimumReceived, SpentItem[] calldata maximumSpent)
+        external
+        view
+        returns (SpentItem[] memory, ReceivedItem[] memory)
+    {
+        return Helpers.processSpentItems(minimumReceived, maximumSpent);
     }
 }
 
@@ -388,6 +396,114 @@ contract CreateOffererHelpersTest is Test, CreateOffererTestHelpers {
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidTokenType.selector, IDelegateRegistry.DelegationType.CONTRACT));
         harness.updateTransientState(minimumReceived, maximumSpent, decodedContext);
         assertEq(keccak256(abi.encode(transientStateBefore)), keccak256(abi.encode(harness.transientState())));
+    }
+
+    function testCalculateExpiryRelative(uint64 blockTime, uint256 expiryLength) public {
+        vm.assume(expiryLength < type(uint256).max - uint256(blockTime));
+        vm.warp(uint256(blockTime));
+        uint256 calculatedExpiry = Helpers.calculateExpiry(Enums.ExpiryType.relative, expiryLength);
+        assertEq(calculatedExpiry, blockTime + expiryLength);
+    }
+
+    function testCalculateExpiryRelativeOverflow(uint64 blockTime, uint256 expiryLength) public {
+        vm.assume(expiryLength > type(uint256).max - uint256(blockTime));
+        vm.warp(uint256(blockTime));
+        vm.expectRevert(stdError.arithmeticError);
+        Helpers.calculateExpiry(Enums.ExpiryType.relative, expiryLength);
+    }
+
+    function testCalculateExpiryAbsolute(uint256 expiryLength) public {
+        uint256 calculatedExpiry = Helpers.calculateExpiry(Enums.ExpiryType.absolute, expiryLength);
+        assertEq(calculatedExpiry, expiryLength);
+    }
+
+    function testCalculateExpiryRevertInvalidType() public {
+        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidExpiryType.selector, Enums.ExpiryType.none));
+        Helpers.calculateExpiry(Enums.ExpiryType.none, 0);
+    }
+
+    function testProcessSpentItems(uint256 createOrderHash, uint256 seed, address token, uint256 tokenId, uint256 amount) public {
+        (SpentItem[] memory minimumReceived, SpentItem[] memory maximumSpent) = _createValidProcessItems(createOrderHash, seed, token, tokenId, amount);
+        (SpentItem[] memory offer, ReceivedItem[] memory consideration) = harness.processSpentItems(minimumReceived, maximumSpent);
+        assertEq(offer.length, 1);
+        assertEq(consideration.length, 1);
+        assertEq(uint256(offer[0].itemType), uint256(ItemType.ERC721));
+        assertEq(offer[0].token, address(harness));
+        assertEq(offer[0].identifier, createOrderHash);
+        assertEq(offer[0].amount, 1);
+        assertEq(uint256(consideration[0].itemType), uint256(maximumSpent[0].itemType));
+        assertEq(consideration[0].token, token);
+        assertEq(consideration[0].identifier, maximumSpent[0].identifier);
+        assertEq(consideration[0].amount, maximumSpent[0].amount);
+        assertEq(consideration[0].recipient, payable(address(harness)));
+    }
+
+    function testProcessSpentItemsRevertArrayLenghts(uint256 n, uint256 m) public {
+        vm.assume(n < 100 && m < 100);
+        vm.assume(n != 1 || m != 1);
+        SpentItem[] memory minimumReceived = new SpentItem[](n);
+        SpentItem[] memory maximumSpent = new SpentItem[](m);
+        vm.expectRevert(Errors.NoBatchWrapping.selector);
+        harness.processSpentItems(minimumReceived, maximumSpent);
+    }
+
+    function testProcessSpentItemsRevertsMinimumReceivedType(uint256 createOrderHash, uint256 seed, address token, uint256 tokenId, uint256 amount) public {
+        (SpentItem[] memory minimumReceived, SpentItem[] memory maximumSpent) = _createValidProcessItems(createOrderHash, seed, token, tokenId, amount);
+        minimumReceived[0].itemType = ItemType.ERC20;
+        vm.expectRevert(abi.encodeWithSelector(Errors.MinimumReceivedInvalid.selector, minimumReceived[0]));
+        harness.processSpentItems(minimumReceived, maximumSpent);
+        minimumReceived[0].itemType = ItemType.ERC1155;
+        vm.expectRevert(abi.encodeWithSelector(Errors.MinimumReceivedInvalid.selector, minimumReceived[0]));
+        harness.processSpentItems(minimumReceived, maximumSpent);
+        minimumReceived[0].itemType = ItemType.NATIVE;
+        vm.expectRevert(abi.encodeWithSelector(Errors.MinimumReceivedInvalid.selector, minimumReceived[0]));
+        harness.processSpentItems(minimumReceived, maximumSpent);
+        minimumReceived[0].itemType = ItemType.ERC1155_WITH_CRITERIA;
+        vm.expectRevert(abi.encodeWithSelector(Errors.MinimumReceivedInvalid.selector, minimumReceived[0]));
+        harness.processSpentItems(minimumReceived, maximumSpent);
+        minimumReceived[0].itemType = ItemType.ERC721_WITH_CRITERIA;
+        vm.expectRevert(abi.encodeWithSelector(Errors.MinimumReceivedInvalid.selector, minimumReceived[0]));
+        harness.processSpentItems(minimumReceived, maximumSpent);
+    }
+
+    function testProcessSpentItemsRevertsMinimumReceivedToken(uint256 createOrderHash, uint256 seed, address token, uint256 tokenId, uint256 amount) public {
+        (SpentItem[] memory minimumReceived, SpentItem[] memory maximumSpent) = _createValidProcessItems(createOrderHash, seed, token, tokenId, amount);
+        minimumReceived[0].token = address(uint160(uint256(keccak256(abi.encode("cat")))));
+        vm.expectRevert(abi.encodeWithSelector(Errors.MinimumReceivedInvalid.selector, minimumReceived[0]));
+        harness.processSpentItems(minimumReceived, maximumSpent);
+    }
+
+    function testProcessSpentItemsRevertsMinimumReceivedAmount(uint256 createOrderHash, uint256 seed, address token, uint256 tokenId, uint256 amount) public {
+        (SpentItem[] memory minimumReceived, SpentItem[] memory maximumSpent) = _createValidProcessItems(createOrderHash, seed, token, tokenId, amount);
+        minimumReceived[0].amount = uint256(keccak256(abi.encode("cat")));
+        vm.expectRevert(abi.encodeWithSelector(Errors.MinimumReceivedInvalid.selector, minimumReceived[0]));
+        harness.processSpentItems(minimumReceived, maximumSpent);
+    }
+
+    function testProcessSpentItemsRevertsMaximumSpentType(uint256 createOrderHash, uint256 seed, address token, uint256 tokenId, uint256 amount) public {
+        (SpentItem[] memory minimumReceived, SpentItem[] memory maximumSpent) = _createValidProcessItems(createOrderHash, seed, token, tokenId, amount);
+        maximumSpent[0].itemType = ItemType.NATIVE;
+        vm.expectRevert(abi.encodeWithSelector(Errors.MaximumSpentInvalid.selector, maximumSpent[0]));
+        harness.processSpentItems(minimumReceived, maximumSpent);
+        maximumSpent[0].itemType = ItemType.ERC1155_WITH_CRITERIA;
+        vm.expectRevert(abi.encodeWithSelector(Errors.MaximumSpentInvalid.selector, maximumSpent[0]));
+        harness.processSpentItems(minimumReceived, maximumSpent);
+        maximumSpent[0].itemType = ItemType.ERC721_WITH_CRITERIA;
+        vm.expectRevert(abi.encodeWithSelector(Errors.MaximumSpentInvalid.selector, maximumSpent[0]));
+        harness.processSpentItems(minimumReceived, maximumSpent);
+    }
+
+    function _createValidProcessItems(uint256 createOrderHash, uint256 seed, address token, uint256 tokenId, uint256 amount)
+        internal
+        view
+        returns (SpentItem[] memory minimumReceived, SpentItem[] memory maximumSpent)
+    {
+        minimumReceived = new SpentItem[](1);
+        minimumReceived[0] = SpentItem({itemType: ItemType.ERC721, token: address(harness), identifier: createOrderHash, amount: 1});
+        (, ItemType itemType) = _createRandomValidDelegationTypeAndItemType(seed);
+        maximumSpent = new SpentItem[](1);
+        maximumSpent[0] =
+            SpentItem({itemType: itemType, token: token, identifier: itemType != ItemType.ERC20 ? tokenId : 0, amount: itemType != ItemType.ERC721 ? amount : 0});
     }
 }
 
@@ -586,8 +702,7 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
     {
         vm.assume(amount > 0);
         vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
-        (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct) =
-            _generateValidVerifyCreateCase(seed, token, tokenId, amount, rights, ptReceiver, dtReceiver);
+        (SpentItem memory offer, ReceivedItem memory consideration,) = _generateValidVerifyCreateCase(seed, token, tokenId, amount, rights, ptReceiver, dtReceiver);
         vm.expectRevert();
         harness.verifyCreate(address(dt), offer, consideration, abi.encode("cat"));
     }
