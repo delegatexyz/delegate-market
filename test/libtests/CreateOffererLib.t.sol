@@ -2,12 +2,12 @@
 pragma solidity ^0.8.21;
 
 import {Test} from "forge-std/Test.sol";
-import {console2} from "forge-std/console2.sol";
 import {SpentItem, ReceivedItem} from "seaport/contracts/interfaces/ContractOffererInterface.sol";
 import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
 import {ItemType} from "seaport/contracts/lib/ConsiderationEnums.sol";
 import {BaseLiquidDelegateTest, DelegateTokenStructs} from "test/base/BaseLiquidDelegateTest.t.sol";
 import {DelegateTokenErrors} from "src/libraries/DelegateTokenErrors.sol";
+import {PrincipalToken} from "src/PrincipalToken.sol";
 import {
     CreateOffererModifiers as Modifiers,
     CreateOffererEnums as Enums,
@@ -15,6 +15,35 @@ import {
     CreateOffererStructs as Structs,
     CreateOffererHelpers as Helpers
 } from "src/libraries/CreateOffererLib.sol";
+
+import {console2} from "forge-std/console2.sol";
+
+contract CreateOffererTestHelpers {
+    function _createRandomValidDelegationType(uint256 seed) internal pure returns (IDelegateRegistry.DelegationType) {
+        if (seed % 3 == 0) return IDelegateRegistry.DelegationType.ERC721;
+        if (seed % 3 == 1) return IDelegateRegistry.DelegationType.ERC20;
+        return IDelegateRegistry.DelegationType.ERC1155;
+    }
+
+    function _createRandomValidDelegationTypeAndItemType(uint256 seed) internal pure returns (IDelegateRegistry.DelegationType delegationType, ItemType itemType) {
+        delegationType = _createRandomValidDelegationType(seed);
+        if (delegationType == IDelegateRegistry.DelegationType.ERC721) itemType = ItemType.ERC721;
+        else if (delegationType == IDelegateRegistry.DelegationType.ERC20) itemType = ItemType.ERC20;
+        else itemType = ItemType.ERC1155;
+    }
+
+    function _createRandomTargetToken(uint256 seed) internal pure returns (Enums.TargetToken) {
+        if (seed % 3 == 0) return Enums.TargetToken.none;
+        else if (seed % 3 == 1) return Enums.TargetToken.principal;
+        else return Enums.TargetToken.delegate;
+    }
+
+    function _createRandomExpiryType(uint256 seed) internal pure returns (Enums.ExpiryType) {
+        if (seed % 3 == 0) return Enums.ExpiryType.none;
+        if (seed % 3 == 1) return Enums.ExpiryType.relative;
+        else return Enums.ExpiryType.absolute;
+    }
+}
 
 contract ModifierTester is Modifiers {
     constructor(address seaport, Enums.Stage firstStage) Modifiers(seaport, firstStage) {}
@@ -44,7 +73,7 @@ contract ModifierTester is Modifiers {
     }
 }
 
-contract CreateOffererModifiersTest is Test {
+contract CreateOffererModifiersTest is Test, CreateOffererTestHelpers {
     ModifierTester modifierTester;
 
     function setUp() public {
@@ -162,9 +191,13 @@ contract HelpersCalldataHarness {
         Structs.TransientState storage ptr = transientState_;
         Helpers.updateTransientState(ptr, minimumReceived, maximumSpent, decodedContext);
     }
+
+    function verifyCreate(address delegateToken, SpentItem calldata offer, ReceivedItem calldata consideration, bytes calldata context) external {
+        Helpers.verifyCreate(delegateToken, offer, consideration, context);
+    }
 }
 
-contract CreateOffererHelpersTest is Test {
+contract CreateOffererHelpersTest is Test, CreateOffererTestHelpers {
     Structs.Receivers receivers;
     Structs.Nonce nonce;
     HelpersCalldataHarness harness;
@@ -192,12 +225,6 @@ contract CreateOffererHelpersTest is Test {
             assertEq(receivers.principal, initialPT);
             assertEq(receivers.delegate, targetTokenReceiver);
         }
-    }
-
-    function _createRandomTargetToken(uint256 seed) internal pure returns (Enums.TargetToken) {
-        if (seed % 3 == 0) return Enums.TargetToken.none;
-        if (seed % 3 == 1) return Enums.TargetToken.principal;
-        else return Enums.TargetToken.delegate;
     }
 
     function testProcessNonce(uint256 initialNonce) public {
@@ -362,15 +389,15 @@ contract CreateOffererHelpersTest is Test {
         harness.updateTransientState(minimumReceived, maximumSpent, decodedContext);
         assertEq(keccak256(abi.encode(transientStateBefore)), keccak256(abi.encode(harness.transientState())));
     }
-
-    function _createRandomExpiryType(uint256 seed) internal pure returns (Enums.ExpiryType) {
-        if (seed % 3 == 0) return Enums.ExpiryType.none;
-        if (seed % 3 == 1) return Enums.ExpiryType.relative;
-        else return Enums.ExpiryType.absolute;
-    }
 }
 
-contract CreateOffererDelegateTokenHelpers is BaseLiquidDelegateTest {
+contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, CreateOffererTestHelpers {
+    HelpersCalldataHarness harness;
+
+    function setUp() public {
+        harness = new HelpersCalldataHarness();
+    }
+
     function testCreateAndValidateDelegateTokenId(uint256 seed, bytes32 rights, address principalHolder, address delegateHolder) public {
         vm.assume(principalHolder != address(0) && delegateHolder != address(0));
         IDelegateRegistry.DelegationType tokenType = _createRandomValidDelegationType(seed);
@@ -476,9 +503,49 @@ contract CreateOffererDelegateTokenHelpers is BaseLiquidDelegateTest {
         assertNotEq(calculatedDelegateId, searchCalculatedOrderHash);
     }
 
-    function _createRandomValidDelegationType(uint256 seed) internal pure returns (IDelegateRegistry.DelegationType) {
-        if (seed % 3 == 0) return IDelegateRegistry.DelegationType.ERC721;
-        if (seed % 3 == 1) return IDelegateRegistry.DelegationType.ERC20;
-        else return IDelegateRegistry.DelegationType.ERC1155;
+    function testVerifyCreate(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver) public {
+        vm.assume(amount > 0);
+        vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
+        (IDelegateRegistry.DelegationType tokenType, ItemType itemType) = _createRandomValidDelegationTypeAndItemType(seed);
+        uint256 createOrderHash = seed << 8 | uint256(tokenType);
+        SpentItem memory offer = SpentItem({itemType: ItemType.ERC721, token: address(harness), identifier: createOrderHash, amount: 1});
+        ReceivedItem memory consideration = ReceivedItem({
+            itemType: itemType,
+            token: token,
+            identifier: itemType != ItemType.ERC20 ? tokenId : 0,
+            amount: itemType != ItemType.ERC721 ? amount : 1,
+            recipient: payable(address(harness))
+        });
+        Structs.Context memory contextStruct = Structs.Context({
+            rights: rights,
+            signerSalt: seed,
+            expiryLength: 10 ** 4,
+            expiryType: Enums.ExpiryType.absolute,
+            targetToken: Enums.TargetToken.delegate,
+            receivers: Structs.Receivers({principal: ptReceiver, delegate: dtReceiver})
+        });
+        // Create delegation as DelegateToken and save
+        vm.startPrank(address(dt));
+        bytes32 registryHash;
+        if (itemType == ItemType.ERC721) {
+            registryHash = registry.delegateERC721(dtReceiver, token, tokenId, rights, true);
+        } else if (itemType == ItemType.ERC20) {
+            registryHash = registry.delegateERC20(dtReceiver, token, amount, rights, true);
+        } else if (itemType == ItemType.ERC1155) {
+            registryHash = registry.delegateERC1155(dtReceiver, token, tokenId, amount, rights, true);
+        }
+        vm.stopPrank();
+        uint256 delegateTokenSlot = uint256(keccak256(abi.encode(keccak256(abi.encode(address(harness), createOrderHash)), 6))); // Setting delegate id to zero
+            // here
+        vm.store(address(dt), bytes32(delegateTokenSlot), registryHash);
+        vm.store(address(dt), bytes32(delegateTokenSlot + 1), bytes32(uint256(10 ** 4)));
+        if (itemType != ItemType.ERC721) {
+            vm.store(address(dt), bytes32(delegateTokenSlot + 2), bytes32(amount));
+        }
+        // Override principal token bytecode with mock 721 and mint delegateId
+        vm.etch(address(principal), address(mockERC721).code);
+        PrincipalToken(principal).mint(ptReceiver, uint256(keccak256(abi.encode(address(harness), createOrderHash))));
+        // Test
+        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
     }
 }

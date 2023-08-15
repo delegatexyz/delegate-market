@@ -329,10 +329,8 @@ library CreateOffererHelpers {
                         expiry: CreateOffererHelpers.calculateExpiry(decodedContext.expiryType, decodedContext.expiryLength),
                         rights: decodedContext.rights,
                         tokenContract: consideration.token,
-                        tokenId: (tokenType == IDelegateRegistry.DelegationType.ERC721 || tokenType == IDelegateRegistry.DelegationType.ERC1155)
-                            ? consideration.identifier
-                            : 0,
-                        amount: (tokenType == IDelegateRegistry.DelegationType.ERC20 || tokenType == IDelegateRegistry.DelegationType.ERC1155) ? consideration.amount : 0
+                        tokenId: (tokenType != IDelegateRegistry.DelegationType.ERC20) ? consideration.identifier : 0,
+                        amount: (tokenType != IDelegateRegistry.DelegationType.ERC721) ? consideration.amount : 0
                     })
                 )
             ) != keccak256(abi.encode(IDelegateToken(delegateToken).getDelegateInfo(DelegateTokenEncoding.delegateId(address(this), offer.identifier))))
