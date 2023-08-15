@@ -438,7 +438,7 @@ contract CreateOffererHelpersTest is Test, CreateOffererTestHelpers {
         assertEq(consideration[0].recipient, payable(address(harness)));
     }
 
-    function testProcessSpentItemsRevertArrayLenghts(uint256 n, uint256 m) public {
+    function testProcessSpentItemsRevertArrayLengths(uint256 n, uint256 m) public {
         vm.assume(n < 100 && m < 100);
         vm.assume(n != 1 || m != 1);
         SpentItem[] memory minimumReceived = new SpentItem[](n);
@@ -504,6 +504,98 @@ contract CreateOffererHelpersTest is Test, CreateOffererTestHelpers {
         maximumSpent = new SpentItem[](1);
         maximumSpent[0] =
             SpentItem({itemType: itemType, token: token, identifier: itemType != ItemType.ERC20 ? tokenId : 0, amount: itemType != ItemType.ERC721 ? amount : 0});
+    }
+
+    function testValidateCreateOrderHash(address targetTokenReceiver, bytes memory encodedOrder, uint256 seed) public view {
+        IDelegateRegistry.DelegationType tokenType = _createRandomValidDelegationType(seed);
+        uint256 createOrderHash = (uint256(keccak256(abi.encode(targetTokenReceiver, msg.sender, encodedOrder))) << 8) | uint256(tokenType);
+        Helpers.validateCreateOrderHash(targetTokenReceiver, createOrderHash, encodedOrder, tokenType);
+    }
+
+    function testValidateCreateOrderHashRevertsMismatch(address targetTokenReceiver, bytes memory encodedOrder, uint256 seed) public {
+        IDelegateRegistry.DelegationType tokenType = _createRandomValidDelegationType(seed);
+        uint256 createOrderHash = (uint256(keccak256(abi.encode(targetTokenReceiver, msg.sender, encodedOrder))) << 8) | uint256(tokenType);
+        uint256 badCreateOrderHash = uint256(keccak256(abi.encode(createOrderHash)));
+        vm.expectRevert(abi.encodeWithSelector(Errors.CreateOrderHashInvariant.selector, badCreateOrderHash, createOrderHash));
+        Helpers.validateCreateOrderHash(targetTokenReceiver, badCreateOrderHash, encodedOrder, tokenType);
+    }
+
+    function testValidateCreateOrderHashCollisionsDifferentReceiver(
+        address targetTokenReceiver,
+        address wrongTargetTokenReceiver,
+        address searchConduit,
+        bytes memory encodedOrder,
+        bytes memory searchEncodedOrder,
+        uint256 seed,
+        uint256 searchSeed
+    ) public {
+        vm.assume(targetTokenReceiver != wrongTargetTokenReceiver);
+        IDelegateRegistry.DelegationType tokenType = _createRandomValidDelegationType(seed);
+        IDelegateRegistry.DelegationType searchTokenType = _createRandomValidDelegationType(searchSeed);
+        uint256 createOrderHash = (uint256(keccak256(abi.encode(targetTokenReceiver, msg.sender, encodedOrder))) << 8) | uint256(tokenType);
+        uint256 searchCreateOrderHash = (uint256(keccak256(abi.encode(wrongTargetTokenReceiver, searchConduit, searchEncodedOrder))) << 8) | uint256(searchTokenType);
+        vm.expectRevert(abi.encodeWithSelector(Errors.CreateOrderHashInvariant.selector, searchCreateOrderHash, createOrderHash));
+        Helpers.validateCreateOrderHash(targetTokenReceiver, searchCreateOrderHash, encodedOrder, tokenType);
+    }
+
+    function testValidateCreateOrderHashCollisionsConstantReceiver(
+        address targetTokenReceiver,
+        address searchConduit,
+        bytes memory encodedOrder,
+        bytes memory searchEncodedOrder,
+        uint256 seed,
+        uint256 searchSeed
+    ) public {
+        vm.assume(msg.sender != searchConduit);
+        vm.assume(keccak256(abi.encode(encodedOrder)) != keccak256(abi.encode(searchEncodedOrder)));
+        vm.assume(seed != searchSeed);
+        IDelegateRegistry.DelegationType tokenType = _createRandomValidDelegationType(seed);
+        IDelegateRegistry.DelegationType searchTokenType = _createRandomValidDelegationType(searchSeed);
+        uint256 createOrderHash = (uint256(keccak256(abi.encode(targetTokenReceiver, msg.sender, encodedOrder))) << 8) | uint256(tokenType);
+        uint256 searchCreateOrderHash = (uint256(keccak256(abi.encode(targetTokenReceiver, searchConduit, searchEncodedOrder))) << 8) | uint256(searchTokenType);
+        vm.expectRevert(abi.encodeWithSelector(Errors.CreateOrderHashInvariant.selector, searchCreateOrderHash, createOrderHash));
+        Helpers.validateCreateOrderHash(targetTokenReceiver, searchCreateOrderHash, encodedOrder, tokenType);
+    }
+
+    function testCalculateOrderHash(address targetTokenReceiver, address conduit, bytes memory createOrderInfo, uint256 seed) public {
+        IDelegateRegistry.DelegationType tokenType = _createRandomValidDelegationType(seed);
+        uint256 expectedHash = uint256(keccak256(abi.encode(targetTokenReceiver, conduit, createOrderInfo))) << 8 | uint256(tokenType);
+        assertEq(expectedHash, Helpers.calculateOrderHash(targetTokenReceiver, conduit, createOrderInfo, tokenType));
+    }
+
+    function testCalculateOrderHashCollisionsDifferentReceiver(
+        address targetTokenReceiver,
+        address wrongTargetTokenReceiver,
+        address conduit,
+        address searchConduit,
+        bytes memory createOrderInfo,
+        bytes memory searchCreateOrderInfo,
+        uint256 seed,
+        uint256 searchSeed
+    ) public {
+        vm.assume(targetTokenReceiver != wrongTargetTokenReceiver);
+        IDelegateRegistry.DelegationType tokenType = _createRandomValidDelegationType(seed);
+        IDelegateRegistry.DelegationType searchTokenType = _createRandomValidDelegationType(searchSeed);
+        uint256 searchHash = uint256(keccak256(abi.encode(wrongTargetTokenReceiver, searchConduit, searchCreateOrderInfo))) << 8 | uint256(searchTokenType);
+        assertNotEq(searchHash, Helpers.calculateOrderHash(targetTokenReceiver, conduit, createOrderInfo, tokenType));
+    }
+
+    function testCalculateOrderHashCollisionsConstantReceiver(
+        address targetTokenReceiver,
+        address conduit,
+        address searchConduit,
+        bytes memory createOrderInfo,
+        bytes memory searchCreateOrderInfo,
+        uint256 seed,
+        uint256 searchSeed
+    ) public {
+        vm.assume(conduit != searchConduit);
+        vm.assume(keccak256(abi.encode(searchCreateOrderInfo)) != keccak256(abi.encode(createOrderInfo)));
+        vm.assume(searchSeed != seed);
+        IDelegateRegistry.DelegationType tokenType = _createRandomValidDelegationType(seed);
+        IDelegateRegistry.DelegationType searchTokenType = _createRandomValidDelegationType(searchSeed);
+        uint256 searchHash = uint256(keccak256(abi.encode(targetTokenReceiver, searchConduit, searchCreateOrderInfo))) << 8 | uint256(searchTokenType);
+        assertNotEq(searchHash, Helpers.calculateOrderHash(targetTokenReceiver, conduit, createOrderInfo, tokenType));
     }
 }
 
