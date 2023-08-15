@@ -7,6 +7,7 @@ import {SpentItem, ReceivedItem} from "seaport/contracts/interfaces/ContractOffe
 import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
 import {ItemType} from "seaport/contracts/lib/ConsiderationEnums.sol";
 import {BaseLiquidDelegateTest, DelegateTokenStructs} from "test/base/BaseLiquidDelegateTest.t.sol";
+import {DelegateTokenErrors} from "src/libraries/DelegateTokenErrors.sol";
 import {
     CreateOffererModifiers as Modifiers,
     CreateOffererEnums as Enums,
@@ -408,7 +409,74 @@ contract CreateOffererDelegateTokenHelpers is BaseLiquidDelegateTest {
         Helpers.createAndValidateDelegateTokenId(address(dt), seed, delegateInfo);
     }
 
-    function _createRandomValidDelegationType(uint256 seed) internal returns (IDelegateRegistry.DelegationType) {
+    function testCalculateOrderHashAndId(address targetTokenReceiver, address conduit, bytes memory orderInfo, uint256 seed) public {
+        IDelegateRegistry.DelegationType tokenType = _createRandomValidDelegationType(seed);
+        (uint256 calculatedOrderHash, uint256 calculatedDelegateId) = Helpers.calculateOrderHashAndId(address(dt), targetTokenReceiver, conduit, orderInfo, tokenType);
+        assertEq(calculatedOrderHash, uint256(keccak256(abi.encode(targetTokenReceiver, conduit, orderInfo))) << 8 | uint256(tokenType));
+        assertEq(
+            calculatedDelegateId,
+            uint256(keccak256(abi.encode(address(this), uint256(keccak256(abi.encode(targetTokenReceiver, conduit, orderInfo))) << 8 | uint256(tokenType))))
+        );
+    }
+
+    function testCalculateOrderHashAndIdReverts(address targetTokenReceiver, address conduit, bytes memory orderInfo, uint256 seed, uint256 slotData) public {
+        vm.assume(slotData > 1);
+        IDelegateRegistry.DelegationType tokenType = _createRandomValidDelegationType(seed);
+        (uint256 calculatedOrderHash, uint256 calculatedDelegateId) = Helpers.calculateOrderHashAndId(address(dt), targetTokenReceiver, conduit, orderInfo, tokenType);
+        // Write storage slot in DelegateToken to cause a revert
+        vm.store(address(dt), keccak256(abi.encode(calculatedDelegateId, 6)), bytes32(slotData));
+        vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.AlreadyExisted.selector, calculatedDelegateId));
+        (calculatedOrderHash, calculatedDelegateId) = Helpers.calculateOrderHashAndId(address(dt), targetTokenReceiver, conduit, orderInfo, tokenType);
+    }
+
+    function testCalculateOrderHashAndIdTypeCollisions(address targetTokenReceiver, address conduit, bytes memory orderInfo) public {
+        (uint256 calculated721OrderHash, uint256 calculated721DelegateId) =
+            Helpers.calculateOrderHashAndId(address(dt), targetTokenReceiver, conduit, orderInfo, IDelegateRegistry.DelegationType.ERC721);
+        (uint256 calculated20OrderHash, uint256 calculated20DelegateId) =
+            Helpers.calculateOrderHashAndId(address(dt), targetTokenReceiver, conduit, orderInfo, IDelegateRegistry.DelegationType.ERC20);
+        (uint256 calculated1155OrderHash, uint256 calculated1155DelegateId) =
+            Helpers.calculateOrderHashAndId(address(dt), targetTokenReceiver, conduit, orderInfo, IDelegateRegistry.DelegationType.ERC1155);
+        assertNotEq(calculated721OrderHash, calculated721DelegateId);
+        assertNotEq(calculated721OrderHash, calculated20OrderHash);
+        assertNotEq(calculated721OrderHash, calculated20DelegateId);
+        assertNotEq(calculated721OrderHash, calculated1155OrderHash);
+        assertNotEq(calculated721OrderHash, calculated1155DelegateId);
+        assertNotEq(calculated721DelegateId, calculated20OrderHash);
+        assertNotEq(calculated721DelegateId, calculated20DelegateId);
+        assertNotEq(calculated721DelegateId, calculated1155OrderHash);
+        assertNotEq(calculated721DelegateId, calculated1155DelegateId);
+        assertNotEq(calculated20OrderHash, calculated20DelegateId);
+        assertNotEq(calculated20OrderHash, calculated1155OrderHash);
+        assertNotEq(calculated20OrderHash, calculated1155DelegateId);
+        assertNotEq(calculated20DelegateId, calculated1155OrderHash);
+        assertNotEq(calculated20DelegateId, calculated1155DelegateId);
+        assertNotEq(calculated1155OrderHash, calculated1155DelegateId);
+    }
+
+    function testCalculateOrderHashAndIdCollisions(
+        address targetTokenReceiver,
+        address notTargetTokenReceiver,
+        address conduit,
+        address searchConduit,
+        bytes memory orderInfo,
+        bytes memory searchOrderInfo,
+        uint256 seed,
+        uint256 searchSeed
+    ) public {
+        vm.assume(targetTokenReceiver != notTargetTokenReceiver);
+        IDelegateRegistry.DelegationType tokenType = _createRandomValidDelegationType(seed);
+        IDelegateRegistry.DelegationType searchTokenType = _createRandomValidDelegationType(searchSeed);
+        (uint256 calculatedOrderHash, uint256 calculatedDelegateId) = Helpers.calculateOrderHashAndId(address(dt), targetTokenReceiver, conduit, orderInfo, tokenType);
+        (uint256 searchCalculatedOrderHash, uint256 searchCalculatedDelegateId) =
+            Helpers.calculateOrderHashAndId(address(dt), notTargetTokenReceiver, searchConduit, searchOrderInfo, searchTokenType);
+        assertNotEq(calculatedOrderHash, searchCalculatedOrderHash);
+        assertNotEq(calculatedOrderHash, searchCalculatedDelegateId);
+        assertNotEq(calculatedOrderHash, calculatedDelegateId);
+        assertNotEq(calculatedDelegateId, searchCalculatedDelegateId);
+        assertNotEq(calculatedDelegateId, searchCalculatedOrderHash);
+    }
+
+    function _createRandomValidDelegationType(uint256 seed) internal pure returns (IDelegateRegistry.DelegationType) {
         if (seed % 3 == 0) return IDelegateRegistry.DelegationType.ERC721;
         if (seed % 3 == 1) return IDelegateRegistry.DelegationType.ERC20;
         else return IDelegateRegistry.DelegationType.ERC1155;
