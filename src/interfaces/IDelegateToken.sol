@@ -18,7 +18,6 @@ interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver {
      * previously double covered by "RightsCreated" and "RightsBurned" events
      * A Transfer event with from = address(0) is a "create" event
      * A Transfer event with to = address(0) is a "withdraw" event
-     * A Transfer event with to = address(1) is a "rescind" event
      */
 
     /// @notice Emitted when a principal token holder extends the expiry of the delegate token
@@ -85,24 +84,22 @@ interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver {
     function extend(uint256 delegateTokenId, uint256 newExpiry) external;
 
     /**
-     * @notice Allows the delegate owner or any approved operator to rescind their right early, allowing the principal
-     * rights owner to redeem the underlying token early.
-     * Allows anyone to forcefully rescind the delegate token if it has expired
-     * @param from The delegate token holder of the token to be rescinded
+     * @notice Allows the delegate owner or any approved operator to return a delegate token to the principal rights holder early, allowing the principal
+     * rights holder to redeem the underlying token(s) early.
+     * Allows anyone to forcefully return the delegate token to the principal rights holder if the delegate token has expired
      * @param delegateTokenId ID of the delegate right to be rescinded
      */
-    function rescind(address from, uint256 delegateTokenId) external;
+    function rescind(uint256 delegateTokenId) external;
 
     /**
      * @notice Allows principal rights owner or approved operator to withdraw the underlying token
      * once the delegation rights have either met their expiration or been rescinded.
      * Can also be called early if the caller is approved or owner of the delegate token (i.e. they wouldn't need to
-     * call rescind & withdraw)
-     * "Burns" the delegate token, principal token, and returns the underlying tokens.
-     * @param recipient Recipient of the underlying tokens.
+     * call rescind & withdraw), or approved operator of the delegate token holder
+     * "Burns" the delegate token, principal token, and returns the underlying tokens to the caller.
      * @param delegateTokenId id of the corresponding delegate token
      */
-    function withdraw(address recipient, uint256 delegateTokenId) external;
+    function withdraw(uint256 delegateTokenId) external;
 
     /**
      * @notice Allows delegate token owner or approved operator to borrow their underlying tokens for the duration of a

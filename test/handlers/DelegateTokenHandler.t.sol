@@ -139,7 +139,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         if (delegateId != 0) {
             vm.startPrank(currentActor);
 
-            delegateToken.rescind(currentActor, delegateId);
+            delegateToken.rescind(delegateId);
             ownedDTTokens[currentActor].remove(delegateId);
             existingDelegateTokens.remove(delegateId);
 
@@ -157,7 +157,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         IDelegateTokenStructs.DelegateInfo memory delegateInfo = delegateToken.getDelegateInfo(prId);
         vm.warp(delegateInfo.expiry);
         vm.startPrank(currentActor);
-        delegateToken.withdraw(currentActor, prId);
+        delegateToken.withdraw(prId);
         vm.stopPrank();
 
         existingPrincipalTokens.remove(prId);
@@ -177,7 +177,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         address dtOwner = _getDTOwner(prId);
         if (dtOwner != address(0)) {
             vm.prank(dtOwner);
-            delegateToken.rescind(dtOwner, prId);
+            delegateToken.rescind(prId);
 
             existingDelegateTokens.remove(prId);
             ownedDTTokens[dtOwner].remove(prId);
@@ -185,7 +185,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         IDelegateTokenStructs.DelegateInfo memory delegateInfo = delegateToken.getDelegateInfo(prId);
         vm.prank(currentActor);
-        delegateToken.withdraw(currentActor, prId);
+        delegateToken.withdraw(prId);
 
         existingPrincipalTokens.remove(prId);
         ownedPrTokens[currentActor].remove(prId);

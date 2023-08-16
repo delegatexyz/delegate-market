@@ -79,12 +79,14 @@ library DelegateTokenStorageHelpers {
 
     function revertInvalidWithdrawalConditions(
         mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo,
+        mapping(address account => mapping(address operator => bool enabled)) storage accountOperator,
         uint256 delegateTokenId,
         address delegateTokenHolder
     ) internal view {
         //slither-disable-next-line timestamp
         if (block.timestamp < readExpiry(delegateTokenInfo, delegateTokenId)) {
-            if (delegateTokenHolder != Constants.RESCIND_ADDRESS && delegateTokenHolder != msg.sender && msg.sender != readApproved(delegateTokenInfo, delegateTokenId)) {
+            if (delegateTokenHolder != msg.sender && msg.sender != readApproved(delegateTokenInfo, delegateTokenId) && !accountOperator[delegateTokenHolder][msg.sender])
+            {
                 revert Errors.WithdrawNotAvailable(delegateTokenId, readExpiry(delegateTokenInfo, delegateTokenId), block.timestamp);
             }
         }

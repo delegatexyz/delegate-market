@@ -31,7 +31,7 @@ contract FlashReentrancyTester is IDelegateFlashloan {
             0
         );
         dt.flashloan{value: 0}(IDelegateFlashloanStructs.FlashInfo(address(this), address(this), IDelegateRegistry.DelegationType.ERC721, tokenContract, tokenId, 0, ""));
-        dt.withdraw(msg.sender, secondDelegateTokenId);
+        dt.withdraw(secondDelegateTokenId);
     }
 
     function onFlashloan(address, IDelegateFlashloanStructs.FlashInfo calldata info) external payable returns (bytes32) {

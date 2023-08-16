@@ -227,7 +227,7 @@ contract DelegateTokenTest is Test {
         mock721.setApprovalForAll(address(dt), true);
         uint256 delegateId =
             dt.create(DelegateTokenStructs.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 0, address(mock721), underlyingTokenId, "", expiry), SALT);
-        dt.withdraw(from, delegateId);
+        dt.withdraw(delegateId);
 
         vm.expectRevert(DelegateTokenErrors.DelegateTokenHolderZero.selector);
         dt.ownerOf(delegateId);
@@ -250,7 +250,7 @@ contract DelegateTokenTest is Test {
         mock20.approve(address(dt), underlyingAmount);
         uint256 delegateId =
             dt.create(DelegateTokenStructs.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC20, from, underlyingAmount, address(mock20), 0, "", expiry), SALT);
-        dt.withdraw(from, delegateId);
+        dt.withdraw(delegateId);
 
         vm.expectRevert(DelegateTokenErrors.DelegateTokenHolderZero.selector);
         dt.ownerOf(delegateId);
@@ -278,7 +278,7 @@ contract DelegateTokenTest is Test {
             DelegateTokenStructs.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC1155, from, underlyingAmount, address(mock1155), underlyingTokenId, "", expiry),
             SALT
         );
-        dt.withdraw(from, delegateId);
+        dt.withdraw(delegateId);
 
         vm.expectRevert(DelegateTokenErrors.DelegateTokenHolderZero.selector);
         dt.ownerOf(delegateId);
