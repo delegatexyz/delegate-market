@@ -39,7 +39,7 @@ contract SimpleDeploy is Script {
         console2.log("Delegate Registry", delegateRegistry);
         console2.log("Principal Token:", principalToken);
         console2.log("Delegate Token:", delegateToken);
-        console2.log("Wrap Offerer:", createOfferer);
+        console2.log("Create Offerer:", createOfferer);
 
         require(principalToken == ptPrediction, "wrong sim");
         require(delegateToken == dtPrediction, "wrong sim");

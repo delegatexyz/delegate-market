@@ -2,10 +2,6 @@
 pragma solidity ^0.8.0;
 
 library DelegateTokenConstants {
-    /// @notice Standardizes rescind address
-    /// @dev should not be zero address
-    address internal constant RESCIND_ADDRESS = address(1);
-
     /// @dev Use this to syntactically store the max of the expiry
     uint256 internal constant MAX_EXPIRY = type(uint96).max;
 
