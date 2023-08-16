@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
-import {DelegateTokenConstants as Constants} from "src/libraries/DelegateTokenConstants.sol";
-import {DelegateTokenErrors as Errors} from "src/libraries/DelegateTokenErrors.sol";
+import {DelegateTokenConstants as Constants, DelegateTokenErrors as Errors} from "src/libraries/DelegateTokenLib.sol";
 
 library DelegateTokenStorageHelpers {
     function writeApproved(mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo, uint256 delegateTokenId, address approved) internal {
@@ -36,6 +35,18 @@ library DelegateTokenStorageHelpers {
         unchecked {
             --balances[delegateTokenHolder];
         } // Reasonable to expect this not to underflow
+    }
+
+    function revertAlreadyExisted(mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo, uint256 delegateTokenId) internal view {
+        if (delegateTokenInfo[delegateTokenId][Constants.REGISTRY_HASH_POSITION] != Constants.ID_AVAILABLE) {
+            revert Errors.AlreadyExisted(delegateTokenId);
+        }
+    }
+
+    function revertNotOperator(mapping(address account => mapping(address operator => bool enabled)) storage accountOperator, address account) internal view {
+        if (!(msg.sender == account || accountOperator[account][msg.sender])) {
+            revert Errors.NotOperator(msg.sender, account);
+        }
     }
 
     function readApproved(mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo, uint256 delegateTokenId) internal view returns (address) {

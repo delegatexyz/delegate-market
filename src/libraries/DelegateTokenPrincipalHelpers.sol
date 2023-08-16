@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
-import {DelegateTokenErrors as Errors} from "src/libraries/DelegateTokenErrors.sol";
-import {DelegateTokenConstants as Constants} from "src/libraries/DelegateTokenConstants.sol";
-import {DelegateTokenStructs as Structs} from "src/libraries/DelegateTokenStructs.sol";
+import {DelegateTokenErrors as Errors, DelegateTokenConstants as Constants, DelegateTokenStructs as Structs} from "src/libraries/DelegateTokenLib.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 
-library DelegateTokenPrincipalTokenHelpers {
+library DelegateTokenPrincipalHelpers {
     /// @notice helper function for burning a principal token
     /// @dev must revert if burnAuthorized has already been set to BURN_AUTHORIZED flag
     function burn(address principalToken, Structs.Uint256 storage principalBurnAuthorization, uint256 delegateTokenId) internal {

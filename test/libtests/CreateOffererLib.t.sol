@@ -3,10 +3,9 @@ pragma solidity ^0.8.21;
 
 import {Test, stdError} from "forge-std/Test.sol";
 import {SpentItem, ReceivedItem} from "seaport/contracts/interfaces/ContractOffererInterface.sol";
-import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
 import {ItemType} from "seaport/contracts/lib/ConsiderationEnums.sol";
 import {BaseLiquidDelegateTest, DelegateTokenStructs} from "test/base/BaseLiquidDelegateTest.t.sol";
-import {DelegateTokenErrors} from "src/libraries/DelegateTokenErrors.sol";
+import {IDelegateRegistry, DelegateTokenErrors} from "src/libraries/DelegateTokenLib.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 import {
     CreateOffererModifiers as Modifiers,
@@ -659,7 +658,7 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
         IDelegateRegistry.DelegationType tokenType = _createRandomValidDelegationType(seed);
         (uint256 calculatedOrderHash, uint256 calculatedDelegateId) = Helpers.calculateOrderHashAndId(address(dt), targetTokenReceiver, conduit, orderInfo, tokenType);
         // Write storage slot in DelegateToken to cause a revert
-        vm.store(address(dt), keccak256(abi.encode(calculatedDelegateId, 6)), bytes32(slotData));
+        vm.store(address(dt), keccak256(abi.encode(calculatedDelegateId, 1)), bytes32(slotData));
         vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.AlreadyExisted.selector, calculatedDelegateId));
         (calculatedOrderHash, calculatedDelegateId) = Helpers.calculateOrderHashAndId(address(dt), targetTokenReceiver, conduit, orderInfo, tokenType);
     }
@@ -910,7 +909,7 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
             registryHash = registry.delegateERC1155(dtReceiver, token, tokenId, amount, rights, true);
         }
         vm.stopPrank();
-        uint256 delegateTokenSlot = uint256(keccak256(abi.encode(keccak256(abi.encode(address(harness), createOrderHash)), 6))); // Setting delegate id to zero
+        uint256 delegateTokenSlot = uint256(keccak256(abi.encode(keccak256(abi.encode(address(harness), createOrderHash)), 1))); // Setting delegate id to zero
             // here
         vm.store(address(dt), bytes32(delegateTokenSlot), registryHash);
         vm.store(address(dt), bytes32(delegateTokenSlot + 1), bytes32(uint256(10 ** 4)));

@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
-import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
 import {RegistryStorage} from "delegate-registry/src/libraries/RegistryStorage.sol";
 import {RegistryHashes} from "delegate-registry/src/libraries/RegistryHashes.sol";
-import {DelegateTokenErrors as Errors} from "src/libraries/DelegateTokenErrors.sol";
-import {DelegateTokenStructs as Structs} from "src/libraries/DelegateTokenStructs.sol";
+import {IDelegateRegistry, DelegateTokenErrors as Errors, DelegateTokenStructs as Structs} from "src/libraries/DelegateTokenLib.sol";
 
 library DelegateTokenRegistryHelpers {
     /**

@@ -2,16 +2,9 @@
 pragma solidity ^0.8.21;
 
 import {Test} from "forge-std/Test.sol";
-import {ComputeAddress} from "../script/ComputeAddress.s.sol";
 import {Strings} from "openzeppelin/utils/Strings.sol";
-import {DelegateToken, Structs as DelegateTokenStructs} from "src/DelegateToken.sol";
-import {DelegateTokenErrors} from "src/libraries/DelegateTokenErrors.sol";
+import {DelegateTokenErrors, DelegateTokenConstants} from "src/libraries/DelegateTokenLib.sol";
 import {DTHarness} from "./utils/DTHarness.t.sol";
-import {PrincipalToken} from "src/PrincipalToken.sol";
-import {DelegateRegistry, IDelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
-import {MockERC721, MockERC20, MockERC1155} from "./mock/MockTokens.t.sol";
-import {DelegateTokenConstants} from "src/libraries/DelegateTokenConstants.sol";
-import {DelegateTokenStructs} from "src/libraries/DelegateTokenStructs.sol";
 import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
 import {ERC721Holder} from "openzeppelin/token/ERC721/utils/ERC721Holder.sol";
 import {IERC721Metadata} from "openzeppelin/token/ERC721/extensions/IERC721Metadata.sol";
@@ -19,47 +12,37 @@ import {IERC2981} from "openzeppelin/interfaces/IERC2981.sol";
 import {IERC165} from "openzeppelin/utils/introspection/IERC165.sol";
 import {IERC1155Receiver} from "openzeppelin/token/ERC1155/IERC1155Receiver.sol";
 
-contract DelegateTokenTest is Test {
-    DelegateRegistry reg;
-    DelegateToken dt;
-    PrincipalToken pt;
+import {
+    PrincipalToken,
+    DelegateToken,
+    MarketMetadata,
+    DelegateTokenStructs,
+    BaseLiquidDelegateTest,
+    ComputeAddress,
+    IDelegateRegistry
+} from "test/base/BaseLiquidDelegateTest.t.sol";
+
+contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
     DTHarness dtHarness;
     PrincipalToken ptShadow;
-    MockERC721 mock721;
-    MockERC20 mock20;
-    MockERC1155 mock1155;
-
-    address dtOwner = address(42);
-
-    string baseURI = "https://metadata.delegate.cash/liquid/";
 
     function setUp() public {
-        reg = new DelegateRegistry();
         DelegateTokenStructs.DelegateTokenParameters memory delegateTokenParameters = DelegateTokenStructs.DelegateTokenParameters({
-            delegateRegistry: address(reg),
+            delegateRegistry: address(registry),
             principalToken: ComputeAddress.addressFrom(address(this), vm.getNonce(address(this)) + 1),
-            baseURI: baseURI,
-            initialMetadataOwner: dtOwner
+            marketMetadata: address(marketMetadata)
         });
-        dt = new DelegateToken(delegateTokenParameters);
-        pt = new PrincipalToken(
-            address(dt)
-        );
         delegateTokenParameters.principalToken = ComputeAddress.addressFrom(address(this), vm.getNonce(address(this)) + 1);
         dtHarness = new DTHarness(delegateTokenParameters);
-
         ptShadow = new PrincipalToken(
-            address(dtHarness)
+            address(dtHarness),
+            address(marketMetadata)
         );
-
-        mock721 = new MockERC721(0);
-        mock20 = new MockERC20();
-        mock1155 = new MockERC1155();
     }
 
     function testDTConstantsAndInitialStateVars() public {
-        assertEq(dt.delegateRegistry(), address(reg));
-        assertEq(dt.principalToken(), address(pt));
+        assertEq(dt.delegateRegistry(), address(registry));
+        assertEq(dt.principalToken(), address(principal));
         assertEq(dt.baseURI(), baseURI);
         assertEq(dtHarness.exposedDelegateTokenInfo(0, 0), 1);
         assertEq(dtHarness.exposedDelegateTokenInfo(0, 1), 2);
@@ -68,47 +51,41 @@ contract DelegateTokenTest is Test {
         dtHarness.exposedDelegateTokenInfo(0, 3);
         // Check slots
         assertEq(dtHarness.exposedSlotUint256(0), 1); // OpenZep reentrancy guard (not entered)
-        assertEq(dtHarness.exposedSlotUint256(1), uint256(uint160(dtOwner))); // OpenZep ownable2step owner
-        assertEq(dtHarness.exposedSlotUint256(2), 0); // OpenZep ownable2Step pending owner
-        assertEq(dtHarness.exposedSlotUint256(3), 0); // OpenZep 4626 defaultRoyaltyInfo
-        assertEq(dtHarness.exposedSlotUint256(4), 0); // OpenZep 4626 royaltyInfo mapping
-        // Skip slot 5 as this is baseURI
-        assertEq(dtHarness.exposedSlotUint256(6), 0); // delegateTokenInfo mapping
-        assertEq(dtHarness.exposedSlotUint256(7), 0); // balances mapping
-        assertEq(dtHarness.exposedSlotUint256(8), 0); // approvals mappings
+        // Skip slot 1 as this is baseURI
+        assertEq(dtHarness.exposedSlotUint256(1), 0); // delegateTokenInfo mapping
+        assertEq(dtHarness.exposedSlotUint256(2), 0); // balances mapping
+        assertEq(dtHarness.exposedSlotUint256(3), 0); // approvals mappings
     }
 
     function testDTConstructor(address delegateRegistry, address principalToken, string calldata baseURI_, address initialMetadataOwner) public {
         vm.assume(delegateRegistry != address(0) && principalToken != address(0) && initialMetadataOwner != address(0));
+        marketMetadata = new MarketMetadata(initialMetadataOwner, baseURI_);
         // Check zero reverts
         vm.expectRevert(DelegateTokenErrors.DelegateRegistryZero.selector);
         new DelegateToken(DelegateTokenStructs.DelegateTokenParameters({
             delegateRegistry: address(0), 
             principalToken: principalToken, 
-            baseURI: baseURI_, 
-            initialMetadataOwner: initialMetadataOwner
+            marketMetadata: address(marketMetadata)
             }));
         vm.expectRevert(DelegateTokenErrors.PrincipalTokenZero.selector);
         new DelegateToken(DelegateTokenStructs.DelegateTokenParameters({
             delegateRegistry: delegateRegistry, 
             principalToken: address(0), 
-            baseURI: baseURI_, 
-            initialMetadataOwner: initialMetadataOwner
+            marketMetadata: address(marketMetadata)
             }));
         vm.expectRevert(DelegateTokenErrors.InitialMetadataOwnerZero.selector);
         new DelegateToken(DelegateTokenStructs.DelegateTokenParameters({
             delegateRegistry: delegateRegistry, 
             principalToken: principalToken, 
-            baseURI: baseURI_, 
-            initialMetadataOwner: address(0)
+            marketMetadata: address(0)
             }));
         // Check successful constructor
         dt =
-        new DelegateToken(DelegateTokenStructs.DelegateTokenParameters({delegateRegistry: delegateRegistry, principalToken: principalToken, baseURI: baseURI_, initialMetadataOwner: initialMetadataOwner}));
+        new DelegateToken(DelegateTokenStructs.DelegateTokenParameters({delegateRegistry: delegateRegistry, principalToken: principalToken, marketMetadata: address(marketMetadata)}));
         assertEq(delegateRegistry, dt.delegateRegistry());
         assertEq(principalToken, dt.principalToken());
         assertEq(baseURI_, dt.baseURI());
-        assertEq(initialMetadataOwner, dt.owner());
+        // assertEq(initialMetadataOwner, dt.owner());
     }
 
     function testSupportsInterface(bytes32 interfaceSeed) public {
@@ -118,9 +95,9 @@ contract DelegateTokenTest is Test {
             randomInterface == type(IERC2981).interfaceId || randomInterface == type(IERC165).interfaceId || randomInterface == type(IERC721).interfaceId
                 || randomInterface == type(IERC721Metadata).interfaceId || randomInterface == type(IERC1155Receiver).interfaceId
         ) {
-            assertTrue(reg.supportsInterface(randomInterface));
+            assertTrue(registry.supportsInterface(randomInterface));
         } else {
-            assertFalse(reg.supportsInterface(randomInterface));
+            assertFalse(registry.supportsInterface(randomInterface));
         }
     }
 
@@ -130,8 +107,8 @@ contract DelegateTokenTest is Test {
             vm.expectRevert(DelegateTokenErrors.DelegateTokenHolderZero.selector);
             dt.balanceOf(delegateTokenHolder);
         } else {
-            // Check balance is stored correctly, mapping is at slot 7
-            vm.store(address(dt), keccak256(abi.encode(delegateTokenHolder, 7)), bytes32(balance));
+            // Check balance is stored correctly, mapping is at slot 2
+            vm.store(address(dt), keccak256(abi.encode(delegateTokenHolder, 2)), bytes32(balance));
             assertEq(dt.balanceOf(delegateTokenHolder), balance);
         }
     }
@@ -142,9 +119,9 @@ contract DelegateTokenTest is Test {
         dt.ownerOf(delegateTokenId);
         // Create registry delegation
         vm.prank(address(dt));
-        bytes32 registryHash = reg.delegateAll(delegateTokenHolder, rights, true);
-        // Store registryHash at expected location, mapping is a slot 6
-        vm.store(address(dt), keccak256(abi.encode(delegateTokenId, 6)), registryHash);
+        bytes32 registryHash = registry.delegateAll(delegateTokenHolder, rights, true);
+        // Store registryHash at expected location, mapping is a slot 1
+        vm.store(address(dt), keccak256(abi.encode(delegateTokenId, 1)), registryHash);
         if (delegateTokenHolder == address(0)) {
             vm.expectRevert(DelegateTokenErrors.DelegateTokenHolderZero.selector);
             dt.ownerOf(delegateTokenId);
@@ -159,10 +136,10 @@ contract DelegateTokenTest is Test {
         vm.assume(to != address(0));
         vm.assume(address(dt) != from);
         vm.startPrank(from);
-        mock721.mintNext(from);
-        mock721.approve(address(dt), 0);
+        mockERC721.mintNext(from);
+        mockERC721.approve(address(dt), 0);
         uint256 delegateTokenId =
-            dt.create(DelegateTokenStructs.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 0, address(mock721), 0, rights, expiry), 1);
+            dt.create(DelegateTokenStructs.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 0, address(mockERC721), 0, rights, expiry), 1);
         vm.stopPrank();
         if (to.code.length != 0) {
             vm.expectRevert();
@@ -184,10 +161,10 @@ contract DelegateTokenTest is Test {
         vm.assume(to != address(0));
         vm.assume(address(dt) != from);
         vm.startPrank(from);
-        mock721.mintNext(from);
-        mock721.approve(address(dt), 0);
+        mockERC721.mintNext(from);
+        mockERC721.approve(address(dt), 0);
         uint256 delegateTokenId =
-            dt.create(DelegateTokenStructs.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 0, address(mock721), 0, rights, expiry), 1);
+            dt.create(DelegateTokenStructs.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 0, address(mockERC721), 0, rights, expiry), 1);
         vm.stopPrank();
         if (to.code.length != 0) {
             vm.expectRevert();
@@ -211,22 +188,22 @@ contract DelegateTokenTest is Test {
         vm.assume(searchDelegateTokenHolder != delegateTokenHolder);
         // Create delegation
         vm.prank(address(dt));
-        bytes32 registryHash = reg.delegateAll(delegateTokenHolder, rights, true);
-        // Store registryHash at expected location, mapping is at slot 6
-        vm.store(address(dt), keccak256(abi.encode(delegateTokenId, 6)), registryHash);
+        bytes32 registryHash = registry.delegateAll(delegateTokenHolder, rights, true);
+        // Store registryHash at expected location, mapping is at slot 1
+        vm.store(address(dt), keccak256(abi.encode(delegateTokenId, 1)), registryHash);
         // Expect revert if caller is not delegateTokenHolder
         vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.NotOperator.selector, searchDelegateTokenHolder, delegateTokenHolder));
         vm.prank(searchDelegateTokenHolder);
         dt.approve(spender, delegateTokenId);
         // Store dirty bits at approve location
-        vm.store(address(dt), bytes32(uint256(keccak256(abi.encode(delegateTokenId, 6))) + 1), bytes32(randomData));
+        vm.store(address(dt), bytes32(uint256(keccak256(abi.encode(delegateTokenId, 1))) + 1), bytes32(randomData));
         vm.startPrank(delegateTokenHolder);
         vm.expectEmit(true, true, true, true, address(dt));
         emit Approval(delegateTokenHolder, spender, delegateTokenId);
         dt.approve(spender, delegateTokenId);
         vm.stopPrank();
         // Check that dirty bits in expiry location are preserved and spender matches
-        uint256 approveSlot = uint256(vm.load(address(dt), bytes32(uint256(keccak256(abi.encode(delegateTokenId, 6))) + 1)));
+        uint256 approveSlot = uint256(vm.load(address(dt), bytes32(uint256(keccak256(abi.encode(delegateTokenId, 1))) + 1)));
         assertEq(approveSlot << 160, randomData << 160);
         assertEq(approveSlot >> 96, uint160(spender));
         // Check that no revert happens if searchDelegateTokenHolder is authorized operator
@@ -244,8 +221,8 @@ contract DelegateTokenTest is Test {
         emit ApprovalForAll(from, operator, approve);
         dt.setApprovalForAll(operator, approve);
         vm.stopPrank();
-        // Load approvals slot and check it has been set correctly, approvals mapping is at slot 8
-        uint256 approvalSlot = uint256(vm.load(address(dt), keccak256(abi.encode(operator, keccak256(abi.encode(from, 8))))));
+        // Load approvals slot and check it has been set correctly, approvals mapping is at slot 3
+        uint256 approvalSlot = uint256(vm.load(address(dt), keccak256(abi.encode(operator, keccak256(abi.encode(from, 3))))));
         assertEq(approvalSlot >> 1, 0);
         if (approve) {
             assertEq(approvalSlot, 1);
@@ -258,21 +235,21 @@ contract DelegateTokenTest is Test {
         // Test revert if not minted
         vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.NotMinted.selector, delegateTokenId));
         dt.getApproved(delegateTokenId);
-        // Store registryHash at expected location, mapping is at slot 6
+        // Store registryHash at expected location, mapping is at slot 1
         vm.prank(address(dt));
-        bytes32 registryHash = reg.delegateAll(from, rights, true);
-        vm.store(address(dt), keccak256(abi.encode(delegateTokenId, 6)), registryHash);
+        bytes32 registryHash = registry.delegateAll(from, rights, true);
+        vm.store(address(dt), keccak256(abi.encode(delegateTokenId, 1)), registryHash);
         // Expect zero address return now
         assertEq(dt.getApproved(delegateTokenId), address(0));
         // Assign slot with dirty bits for expiry space
-        vm.store(address(dt), bytes32(uint256(keccak256(abi.encode(delegateTokenId, 6))) + 1), bytes32((uint256(uint160(approved)) << 96) | (dirtyBits >> 160)));
+        vm.store(address(dt), bytes32(uint256(keccak256(abi.encode(delegateTokenId, 1))) + 1), bytes32((uint256(uint160(approved)) << 96) | (dirtyBits >> 160)));
         assertEq(dt.getApproved(delegateTokenId), approved);
     }
 
     function testIsApprovedForAll(address from, address operator, uint256 approve) public {
         vm.assume(approve <= 1);
-        // Store test approval, approvals mapping is at slot 8
-        vm.store(address(dt), keccak256(abi.encode(operator, keccak256(abi.encode(from, 8)))), bytes32(approve));
+        // Store test approval, approvals mapping is at slot 3
+        vm.store(address(dt), keccak256(abi.encode(operator, keccak256(abi.encode(from, 3)))), bytes32(approve));
         if (approve == 0) assertFalse(dt.isApprovedForAll(from, operator));
         else assertTrue(dt.isApprovedForAll(from, operator));
     }
@@ -284,10 +261,10 @@ contract DelegateTokenTest is Test {
         vm.assume(from != address(0));
         vm.assume(address(dt) != from);
         vm.startPrank(from);
-        mock721.mintNext(from);
-        mock721.approve(address(dt), 0);
+        mockERC721.mintNext(from);
+        mockERC721.approve(address(dt), 0);
         uint256 delegateTokenId =
-            dt.create(DelegateTokenStructs.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 0, address(mock721), 0, rights, expiry), 1);
+            dt.create(DelegateTokenStructs.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 0, address(mockERC721), 0, rights, expiry), 1);
         vm.stopPrank();
         // Should revert if to is zero
         if (to == address(0)) {

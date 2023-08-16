@@ -6,6 +6,7 @@ import {console2} from "forge-std/console2.sol";
 import {DelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
 import {DelegateToken, Structs as DelegateTokenStructs} from "src/DelegateToken.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
+import {MarketMetadata} from "src/MarketMetadata.sol";
 import {CreateOfferer, Structs as OffererStructs} from "src/CreateOfferer.sol";
 import {Strings} from "openzeppelin/utils/Strings.sol";
 import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
@@ -39,13 +40,11 @@ contract DeployV2 is Script {
 
         vm.startBroadcast();
 
-        PrincipalToken principalToken = new PrincipalToken(dtPrediction);
-        DelegateTokenStructs.DelegateTokenParameters memory delegateTokenParameters = DelegateTokenStructs.DelegateTokenParameters({
-            delegateRegistry: address(registry),
-            principalToken: ptPrediction,
-            baseURI: baseURI,
-            initialMetadataOwner: deployer
-        });
+        address marketMetadata = address(new MarketMetadata(deployer, baseURI));
+
+        PrincipalToken principalToken = new PrincipalToken(dtPrediction, marketMetadata);
+        DelegateTokenStructs.DelegateTokenParameters memory delegateTokenParameters =
+            DelegateTokenStructs.DelegateTokenParameters({delegateRegistry: address(registry), principalToken: ptPrediction, marketMetadata: marketMetadata});
         DelegateToken delegateToken = new DelegateToken(delegateTokenParameters);
         OffererStructs.Parameters memory createOffererParameters =
             OffererStructs.Parameters({seaport: seaport15, delegateToken: address(delegateToken), principalToken: address(principalToken)});

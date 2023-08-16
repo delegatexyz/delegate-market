@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.4;
 
-import {DelegateTokenStructs as Structs} from "src/libraries/DelegateTokenStructs.sol";
+import {DelegateTokenStructs as Structs} from "src/libraries/DelegateTokenLib.sol";
 
 interface IDelegateFlashloan {
     error InvalidFlashloan();

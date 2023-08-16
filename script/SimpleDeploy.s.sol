@@ -6,6 +6,7 @@ import {console2} from "forge-std/console2.sol";
 import {DelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
 import {DelegateToken, Structs as DelegateTokenStructs} from "src/DelegateToken.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
+import {MarketMetadata} from "src/MarketMetadata.sol";
 import {CreateOfferer, Structs as OffererStructs} from "src/CreateOfferer.sol";
 import {ComputeAddress} from "script/ComputeAddress.s.sol";
 
@@ -18,19 +19,16 @@ contract SimpleDeploy is Script {
         vm.startBroadcast();
 
         address delegateRegistry = address(new DelegateRegistry());
+        address marketMetadata = address(new MarketMetadata(msg.sender, baseURI));
 
         uint256 nonce = vm.getNonce(msg.sender);
 
         address ptPrediction = ComputeAddress.addressFrom(msg.sender, nonce);
         address dtPrediction = ComputeAddress.addressFrom(msg.sender, nonce + 1);
 
-        address principalToken = address(new PrincipalToken(dtPrediction));
-        DelegateTokenStructs.DelegateTokenParameters memory delegateTokenParameters = DelegateTokenStructs.DelegateTokenParameters({
-            delegateRegistry: delegateRegistry,
-            principalToken: ptPrediction,
-            baseURI: baseURI,
-            initialMetadataOwner: msg.sender
-        });
+        address principalToken = address(new PrincipalToken(dtPrediction, marketMetadata));
+        DelegateTokenStructs.DelegateTokenParameters memory delegateTokenParameters =
+            DelegateTokenStructs.DelegateTokenParameters({delegateRegistry: delegateRegistry, principalToken: ptPrediction, marketMetadata: marketMetadata});
         address delegateToken = address(new DelegateToken(delegateTokenParameters));
         OffererStructs.Parameters memory createOffererParameters =
             OffererStructs.Parameters({seaport: seaport15, delegateToken: delegateToken, principalToken: principalToken});

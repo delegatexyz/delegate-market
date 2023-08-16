@@ -4,10 +4,11 @@ pragma solidity ^0.8.0;
 import {IERC721Metadata} from "openzeppelin/token/ERC721/extensions/IERC721Metadata.sol";
 import {IERC721Receiver} from "openzeppelin/token/ERC721/IERC721Receiver.sol";
 import {IERC1155Receiver} from "openzeppelin/token/ERC1155/IERC1155Receiver.sol";
+import {IERC2981} from "openzeppelin/interfaces/IERC2981.sol";
 
-import {DelegateTokenStructs as Structs} from "src/libraries/DelegateTokenStructs.sol";
+import {DelegateTokenStructs as Structs} from "src/libraries/DelegateTokenLib.sol";
 
-interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver {
+interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver, IERC2981 {
     /*//////////////////////////////////////////////////////////////
                              EVENTS
     //////////////////////////////////////////////////////////////*/
@@ -107,12 +108,6 @@ interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver {
      * @param info IDelegateFlashloan FlashInfo struct
      */
     function flashloan(Structs.FlashInfo calldata info) external payable;
-
-    /**
-     * @notice Allows the owner of DelegateToken contract to set baseURI
-     * @param uri will be set as the new baseURI
-     */
-    function setBaseURI(string calldata uri) external;
 
     /// @notice Callback function for principal token during the create flow
     function burnAuthorizedCallback() external;

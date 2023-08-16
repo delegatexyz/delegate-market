@@ -3,10 +3,9 @@ pragma solidity ^0.8.0;
 
 import {SpentItem, ReceivedItem} from "seaport/contracts/interfaces/ContractOffererInterface.sol";
 import {ItemType} from "seaport/contracts/lib/ConsiderationEnums.sol";
-import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
 import {IDelegateToken, Structs as IDelegateTokenStructs} from "src/interfaces/IDelegateToken.sol";
 import {RegistryHashes} from "delegate-registry/src/libraries/RegistryHashes.sol";
-import {DelegateTokenEncoding} from "src/libraries/DelegateTokenEncoding.sol";
+import {IDelegateRegistry, DelegateTokenHelpers} from "src/libraries/DelegateTokenLib.sol";
 
 library CreateOffererErrors {
     error DelegateTokenIsZero();
@@ -281,7 +280,7 @@ library CreateOffererHelpers {
      */
     function createAndValidateDelegateTokenId(address delegateToken, uint256 createOrderHash, IDelegateTokenStructs.DelegateInfo memory delegateInfo) internal {
         uint256 actualDelegateId = IDelegateToken(delegateToken).create(delegateInfo, createOrderHash);
-        uint256 requestedDelegateId = DelegateTokenEncoding.delegateId(address(this), createOrderHash);
+        uint256 requestedDelegateId = DelegateTokenHelpers.delegateId(address(this), createOrderHash);
         if (actualDelegateId != requestedDelegateId) {
             revert CreateOffererErrors.DelegateTokenIdInvariant(requestedDelegateId, actualDelegateId);
         }
@@ -333,7 +332,7 @@ library CreateOffererHelpers {
                         amount: (tokenType != IDelegateRegistry.DelegationType.ERC721) ? consideration.amount : 0
                     })
                 )
-            ) != keccak256(abi.encode(IDelegateToken(delegateToken).getDelegateInfo(DelegateTokenEncoding.delegateId(address(this), offer.identifier))))
+            ) != keccak256(abi.encode(IDelegateToken(delegateToken).getDelegateInfo(DelegateTokenHelpers.delegateId(address(this), offer.identifier))))
         ) revert CreateOffererErrors.DelegateInfoInvariant();
         //slither-disable-end timestamp
     }
