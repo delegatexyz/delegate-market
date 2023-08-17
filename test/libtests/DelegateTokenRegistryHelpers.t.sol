@@ -12,6 +12,14 @@ contract CalldataHarness {
     function revertERC721FlashUnavailable(address delegateRegistry, DelegateTokenStructs.FlashInfo calldata info) external view {
         Helpers.revertERC721FlashUnavailable(delegateRegistry, info);
     }
+
+    function revertERC20FlashAmountUnavailable(address delegateRegistry, DelegateTokenStructs.FlashInfo calldata info) external view {
+        Helpers.revertERC20FlashAmountUnavailable(delegateRegistry, info);
+    }
+
+    function revertERC1155FlashAmountUnavailable(address delegateRegistry, DelegateTokenStructs.FlashInfo calldata info) external view {
+        Helpers.revertERC1155FlashAmountUnavailable(delegateRegistry, info);
+    }
 }
 
 contract DelegateTokenRegistryHelpersTest is BaseLiquidDelegateTest {
@@ -865,6 +873,647 @@ contract DelegateTokenRegistryHelpersTest is BaseLiquidDelegateTest {
                 tokenContract: contract_,
                 tokenId: tokenId,
                 amount: amount,
+                data: data
+            })
+        );
+    }
+
+    function testNoRevertERC20FlashAmountUnavailableAllRights(
+        address delegateHolder,
+        address contract_,
+        uint256 tokenId,
+        address receiver,
+        uint256 delegateAmount,
+        uint256 flashAmount,
+        bytes calldata data
+    ) public {
+        vm.assume(flashAmount <= delegateAmount);
+        vm.startPrank(address(harness));
+        registry.delegateERC20(delegateHolder, contract_, delegateAmount, "", true);
+        vm.stopPrank();
+        harness.revertERC20FlashAmountUnavailable(
+            address(registry),
+            DelegateTokenStructs.FlashInfo({
+                receiver: receiver,
+                delegateHolder: delegateHolder,
+                tokenType: IDelegateRegistry.DelegationType.ERC721,
+                tokenContract: contract_,
+                tokenId: tokenId,
+                amount: flashAmount,
+                data: data
+            })
+        );
+    }
+
+    function testNoRevertERC20FlashAmountUnavailableFlashloanRights(
+        address delegateHolder,
+        address contract_,
+        uint256 tokenId,
+        address receiver,
+        uint256 delegateAmount,
+        uint256 flashAmount,
+        bytes calldata data
+    ) public {
+        vm.assume(flashAmount <= delegateAmount);
+        vm.startPrank(address(harness));
+        registry.delegateERC20(delegateHolder, contract_, delegateAmount, "flashloan", true);
+        vm.stopPrank();
+        harness.revertERC20FlashAmountUnavailable(
+            address(registry),
+            DelegateTokenStructs.FlashInfo({
+                receiver: receiver,
+                delegateHolder: delegateHolder,
+                tokenType: IDelegateRegistry.DelegationType.ERC721,
+                tokenContract: contract_,
+                tokenId: tokenId,
+                amount: flashAmount,
+                data: data
+            })
+        );
+    }
+
+    function testNoRevertERC20FlashAmountUnavailableBothRights(
+        address delegateHolder,
+        address contract_,
+        uint256 tokenId,
+        address receiver,
+        uint256 delegateAmount1,
+        uint256 delegateAmount2,
+        uint256 flashAmount,
+        bytes calldata data
+    ) public {
+        vm.assume(delegateAmount1 < type(uint128).max && delegateAmount2 < type(uint128).max);
+        vm.assume(flashAmount <= delegateAmount1 + delegateAmount2);
+        vm.startPrank(address(harness));
+        registry.delegateERC20(delegateHolder, contract_, delegateAmount1, "", true);
+        registry.delegateERC20(delegateHolder, contract_, delegateAmount2, "flashloan", true);
+        vm.stopPrank();
+        harness.revertERC20FlashAmountUnavailable(
+            address(registry),
+            DelegateTokenStructs.FlashInfo({
+                receiver: receiver,
+                delegateHolder: delegateHolder,
+                tokenType: IDelegateRegistry.DelegationType.ERC721,
+                tokenContract: contract_,
+                tokenId: tokenId,
+                amount: flashAmount,
+                data: data
+            })
+        );
+    }
+
+    function testRevertERC20FlashAmountUnavailableAllRights(
+        address delegateHolder,
+        address contract_,
+        uint256 tokenId,
+        address receiver,
+        uint256 delegateAmount,
+        uint256 flashAmount,
+        bytes calldata data
+    ) public {
+        vm.assume(flashAmount > delegateAmount);
+        vm.startPrank(address(harness));
+        registry.delegateERC20(delegateHolder, contract_, delegateAmount, "", true);
+        vm.stopPrank();
+        vm.expectRevert(DelegateTokenErrors.ERC20FlashAmountUnavailable.selector);
+        harness.revertERC20FlashAmountUnavailable(
+            address(registry),
+            DelegateTokenStructs.FlashInfo({
+                receiver: receiver,
+                delegateHolder: delegateHolder,
+                tokenType: IDelegateRegistry.DelegationType.ERC721,
+                tokenContract: contract_,
+                tokenId: tokenId,
+                amount: flashAmount,
+                data: data
+            })
+        );
+    }
+
+    function testRevertERC20FlashAmountUnavailableFlashloanRights(
+        address delegateHolder,
+        address contract_,
+        uint256 tokenId,
+        address receiver,
+        uint256 delegateAmount,
+        uint256 flashAmount,
+        bytes calldata data
+    ) public {
+        vm.assume(flashAmount > delegateAmount);
+        vm.startPrank(address(harness));
+        registry.delegateERC20(delegateHolder, contract_, delegateAmount, "flashloan", true);
+        vm.stopPrank();
+        vm.expectRevert(DelegateTokenErrors.ERC20FlashAmountUnavailable.selector);
+        harness.revertERC20FlashAmountUnavailable(
+            address(registry),
+            DelegateTokenStructs.FlashInfo({
+                receiver: receiver,
+                delegateHolder: delegateHolder,
+                tokenType: IDelegateRegistry.DelegationType.ERC721,
+                tokenContract: contract_,
+                tokenId: tokenId,
+                amount: flashAmount,
+                data: data
+            })
+        );
+    }
+
+    function testRevertERC20FlashAmountUnavailableBothRights(
+        address delegateHolder,
+        address contract_,
+        uint256 tokenId,
+        address receiver,
+        uint256 delegateAmount1,
+        uint256 delegateAmount2,
+        uint256 flashAmount,
+        bytes calldata data
+    ) public {
+        vm.assume(delegateAmount1 < type(uint128).max && delegateAmount2 < type(uint128).max);
+        vm.assume(flashAmount > delegateAmount1 + delegateAmount2);
+        vm.startPrank(address(harness));
+        registry.delegateERC20(delegateHolder, contract_, delegateAmount1, "", true);
+        registry.delegateERC20(delegateHolder, contract_, delegateAmount2, "flashloan", true);
+        vm.stopPrank();
+        vm.expectRevert(DelegateTokenErrors.ERC20FlashAmountUnavailable.selector);
+        harness.revertERC20FlashAmountUnavailable(
+            address(registry),
+            DelegateTokenStructs.FlashInfo({
+                receiver: receiver,
+                delegateHolder: delegateHolder,
+                tokenType: IDelegateRegistry.DelegationType.ERC721,
+                tokenContract: contract_,
+                tokenId: tokenId,
+                amount: flashAmount,
+                data: data
+            })
+        );
+    }
+
+    function testRevertERC20FlashAmountUnavailableBadDelegateHolder(
+        address delegateHolder,
+        address badDelegateHolder,
+        address contract_,
+        uint256 tokenId,
+        address receiver,
+        uint256 delegateAmount,
+        uint256 flashAmount,
+        bytes32 rights,
+        bytes calldata data
+    ) public {
+        vm.assume(flashAmount <= delegateAmount && flashAmount != 0);
+        vm.assume(delegateHolder != badDelegateHolder);
+        vm.startPrank(address(harness));
+        registry.delegateERC20(delegateHolder, contract_, delegateAmount, "", true);
+        registry.delegateERC20(delegateHolder, contract_, delegateAmount, "flashloan", true);
+        registry.delegateERC20(delegateHolder, contract_, delegateAmount, rights, true);
+        vm.stopPrank();
+        vm.expectRevert(DelegateTokenErrors.ERC20FlashAmountUnavailable.selector);
+        harness.revertERC20FlashAmountUnavailable(
+            address(registry),
+            DelegateTokenStructs.FlashInfo({
+                receiver: receiver,
+                delegateHolder: badDelegateHolder,
+                tokenType: IDelegateRegistry.DelegationType.ERC721,
+                tokenContract: contract_,
+                tokenId: tokenId,
+                amount: flashAmount,
+                data: data
+            })
+        );
+    }
+
+    function testRevertERC20FlashAmountUnavailableBadContract(
+        address delegateHolder,
+        address contract_,
+        address badContract,
+        uint256 tokenId,
+        address receiver,
+        uint256 delegateAmount,
+        uint256 flashAmount,
+        bytes32 rights,
+        bytes calldata data
+    ) public {
+        vm.assume(flashAmount <= delegateAmount && flashAmount != 0);
+        vm.assume(contract_ != badContract);
+        vm.startPrank(address(harness));
+        registry.delegateERC20(delegateHolder, contract_, delegateAmount, "", true);
+        registry.delegateERC20(delegateHolder, contract_, delegateAmount, "flashloan", true);
+        registry.delegateERC20(delegateHolder, contract_, delegateAmount, rights, true);
+        vm.stopPrank();
+        vm.expectRevert(DelegateTokenErrors.ERC20FlashAmountUnavailable.selector);
+        harness.revertERC20FlashAmountUnavailable(
+            address(registry),
+            DelegateTokenStructs.FlashInfo({
+                receiver: receiver,
+                delegateHolder: delegateHolder,
+                tokenType: IDelegateRegistry.DelegationType.ERC721,
+                tokenContract: badContract,
+                tokenId: tokenId,
+                amount: flashAmount,
+                data: data
+            })
+        );
+    }
+
+    function testRevertERC20FlashAmountUnavailableBadType(
+        address delegateHolder,
+        address contract_,
+        uint256 tokenId,
+        address receiver,
+        uint256 delegateAmount,
+        uint256 flashAmount,
+        bytes32 rights,
+        bytes calldata data
+    ) public {
+        vm.assume(flashAmount <= delegateAmount && flashAmount != 0);
+        vm.startPrank(address(harness));
+        registry.delegateAll(delegateHolder, rights, true);
+        registry.delegateContract(delegateHolder, contract_, rights, true);
+        registry.delegateERC721(delegateHolder, contract_, tokenId, rights, true);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, rights, true);
+        vm.stopPrank();
+        vm.expectRevert(DelegateTokenErrors.ERC20FlashAmountUnavailable.selector);
+        harness.revertERC20FlashAmountUnavailable(
+            address(registry),
+            DelegateTokenStructs.FlashInfo({
+                receiver: receiver,
+                delegateHolder: delegateHolder,
+                tokenType: IDelegateRegistry.DelegationType.ERC721,
+                tokenContract: contract_,
+                tokenId: tokenId,
+                amount: flashAmount,
+                data: data
+            })
+        );
+    }
+
+    function testRevertERC20FlashAmountUnavailableBadFrom(
+        address badFrom,
+        address delegateHolder,
+        address contract_,
+        uint256 tokenId,
+        address receiver,
+        uint256 delegateAmount,
+        uint256 flashAmount,
+        bytes32 rights,
+        bytes calldata data
+    ) public {
+        vm.assume(flashAmount <= delegateAmount && flashAmount != 0);
+        vm.assume(address(harness) != badFrom);
+        vm.startPrank(address(badFrom));
+        registry.delegateAll(delegateHolder, rights, true);
+        registry.delegateContract(delegateHolder, contract_, rights, true);
+        registry.delegateERC721(delegateHolder, contract_, tokenId, rights, true);
+        registry.delegateERC20(delegateHolder, contract_, delegateAmount, rights, true);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, rights, true);
+        vm.stopPrank();
+        vm.expectRevert(DelegateTokenErrors.ERC20FlashAmountUnavailable.selector);
+        harness.revertERC20FlashAmountUnavailable(
+            address(registry),
+            DelegateTokenStructs.FlashInfo({
+                receiver: receiver,
+                delegateHolder: delegateHolder,
+                tokenType: IDelegateRegistry.DelegationType.ERC721,
+                tokenContract: contract_,
+                tokenId: tokenId,
+                amount: flashAmount,
+                data: data
+            })
+        );
+    }
+
+    function testNoRevertERC1155FlashAmountUnavailableAllRights(
+        address delegateHolder,
+        address contract_,
+        uint256 tokenId,
+        address receiver,
+        uint256 delegateAmount,
+        uint256 flashAmount,
+        bytes calldata data
+    ) public {
+        vm.assume(flashAmount <= delegateAmount);
+        vm.startPrank(address(harness));
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, "", true);
+        vm.stopPrank();
+        harness.revertERC1155FlashAmountUnavailable(
+            address(registry),
+            DelegateTokenStructs.FlashInfo({
+                receiver: receiver,
+                delegateHolder: delegateHolder,
+                tokenType: IDelegateRegistry.DelegationType.ERC721,
+                tokenContract: contract_,
+                tokenId: tokenId,
+                amount: flashAmount,
+                data: data
+            })
+        );
+    }
+
+    function testNoRevertERC1155FlashAmountUnavailableFlashloanRights(
+        address delegateHolder,
+        address contract_,
+        uint256 tokenId,
+        address receiver,
+        uint256 delegateAmount,
+        uint256 flashAmount,
+        bytes calldata data
+    ) public {
+        vm.assume(flashAmount <= delegateAmount);
+        vm.startPrank(address(harness));
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, "flashloan", true);
+        vm.stopPrank();
+        harness.revertERC1155FlashAmountUnavailable(
+            address(registry),
+            DelegateTokenStructs.FlashInfo({
+                receiver: receiver,
+                delegateHolder: delegateHolder,
+                tokenType: IDelegateRegistry.DelegationType.ERC721,
+                tokenContract: contract_,
+                tokenId: tokenId,
+                amount: flashAmount,
+                data: data
+            })
+        );
+    }
+
+    function testNoRevertERC1155FlashAmountUnavailableBothRights(
+        address delegateHolder,
+        address contract_,
+        uint256 tokenId,
+        address receiver,
+        uint256 delegateAmount1,
+        uint256 delegateAmount2,
+        uint256 flashAmount,
+        bytes calldata data
+    ) public {
+        vm.assume(delegateAmount1 < type(uint128).max && delegateAmount2 < type(uint128).max);
+        vm.assume(flashAmount <= delegateAmount1 + delegateAmount2);
+        vm.startPrank(address(harness));
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount1, "", true);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount2, "flashloan", true);
+        vm.stopPrank();
+        harness.revertERC1155FlashAmountUnavailable(
+            address(registry),
+            DelegateTokenStructs.FlashInfo({
+                receiver: receiver,
+                delegateHolder: delegateHolder,
+                tokenType: IDelegateRegistry.DelegationType.ERC721,
+                tokenContract: contract_,
+                tokenId: tokenId,
+                amount: flashAmount,
+                data: data
+            })
+        );
+    }
+
+    function testRevertERC1155FlashAmountUnavailableAllRights(
+        address delegateHolder,
+        address contract_,
+        uint256 tokenId,
+        address receiver,
+        uint256 delegateAmount,
+        uint256 flashAmount,
+        bytes calldata data
+    ) public {
+        vm.assume(flashAmount > delegateAmount);
+        vm.startPrank(address(harness));
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, "", true);
+        vm.stopPrank();
+        vm.expectRevert(DelegateTokenErrors.ERC1155FlashAmountUnavailable.selector);
+        harness.revertERC1155FlashAmountUnavailable(
+            address(registry),
+            DelegateTokenStructs.FlashInfo({
+                receiver: receiver,
+                delegateHolder: delegateHolder,
+                tokenType: IDelegateRegistry.DelegationType.ERC721,
+                tokenContract: contract_,
+                tokenId: tokenId,
+                amount: flashAmount,
+                data: data
+            })
+        );
+    }
+
+    function testRevertERC1155FlashAmountUnavailableFlashloanRights(
+        address delegateHolder,
+        address contract_,
+        uint256 tokenId,
+        address receiver,
+        uint256 delegateAmount,
+        uint256 flashAmount,
+        bytes calldata data
+    ) public {
+        vm.assume(flashAmount > delegateAmount);
+        vm.startPrank(address(harness));
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, "flashloan", true);
+        vm.stopPrank();
+        vm.expectRevert(DelegateTokenErrors.ERC1155FlashAmountUnavailable.selector);
+        harness.revertERC1155FlashAmountUnavailable(
+            address(registry),
+            DelegateTokenStructs.FlashInfo({
+                receiver: receiver,
+                delegateHolder: delegateHolder,
+                tokenType: IDelegateRegistry.DelegationType.ERC721,
+                tokenContract: contract_,
+                tokenId: tokenId,
+                amount: flashAmount,
+                data: data
+            })
+        );
+    }
+
+    function testRevertERC1155FlashAmountUnavailableBothRights(
+        address delegateHolder,
+        address contract_,
+        uint256 tokenId,
+        address receiver,
+        uint256 delegateAmount1,
+        uint256 delegateAmount2,
+        uint256 flashAmount,
+        bytes calldata data
+    ) public {
+        vm.assume(delegateAmount1 < type(uint128).max && delegateAmount2 < type(uint128).max);
+        vm.assume(flashAmount > delegateAmount1 + delegateAmount2);
+        vm.startPrank(address(harness));
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount1, "", true);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount2, "flashloan", true);
+        vm.stopPrank();
+        vm.expectRevert(DelegateTokenErrors.ERC1155FlashAmountUnavailable.selector);
+        harness.revertERC1155FlashAmountUnavailable(
+            address(registry),
+            DelegateTokenStructs.FlashInfo({
+                receiver: receiver,
+                delegateHolder: delegateHolder,
+                tokenType: IDelegateRegistry.DelegationType.ERC721,
+                tokenContract: contract_,
+                tokenId: tokenId,
+                amount: flashAmount,
+                data: data
+            })
+        );
+    }
+
+    function testRevertERC1155FlashAmountUnavailableBadDelegateHolder(
+        address delegateHolder,
+        address badDelegateHolder,
+        address contract_,
+        uint256 tokenId,
+        address receiver,
+        uint256 delegateAmount,
+        uint256 flashAmount,
+        bytes32 rights,
+        bytes calldata data
+    ) public {
+        vm.assume(flashAmount <= delegateAmount && flashAmount != 0);
+        vm.assume(delegateHolder != badDelegateHolder);
+        vm.startPrank(address(harness));
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, "", true);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, "flashloan", true);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, rights, true);
+        vm.stopPrank();
+        vm.expectRevert(DelegateTokenErrors.ERC1155FlashAmountUnavailable.selector);
+        harness.revertERC1155FlashAmountUnavailable(
+            address(registry),
+            DelegateTokenStructs.FlashInfo({
+                receiver: receiver,
+                delegateHolder: badDelegateHolder,
+                tokenType: IDelegateRegistry.DelegationType.ERC721,
+                tokenContract: contract_,
+                tokenId: tokenId,
+                amount: flashAmount,
+                data: data
+            })
+        );
+    }
+
+    function testRevertERC1155FlashAmountUnavailableBadContract(
+        address delegateHolder,
+        address contract_,
+        address badContract,
+        uint256 tokenId,
+        address receiver,
+        uint256 delegateAmount,
+        uint256 flashAmount,
+        bytes32 rights,
+        bytes calldata data
+    ) public {
+        vm.assume(flashAmount <= delegateAmount && flashAmount != 0);
+        vm.assume(contract_ != badContract);
+        vm.startPrank(address(harness));
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, "", true);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, "flashloan", true);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, rights, true);
+        vm.stopPrank();
+        vm.expectRevert(DelegateTokenErrors.ERC1155FlashAmountUnavailable.selector);
+        harness.revertERC1155FlashAmountUnavailable(
+            address(registry),
+            DelegateTokenStructs.FlashInfo({
+                receiver: receiver,
+                delegateHolder: delegateHolder,
+                tokenType: IDelegateRegistry.DelegationType.ERC721,
+                tokenContract: badContract,
+                tokenId: tokenId,
+                amount: flashAmount,
+                data: data
+            })
+        );
+    }
+
+    function testRevertERC1155FlashAmountUnavailableBadTokenId(
+        address delegateHolder,
+        address contract_,
+        uint256 tokenId,
+        uint256 badTokenId,
+        address receiver,
+        uint256 delegateAmount,
+        uint256 flashAmount,
+        bytes32 rights,
+        bytes calldata data
+    ) public {
+        vm.assume(flashAmount <= delegateAmount && flashAmount != 0);
+        vm.assume(tokenId != badTokenId);
+        vm.startPrank(address(harness));
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, "", true);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, "flashloan", true);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, rights, true);
+        vm.stopPrank();
+        vm.expectRevert(DelegateTokenErrors.ERC1155FlashAmountUnavailable.selector);
+        harness.revertERC1155FlashAmountUnavailable(
+            address(registry),
+            DelegateTokenStructs.FlashInfo({
+                receiver: receiver,
+                delegateHolder: delegateHolder,
+                tokenType: IDelegateRegistry.DelegationType.ERC721,
+                tokenContract: contract_,
+                tokenId: badTokenId,
+                amount: flashAmount,
+                data: data
+            })
+        );
+    }
+
+    function testRevertERC1155FlashAmountUnavailableBadType(
+        address delegateHolder,
+        address contract_,
+        uint256 tokenId,
+        address receiver,
+        uint256 delegateAmount,
+        uint256 flashAmount,
+        bytes32 rights,
+        bytes calldata data
+    ) public {
+        vm.assume(flashAmount <= delegateAmount && flashAmount != 0);
+        vm.startPrank(address(harness));
+        registry.delegateAll(delegateHolder, rights, true);
+        registry.delegateContract(delegateHolder, contract_, rights, true);
+        registry.delegateERC721(delegateHolder, contract_, tokenId, rights, true);
+        registry.delegateERC20(delegateHolder, contract_, delegateAmount, rights, true);
+        vm.stopPrank();
+        vm.expectRevert(DelegateTokenErrors.ERC1155FlashAmountUnavailable.selector);
+        harness.revertERC1155FlashAmountUnavailable(
+            address(registry),
+            DelegateTokenStructs.FlashInfo({
+                receiver: receiver,
+                delegateHolder: delegateHolder,
+                tokenType: IDelegateRegistry.DelegationType.ERC721,
+                tokenContract: contract_,
+                tokenId: tokenId,
+                amount: flashAmount,
+                data: data
+            })
+        );
+    }
+
+    function testRevertERC1155FlashAmountUnavailableBadFrom(
+        address badFrom,
+        address delegateHolder,
+        address contract_,
+        uint256 tokenId,
+        address receiver,
+        uint256 delegateAmount,
+        uint256 flashAmount,
+        bytes32 rights,
+        bytes calldata data
+    ) public {
+        vm.assume(flashAmount <= delegateAmount && flashAmount != 0);
+        vm.assume(address(harness) != badFrom);
+        vm.startPrank(address(badFrom));
+        registry.delegateAll(delegateHolder, rights, true);
+        registry.delegateContract(delegateHolder, contract_, rights, true);
+        registry.delegateERC721(delegateHolder, contract_, tokenId, rights, true);
+        registry.delegateERC20(delegateHolder, contract_, delegateAmount, rights, true);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, rights, true);
+        vm.stopPrank();
+        vm.expectRevert(DelegateTokenErrors.ERC1155FlashAmountUnavailable.selector);
+        harness.revertERC1155FlashAmountUnavailable(
+            address(registry),
+            DelegateTokenStructs.FlashInfo({
+                receiver: receiver,
+                delegateHolder: delegateHolder,
+                tokenType: IDelegateRegistry.DelegationType.ERC721,
+                tokenContract: contract_,
+                tokenId: tokenId,
+                amount: flashAmount,
                 data: data
             })
         );
