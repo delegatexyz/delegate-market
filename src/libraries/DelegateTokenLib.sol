@@ -108,9 +108,9 @@ library DelegateTokenErrors {
     error WrongTokenIdForType(IDelegateRegistry.DelegationType tokenType, uint256 wrongTokenId);
     error InvalidTokenType(IDelegateRegistry.DelegationType tokenType);
 
-    error ERC721FlashUnavailable(uint256 tokenId);
-    error ERC20FlashAmountUnavailable(uint256 flashAmount, uint256 amountAvailable);
-    error ERC1155FlashAmountUnavailable(uint256 tokenId, uint256 flashAmount, uint256 amountAvailable);
+    error ERC721FlashUnavailable();
+    error ERC20FlashAmountUnavailable();
+    error ERC1155FlashAmountUnavailable();
 
     error BurnNotAuthorized();
     error MintNotAuthorized();

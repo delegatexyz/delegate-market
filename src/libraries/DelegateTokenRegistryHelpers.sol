@@ -140,7 +140,7 @@ library DelegateTokenRegistryHelpers {
             loadFrom(delegateRegistry, RegistryHashes.erc721Hash(address(this), "", info.delegateHolder, info.tokenId, info.tokenContract)) != address(this)
                 && loadFrom(delegateRegistry, RegistryHashes.erc721Hash(address(this), "flashloan", info.delegateHolder, info.tokenId, info.tokenContract)) != address(this)
         ) {
-            revert Errors.ERC721FlashUnavailable(info.tokenId);
+            revert Errors.ERC721FlashUnavailable();
         }
     }
 
@@ -152,7 +152,7 @@ library DelegateTokenRegistryHelpers {
             availableAmount = loadAmount(delegateRegistry, RegistryHashes.erc20Hash(address(this), "flashloan", info.delegateHolder, info.tokenContract))
                 + loadAmount(delegateRegistry, RegistryHashes.erc20Hash(address(this), "", info.delegateHolder, info.tokenContract));
         } // Unreasonable that this block will overflow
-        if (info.amount > availableAmount) revert Errors.ERC20FlashAmountUnavailable(info.amount, availableAmount);
+        if (info.amount > availableAmount) revert Errors.ERC20FlashAmountUnavailable();
     }
 
     function revertERC1155FlashAmountUnavailable(address delegateRegistry, Structs.FlashInfo calldata info) internal view {
@@ -162,7 +162,7 @@ library DelegateTokenRegistryHelpers {
                 + loadAmount(delegateRegistry, RegistryHashes.erc1155Hash(address(this), "", info.delegateHolder, info.tokenId, info.tokenContract));
         } // Unreasonable that this will overflow
         if (info.amount > availableAmount) {
-            revert Errors.ERC1155FlashAmountUnavailable(info.tokenId, info.amount, availableAmount);
+            revert Errors.ERC1155FlashAmountUnavailable();
         }
     }
 

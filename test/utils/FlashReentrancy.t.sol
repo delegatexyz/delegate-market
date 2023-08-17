@@ -26,7 +26,7 @@ contract FlashReentrancyTester is IDelegateFlashloan {
                 tokenContract,
                 tokenId,
                 "", // Default rights to enable flashloan
-                1 days
+                block.timestamp + 1 days
             ),
             0
         );
@@ -45,7 +45,7 @@ contract FlashReentrancyTester is IDelegateFlashloan {
                 info.tokenContract,
                 info.tokenId,
                 "",
-                1 days
+                block.timestamp + 1 days
             ),
             1
         );
