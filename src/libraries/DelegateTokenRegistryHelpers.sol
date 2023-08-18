@@ -166,6 +166,7 @@ library DelegateTokenRegistryHelpers {
         }
     }
 
+    /// @dev will not revert if from didn't have a delegation in the first place
     function transferERC721(
         address delegateRegistry,
         bytes32 registryHash,
@@ -182,6 +183,9 @@ library DelegateTokenRegistryHelpers {
         ) revert Errors.HashMismatch();
     }
 
+    /// @dev will not revert if from didn't have a delegation in the first place
+    /// @dev will not revert an underflow value if from's existing delegation amount > underlyingAmount
+    /// @dev will not revert an overflow value if to's existing delegation + underlyingAmount > type(uint256).max
     function transferERC20(
         address delegateRegistry,
         bytes32 registryHash,
@@ -204,6 +208,9 @@ library DelegateTokenRegistryHelpers {
         }
     }
 
+    /// @dev will not revert if from didn't have a delegation in the first place
+    /// @dev will not revert an underflow value if from's existing delegation amount > underlyingAmount
+    /// @dev will not revert an overflowed value if to's existing delegation + underlyingAmount > type(uint256).max
     function transferERC1155(
         address delegateRegistry,
         bytes32 registryHash,
@@ -225,6 +232,7 @@ library DelegateTokenRegistryHelpers {
         ) revert Errors.HashMismatch();
     }
 
+    /// @dev will not revert if delegateHolder had a delegation in the first place
     function delegateERC721(address delegateRegistry, bytes32 newRegistryHash, Structs.DelegateInfo calldata delegateInfo) internal {
         if (
             IDelegateRegistry(delegateRegistry).delegateERC721(delegateInfo.delegateHolder, delegateInfo.tokenContract, delegateInfo.tokenId, delegateInfo.rights, true)
@@ -234,6 +242,8 @@ library DelegateTokenRegistryHelpers {
         }
     }
 
+    /// @dev will not revert if delegateHolder had a delegation in the first place
+    /// @dev will not revert an overflow value if delegateHolder's existing delegation + amount > type(uint256).max
     function delegateERC20(address delegateRegistry, bytes32 newRegistryHash, Structs.DelegateInfo calldata delegateInfo) internal {
         if (
             IDelegateRegistry(delegateRegistry).delegateERC20(
@@ -248,6 +258,8 @@ library DelegateTokenRegistryHelpers {
         }
     }
 
+    /// @dev will not revert if delegateHolder had a delegation in the first place
+    /// @dev will not revert an overflow value if delegateHolder's existing delegation + amount > type(uint256).max
     function delegateERC1155(address delegateRegistry, bytes32 newRegistryHash, Structs.DelegateInfo calldata delegateInfo) internal {
         if (
             IDelegateRegistry(delegateRegistry).delegateERC1155(
@@ -261,6 +273,7 @@ library DelegateTokenRegistryHelpers {
         ) revert Errors.HashMismatch();
     }
 
+    /// @dev will not revert if delegateHolder never had a delegation in the first place
     function revokeERC721(
         address delegateRegistry,
         bytes32 registryHash,
@@ -274,6 +287,8 @@ library DelegateTokenRegistryHelpers {
         }
     }
 
+    /// @dev will not revert if delegateHolder never had a delegation in the first place
+    /// @dev will not revert an underflow value if delegateHolder's existing delegation - underlyingAmount < 0
     function revokeERC20(
         address delegateRegistry,
         bytes32 registryHash,
@@ -289,6 +304,8 @@ library DelegateTokenRegistryHelpers {
         ) revert Errors.HashMismatch();
     }
 
+    /// @dev will not revert if delegateHolder never had a delegation in the first place
+    /// @dev will not revert an underflow value if delegateHolder's existing delegation - underlyingAmount < 0
     function revokeERC1155(
         address delegateRegistry,
         bytes32 registryHash,
