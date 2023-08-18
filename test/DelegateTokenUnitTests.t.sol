@@ -95,10 +95,33 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
             randomInterface == type(IERC2981).interfaceId || randomInterface == type(IERC165).interfaceId || randomInterface == type(IERC721).interfaceId
                 || randomInterface == type(IERC721Metadata).interfaceId || randomInterface == type(IERC1155Receiver).interfaceId
         ) {
-            assertTrue(registry.supportsInterface(randomInterface));
+            assertTrue(dt.supportsInterface(randomInterface));
         } else {
-            assertFalse(registry.supportsInterface(randomInterface));
+            assertFalse(dt.supportsInterface(randomInterface));
         }
+    }
+
+    function testSupportedInterfaces() public {
+        assertTrue(dt.supportsInterface(type(IERC2981).interfaceId));
+        assertTrue(dt.supportsInterface(type(IERC165).interfaceId));
+        assertTrue(dt.supportsInterface(type(IERC721).interfaceId));
+        assertTrue(dt.supportsInterface(type(IERC721Metadata).interfaceId));
+        assertTrue(dt.supportsInterface(type(IERC1155Receiver).interfaceId));
+    }
+
+    function testOnERC1155BatchReceived(address addr1, address addr2, uint256[] memory data, uint256[] memory data2, bytes memory data3) public {
+        vm.expectRevert(DelegateTokenErrors.BatchERC1155TransferUnsupported.selector);
+        dt.onERC1155BatchReceived(addr1, addr2, data, data2, data3);
+    }
+
+    function testRevertOnERC721Received(address operator, address addr1, uint256 data, bytes calldata data2) public {
+        vm.assume(address(dt) != operator);
+        vm.expectRevert(DelegateTokenErrors.InvalidERC721TransferOperator.selector);
+        dt.onERC721Received(operator, addr1, data, data2);
+    }
+
+    function testOnERC721Received(address addr1, uint256 data, bytes calldata data2) public {
+        assertEq(bytes4(dt.onERC721Received(address(dt), addr1, data, data2)), bytes4(0x150b7a02));
     }
 
     function testBalanceOf(address delegateTokenHolder, uint256 balance) public {
