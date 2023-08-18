@@ -4,6 +4,7 @@ pragma solidity ^0.8.21;
 import {Test} from "forge-std/Test.sol";
 import {OrderParameters} from "seaport/contracts/lib/ConsiderationStructs.sol";
 import {SeaportHashLib} from "./SeaportHashLib.t.sol";
+import {SeaportInterface} from "seaport/contracts/interfaces/SeaportInterface.sol";
 
 struct User {
     address addr;
@@ -25,7 +26,8 @@ abstract contract SeaportHelpers is Test {
         sig = abi.encodePacked(r, s, v);
     }
 
-    function signOrder(User memory _user, bytes32 _domainSeparator, OrderParameters memory _orderParams, uint256 _nonce) internal pure returns (bytes memory sig) {
-        (sig,) = signERC712(_user, _domainSeparator, _orderParams.hash(_nonce));
+    function signOrder(SeaportInterface seaport, User memory user, OrderParameters memory orderParams) internal view returns (bytes memory sig) {
+        (, bytes32 seaportDomainSeparator,) = seaport.information();
+        (sig,) = signERC712(user, seaportDomainSeparator, orderParams.hash(seaport.getCounter(user.addr)));
     }
 }

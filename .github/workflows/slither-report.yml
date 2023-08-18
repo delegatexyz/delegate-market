@@ -20,5 +20,5 @@ jobs:
         run: forge build --build-info --skip test --skip script
       - uses: crytic/slither-action@v0.3.0
         with:
-          slither-args: "--compile-force-framework 'foundry' --foundry-out-directory 'out' --ignore-compile --skip-clean --filter-paths 'lib' --checklist"
+          slither-args: "--compile-force-framework 'foundry' --foundry-out-directory 'out' --ignore-compile --skip-clean --filter-paths (seaport|openzeppelin) --checklist"
           fail-on: "low"

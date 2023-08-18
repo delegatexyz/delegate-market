@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.21;
 
-import {IDelegateToken} from "src/interfaces/IDelegateToken.sol";
+import {IDelegateToken, Structs as IDelegateTokenStructs} from "src/interfaces/IDelegateToken.sol";
 import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
+import {IDelegateFlashloan, Structs as IDelegateFlashloanStructs} from "src/interfaces/IDelegateFlashloan.sol";
 import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
-import {INFTFlashBorrower} from "src/interfaces/INFTFlashBorrower.sol";
 
-contract FlashReentrancyTester is INFTFlashBorrower {
+contract FlashReentrancyTester is IDelegateFlashloan {
     IDelegateToken immutable dt;
 
     uint256 secondDelegateTokenId;
@@ -17,38 +17,38 @@ contract FlashReentrancyTester is INFTFlashBorrower {
 
     function flashReentrancyTester(address tokenContract, uint256 tokenId) external {
         IERC721(tokenContract).approve(address(dt), tokenId);
-        uint256 firstDelegateTokenId = dt.create(
-            IDelegateToken.DelegateInfo(
+        dt.create(
+            IDelegateTokenStructs.DelegateInfo(
                 address(42), // Sends principal token to a burn address
                 IDelegateRegistry.DelegationType.ERC721,
                 address(this),
-                1,
+                0,
                 tokenContract,
                 tokenId,
                 "", // Default rights to enable flashloan
-                1 days
+                block.timestamp + 1 days
             ),
             0
         );
-        dt.flashLoan{value: 0}(address(this), firstDelegateTokenId, "");
-        dt.withdraw(msg.sender, secondDelegateTokenId);
+        dt.flashloan{value: 0}(IDelegateFlashloanStructs.FlashInfo(address(this), address(this), IDelegateRegistry.DelegationType.ERC721, tokenContract, tokenId, 0, ""));
+        dt.withdraw(secondDelegateTokenId);
     }
 
-    function onFlashLoan(address, address tokenContract, uint256 tokenId, bytes calldata) external payable returns (bytes32) {
-        IERC721(tokenContract).approve(address(dt), tokenId);
+    function onFlashloan(address, IDelegateFlashloanStructs.FlashInfo calldata info) external payable returns (bytes32) {
+        IERC721(info.tokenContract).approve(address(dt), info.tokenId);
         secondDelegateTokenId = dt.create(
-            IDelegateToken.DelegateInfo(
+            IDelegateTokenStructs.DelegateInfo(
                 address(this), // Sends principal token to this contract
-                IDelegateRegistry.DelegationType.ERC721,
+                info.tokenType,
                 address(this),
-                1,
-                tokenContract,
-                tokenId,
+                info.amount,
+                info.tokenContract,
+                info.tokenId,
                 "",
-                1 days
+                block.timestamp + 1 days
             ),
             1
         );
-        return dt.flashLoanCallBackSuccess();
+        return IDelegateFlashloan.onFlashloan.selector;
     }
 }

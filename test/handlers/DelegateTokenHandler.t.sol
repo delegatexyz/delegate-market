@@ -11,10 +11,12 @@ import {MockERC721} from "../mock/MockTokens.t.sol";
 import {Strings} from "openzeppelin/utils/Strings.sol";
 import {SafeCast} from "openzeppelin/utils/math/SafeCast.sol";
 
-import {IDelegateToken, IDelegateRegistry} from "src/interfaces/IDelegateToken.sol";
+import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
+import {IDelegateToken, Structs as IDelegateTokenStructs} from "src/interfaces/IDelegateToken.sol";
+import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 
-import {ExpiryType} from "src/interfaces/IWrapOfferer.sol";
+import {CreateOffererEnums} from "src/libraries/CreateOffererLib.sol";
 
 contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
     using Strings for address;
@@ -83,7 +85,9 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         uint256 amount = 0;
         uint96 salt = 3;
         uint256 delegateId = delegateToken.create(
-            IDelegateToken.DelegateInfo(currentActor, IDelegateRegistry.DelegationType.ERC721, currentActor, amount, address(token), id, "", block.timestamp + 1 seconds),
+            IDelegateTokenStructs.DelegateInfo(
+                currentActor, IDelegateRegistry.DelegationType.ERC721, currentActor, amount, address(token), id, "", block.timestamp + 1 seconds
+            ),
             salt
         );
         allDelegateTokens.add(delegateId);
@@ -111,7 +115,8 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
             uint256 amount = 0;
             uint96 salt = 3;
             delegateId = delegateToken.create(
-                IDelegateToken.DelegateInfo(to, IDelegateRegistry.DelegationType.ERC721, currentActor, amount, address(token), id, "", block.timestamp + 1 seconds), salt
+                IDelegateTokenStructs.DelegateInfo(to, IDelegateRegistry.DelegationType.ERC721, currentActor, amount, address(token), id, "", block.timestamp + 1 seconds),
+                salt
             );
 
             allDelegateTokens.add(delegateId);
@@ -121,7 +126,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
             ownedPrTokens[currentActor].add(delegateId);
         } else {
             ownedDTTokens[currentActor].remove(delegateId);
-            delegateToken.transferFrom(currentActor, to, delegateId);
+            IERC721(address(delegateToken)).transferFrom(currentActor, to, delegateId);
         }
 
         vm.stopPrank();
@@ -134,7 +139,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         if (delegateId != 0) {
             vm.startPrank(currentActor);
 
-            delegateToken.rescind(currentActor, delegateId);
+            delegateToken.rescind(delegateId);
             ownedDTTokens[currentActor].remove(delegateId);
             existingDelegateTokens.remove(delegateId);
 
@@ -149,10 +154,10 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         address dtOwner = _getDTOwner(prId);
 
-        IDelegateToken.DelegateInfo memory delegateInfo = delegateToken.getDelegateInfo(prId);
+        IDelegateTokenStructs.DelegateInfo memory delegateInfo = delegateToken.getDelegateInfo(prId);
         vm.warp(delegateInfo.expiry);
         vm.startPrank(currentActor);
-        delegateToken.withdraw(currentActor, prId);
+        delegateToken.withdraw(prId);
         vm.stopPrank();
 
         existingPrincipalTokens.remove(prId);
@@ -172,15 +177,15 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         address dtOwner = _getDTOwner(prId);
         if (dtOwner != address(0)) {
             vm.prank(dtOwner);
-            delegateToken.rescind(dtOwner, prId);
+            delegateToken.rescind(prId);
 
             existingDelegateTokens.remove(prId);
             ownedDTTokens[dtOwner].remove(prId);
         }
 
-        IDelegateToken.DelegateInfo memory delegateInfo = delegateToken.getDelegateInfo(prId);
+        IDelegateTokenStructs.DelegateInfo memory delegateInfo = delegateToken.getDelegateInfo(prId);
         vm.prank(currentActor);
-        delegateToken.withdraw(currentActor, prId);
+        delegateToken.withdraw(prId);
 
         existingPrincipalTokens.remove(prId);
         ownedPrTokens[currentActor].remove(prId);
@@ -191,12 +196,14 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         uint256 prId = existingPrincipalTokens.get(prSeed);
         if (prId == 0) return;
 
-        IDelegateToken.DelegateInfo memory delegateInfo = delegateToken.getDelegateInfo(prId);
+        IDelegateTokenStructs.DelegateInfo memory delegateInfo = delegateToken.getDelegateInfo(prId);
 
-        ExpiryType expiryType = ExpiryType(bound(rawExpiryType, uint256(type(ExpiryType).min), uint256(type(ExpiryType).max)).toUint8());
+        CreateOffererEnums.ExpiryType expiryType = CreateOffererEnums.ExpiryType(
+            bound(rawExpiryType, uint256(type(CreateOffererEnums.ExpiryType).min), uint256(type(CreateOffererEnums.ExpiryType).max)).toUint8()
+        );
 
         uint256 minTime = (delegateInfo.expiry > block.timestamp ? delegateInfo.expiry : block.timestamp) + 1;
-        uint256 maxTime = expiryType == ExpiryType.RELATIVE ? type(uint40).max - block.timestamp : type(uint40).max;
+        uint256 maxTime = expiryType == CreateOffererEnums.ExpiryType.relative ? type(uint40).max - block.timestamp : type(uint40).max;
         // No possible extension
         if (maxTime < minTime) return;
 
@@ -228,7 +235,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
     }
 
     function _getDTOwner(uint256 dtId) internal view returns (address owner) {
-        try delegateToken.ownerOf(dtId) returns (address retrievedOwner) {
+        try IERC721(address(delegateToken)).ownerOf(dtId) returns (address retrievedOwner) {
             owner = retrievedOwner;
         } catch {}
     }
