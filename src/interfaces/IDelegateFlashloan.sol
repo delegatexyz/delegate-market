@@ -10,7 +10,7 @@ interface IDelegateFlashloan {
      * @dev Receive a delegate flashloan.
      * @param initiator caller of the flashloan
      * @param flashInfo struct
-     * @return The keccak256 hash of "IDelegateFlashloan.onFlashloan"
+     * @return The function selector for onFlashloan
      */
     function onFlashloan(address initiator, Structs.FlashInfo calldata flashInfo) external payable returns (bytes32);
 }

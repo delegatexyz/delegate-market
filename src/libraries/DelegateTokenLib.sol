@@ -81,8 +81,8 @@ library DelegateTokenErrors {
     error FromIsZero();
     error TokenAmountIsZero();
 
-    error NotERC721Receiver(address to);
-    error InvalidERC721TransferOperator(address operator, address expectedOperator);
+    error NotERC721Receiver();
+    error InvalidERC721TransferOperator();
     error ERC1155PullNotRequested(address operator);
     error BatchERC1155TransferUnsupported();
 
@@ -92,7 +92,7 @@ library DelegateTokenErrors {
     error NotOperator(address caller, address account);
     error NotApproved(address caller, uint256 delegateTokenId);
 
-    error FromNotDelegateTokenHolder(address from, address delegateTokenHolder);
+    error FromNotDelegateTokenHolder();
 
     error HashMismatch();
 
@@ -100,9 +100,9 @@ library DelegateTokenErrors {
     error AlreadyExisted(uint256 delegateTokenId);
     error WithdrawNotAvailable(uint256 delegateTokenId, uint256 expiry, uint256 timestamp);
 
-    error ExpiryTimeNotInFuture(uint256 expiry, uint256 timestamp);
-    error ExpiryTooLarge(uint256 expiry, uint256 maximum);
-    error ExpiryTooSmall(uint256 expiry, uint256 minimum);
+    error ExpiryInPast();
+    error ExpiryTooLarge();
+    error ExpiryTooSmall();
 
     error WrongAmountForType(IDelegateRegistry.DelegationType tokenType, uint256 wrongAmount);
     error WrongTokenIdForType(IDelegateRegistry.DelegationType tokenType, uint256 wrongTokenId);
@@ -131,24 +131,24 @@ library DelegateTokenHelpers {
 
     function revertOnInvalidERC721ReceiverCallback(address from, address to, uint256 delegateTokenId, bytes calldata data) internal {
         if (to.code.length != 0 && IERC721Receiver(to).onERC721Received(msg.sender, from, delegateTokenId, data) != IERC721Receiver.onERC721Received.selector) {
-            revert DelegateTokenErrors.NotERC721Receiver(to);
+            revert DelegateTokenErrors.NotERC721Receiver();
         }
     }
 
     function revertOnInvalidERC721ReceiverCallback(address from, address to, uint256 delegateTokenId) internal {
         if (to.code.length != 0 && IERC721Receiver(to).onERC721Received(msg.sender, from, delegateTokenId, "") != IERC721Receiver.onERC721Received.selector) {
-            revert DelegateTokenErrors.NotERC721Receiver(to);
+            revert DelegateTokenErrors.NotERC721Receiver();
         }
     }
 
     function revertInvalidExpiry(uint256 expiry) internal view {
         //slither-disable-next-line timestamp
-        if (expiry < block.timestamp) revert DelegateTokenErrors.ExpiryTimeNotInFuture(expiry, block.timestamp);
-        if (expiry > DelegateTokenConstants.MAX_EXPIRY) revert DelegateTokenErrors.ExpiryTooLarge(expiry, DelegateTokenConstants.MAX_EXPIRY);
+        if (expiry < block.timestamp) revert DelegateTokenErrors.ExpiryInPast();
+        if (expiry > DelegateTokenConstants.MAX_EXPIRY) revert DelegateTokenErrors.ExpiryTooLarge();
     }
 
     function revertInvalidERC721TransferOperator(address operator) internal view {
-        if (address(this) != operator) revert DelegateTokenErrors.InvalidERC721TransferOperator(operator, address(this));
+        if (address(this) != operator) revert DelegateTokenErrors.InvalidERC721TransferOperator();
     }
 
     function revertNotMinted(bytes32 registryHash, uint256 delegateTokenId) internal pure {
@@ -166,7 +166,7 @@ library DelegateTokenHelpers {
     }
 
     function revertFromNotDelegateTokenHolder(address from, address delegateTokenHolder) internal pure {
-        if (from != delegateTokenHolder) revert DelegateTokenErrors.FromNotDelegateTokenHolder(from, delegateTokenHolder);
+        if (from != delegateTokenHolder) revert DelegateTokenErrors.FromNotDelegateTokenHolder();
     }
 
     function revertBatchERC1155TransferUnsupported() internal pure {

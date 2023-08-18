@@ -283,7 +283,7 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
         }
         if (to != address(0)) {
             // Should revert if from != delegateTokenHolder
-            vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.FromNotDelegateTokenHolder.selector, searchFrom, from));
+            vm.expectRevert(DelegateTokenErrors.FromNotDelegateTokenHolder.selector);
             vm.prank(from);
             dt.safeTransferFrom(searchFrom, to, delegateTokenId);
             // Should revert if from != msg.sender

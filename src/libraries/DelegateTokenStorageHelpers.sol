@@ -10,7 +10,7 @@ library DelegateTokenStorageHelpers {
     }
 
     function writeExpiry(mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo, uint256 delegateTokenId, uint256 expiry) internal {
-        if (expiry > Constants.MAX_EXPIRY) revert Errors.ExpiryTooLarge(expiry, Constants.MAX_EXPIRY);
+        if (expiry > Constants.MAX_EXPIRY) revert Errors.ExpiryTooLarge();
         address approved = address(uint160(delegateTokenInfo[delegateTokenId][Constants.PACKED_INFO_POSITION] >> 96));
         delegateTokenInfo[delegateTokenId][Constants.PACKED_INFO_POSITION] = (uint256(uint160(approved)) << 96) | expiry;
     }
@@ -85,7 +85,7 @@ library DelegateTokenStorageHelpers {
         view
     {
         uint256 currentExpiry = readExpiry(delegateTokenInfo, delegateTokenId);
-        if (newExpiry <= currentExpiry) revert Errors.ExpiryTooSmall(newExpiry, currentExpiry);
+        if (newExpiry <= currentExpiry) revert Errors.ExpiryTooSmall();
     }
 
     function revertInvalidWithdrawalConditions(
