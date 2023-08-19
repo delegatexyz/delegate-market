@@ -4,11 +4,14 @@ pragma solidity ^0.8.4;
 import {DelegateTokenConstants as Constants, DelegateTokenErrors as Errors} from "src/libraries/DelegateTokenLib.sol";
 
 library DelegateTokenStorageHelpers {
+    /// @dev should preserve the expiry in the lower 96 bits in storage, and update the upper 160 bits with approved address
     function writeApproved(mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo, uint256 delegateTokenId, address approved) internal {
         uint96 expiry = uint96(delegateTokenInfo[delegateTokenId][Constants.PACKED_INFO_POSITION]);
         delegateTokenInfo[delegateTokenId][Constants.PACKED_INFO_POSITION] = (uint256(uint160(approved)) << 96) | expiry;
     }
 
+    /// @dev should preserve approved in the upper 160 bits, and update the lower 96 bits with expiry
+    /// @dev should revert if expiry exceeds 96 bits
     function writeExpiry(mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo, uint256 delegateTokenId, uint256 expiry) internal {
         if (expiry > Constants.MAX_EXPIRY) revert Errors.ExpiryTooLarge();
         address approved = address(uint160(delegateTokenInfo[delegateTokenId][Constants.PACKED_INFO_POSITION] >> 96));
@@ -80,6 +83,7 @@ library DelegateTokenStorageHelpers {
         }
     }
 
+    /// @dev will not revert if newExpiry isn't > block.timestamp or newExpiry > type(uint96).max
     function revertInvalidExpiryUpdate(mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo, uint256 delegateTokenId, uint256 newExpiry)
         internal
         view
@@ -88,6 +92,8 @@ library DelegateTokenStorageHelpers {
         if (newExpiry <= currentExpiry) revert Errors.ExpiryTooSmall();
     }
 
+    /// @dev should only revert if expiry has not expired AND caller is not the delegateTokenHolder AND not approved for the delegateTokenId AND not an operator for
+    /// delegateTokenHolder
     function revertInvalidWithdrawalConditions(
         mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo,
         mapping(address account => mapping(address operator => bool enabled)) storage accountOperator,
