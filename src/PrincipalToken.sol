@@ -43,8 +43,8 @@ contract PrincipalToken is ERC721("PrincipalToken", "PT") {
     /// @dev must revert if caller is not delegate token
     /// @dev must revert if delegate token has not authorized the burn
     function burn(address spender, uint256 id) external {
-        if (!_isApprovedOrOwner(spender, id)) revert NotApproved(spender, id);
         _checkDelegateTokenCaller();
+        if (!_isApprovedOrOwner(spender, id)) revert NotApproved(spender, id);
         _burn(id);
         IDelegateToken(delegateToken).burnAuthorizedCallback();
     }

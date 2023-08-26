@@ -118,82 +118,24 @@ contract DelegateTokenLibTest is Test, BaseLiquidDelegateTest {
 
     function testPastRevertInvalidExpiry(uint256 randomTime, uint256 expiry) public {
         vm.warp(randomTime);
-        vm.assume(expiry < randomTime);
+        vm.assume(expiry <= randomTime);
         vm.expectRevert(DelegateTokenErrors.ExpiryInPast.selector);
-        Helpers.revertInvalidExpiry(expiry);
+        Helpers.revertOldExpiry(expiry);
     }
 
     function testNoRevertInvalidExpiry(uint256 randomTime, uint256 expiry) public {
         vm.assume(randomTime < type(uint96).max);
         vm.warp(randomTime);
-        vm.assume(expiry <= type(uint96).max && expiry >= randomTime);
-        Helpers.revertInvalidExpiry(expiry);
-    }
-
-    function testLargeRevertInvalidExpiry(uint256 expiry) public {
-        vm.warp(0);
-        vm.assume(expiry > type(uint96).max);
-        vm.expectRevert(DelegateTokenErrors.ExpiryTooLarge.selector);
-        Helpers.revertInvalidExpiry(expiry);
-    }
-
-    function testRevertInvalidERC721TransferOperator(address operator) public {
-        vm.assume(address(this) != operator);
-        vm.expectRevert(DelegateTokenErrors.InvalidERC721TransferOperator.selector);
-        Helpers.revertInvalidERC721TransferOperator(operator);
-    }
-
-    function testNoRevertInvalidERC721TransferOperator() public view {
-        Helpers.revertInvalidERC721TransferOperator(address(this));
-    }
-
-    function testAvailableRevertNotMinted(uint256 id) public {
-        vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.NotMinted.selector, id));
-        Helpers.revertNotMinted(0, id);
-    }
-
-    function testUsedRevertNotMinted(uint256 id) public {
-        vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.NotMinted.selector, id));
-        Helpers.revertNotMinted(bytes32(uint256(1)), id);
-    }
-
-    function testNoRevertNotMinted(bytes32 random, uint256 id) public pure {
-        vm.assume(uint256(random) != 0 && uint256(random) != 1);
-        Helpers.revertNotMinted(random, id);
-    }
-
-    function testRevertToIsZero(address to) public {
-        if (to == address(0)) {
-            vm.expectRevert(DelegateTokenErrors.ToIsZero.selector);
-        }
-        Helpers.revertToIsZero(to);
-    }
-
-    function testRevertDelegateTokenHolderZero(address delegateTokenHolder) public {
-        if (delegateTokenHolder == address(0)) {
-            vm.expectRevert(DelegateTokenErrors.DelegateTokenHolderZero.selector);
-        }
-        Helpers.revertDelegateTokenHolderZero(delegateTokenHolder);
-    }
-
-    function testRevertFromNotDelegateTokenHolder(address from, address delegateTokenHolder) public {
-        if (delegateTokenHolder != from) {
-            vm.expectRevert(DelegateTokenErrors.FromNotDelegateTokenHolder.selector);
-        }
-        Helpers.revertFromNotDelegateTokenHolder(from, delegateTokenHolder);
-    }
-
-    function revertBatchERC1155TransferUnsupported() public {
-        vm.expectRevert(DelegateTokenErrors.BatchERC1155TransferUnsupported.selector);
-        Helpers.revertBatchERC1155TransferUnsupported();
+        vm.assume(expiry <= type(uint96).max && expiry > randomTime);
+        Helpers.revertOldExpiry(expiry);
     }
 
     function testDelegateId(address caller, uint256 salt) public {
-        assertEq(uint256(keccak256(abi.encode(caller, salt))), Helpers.delegateId(caller, salt));
+        assertEq(uint256(keccak256(abi.encode(caller, salt))), Helpers.delegateIdNoRevert(caller, salt));
     }
 
     function testDelegateIdCollisions(address caller, address notCaller, uint256 salt, uint256 searchSalt) public {
         vm.assume(caller != notCaller);
-        assertNotEq(Helpers.delegateId(caller, salt), Helpers.delegateId(notCaller, searchSalt));
+        assertNotEq(Helpers.delegateIdNoRevert(caller, salt), Helpers.delegateIdNoRevert(notCaller, searchSalt));
     }
 }

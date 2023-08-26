@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.4;
 
-import {
-    IDelegateRegistry, DelegateTokenErrors as Errors, DelegateTokenConstants as Constants, DelegateTokenStructs as Structs
-} from "src/libraries/DelegateTokenLib.sol";
+import {IDelegateRegistry, DelegateTokenErrors as Errors, DelegateTokenStructs as Structs} from "src/libraries/DelegateTokenLib.sol";
 import {IERC1155} from "openzeppelin/token/ERC1155/IERC1155.sol";
 import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
 import {IERC20} from "openzeppelin/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin/token/ERC20/utils/SafeERC20.sol";
 
 library DelegateTokenTransferHelpers {
+    /// 1155 callbacks
+    uint256 internal constant ERC1155_NOT_PULLED = 5;
+    uint256 internal constant ERC1155_PULLED = 6;
+
     function checkAndPullByType(Structs.Uint256 storage erc1155Pulled, Structs.DelegateInfo calldata delegateInfo) internal {
         if (delegateInfo.tokenType == IDelegateRegistry.DelegationType.ERC721) {
             checkERC721BeforePull(delegateInfo.amount, delegateInfo.tokenContract, delegateInfo.tokenId);
@@ -58,8 +60,8 @@ library DelegateTokenTransferHelpers {
 
     function checkERC1155BeforePull(Structs.Uint256 storage erc1155Pulled, uint256 pullAmount) internal {
         if (pullAmount == 0) revert Errors.WrongAmountForType(IDelegateRegistry.DelegationType.ERC1155, pullAmount);
-        if (erc1155Pulled.flag == Constants.ERC1155_NOT_PULLED) {
-            erc1155Pulled.flag = Constants.ERC1155_PULLED;
+        if (erc1155Pulled.flag == ERC1155_NOT_PULLED) {
+            erc1155Pulled.flag = ERC1155_PULLED;
         } else {
             revert Errors.ERC1155Pulled();
         }
@@ -67,14 +69,14 @@ library DelegateTokenTransferHelpers {
 
     function pullERC1155AfterCheck(Structs.Uint256 storage erc1155Pulled, uint256 pullAmount, address underlyingContract, uint256 underlyingTokenId) internal {
         IERC1155(underlyingContract).safeTransferFrom(msg.sender, address(this), underlyingTokenId, pullAmount, "");
-        if (erc1155Pulled.flag == Constants.ERC1155_PULLED) {
+        if (erc1155Pulled.flag == ERC1155_PULLED) {
             revert Errors.ERC1155NotPulled();
         }
     }
 
     function checkERC1155Pulled(Structs.Uint256 storage erc1155Pulled, address operator) internal returns (bool) {
-        if (erc1155Pulled.flag == Constants.ERC1155_PULLED && address(this) == operator) {
-            erc1155Pulled.flag = Constants.ERC1155_NOT_PULLED;
+        if (erc1155Pulled.flag == ERC1155_PULLED && address(this) == operator) {
+            erc1155Pulled.flag = ERC1155_NOT_PULLED;
             return true;
         }
         return false;

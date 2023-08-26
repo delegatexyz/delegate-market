@@ -3,7 +3,7 @@ pragma solidity ^0.8.21;
 
 import {Test} from "forge-std/Test.sol";
 import {Strings} from "openzeppelin/utils/Strings.sol";
-import {DelegateTokenErrors, DelegateTokenConstants} from "src/libraries/DelegateTokenLib.sol";
+import {DelegateTokenErrors} from "src/libraries/DelegateTokenLib.sol";
 import {DTHarness} from "./utils/DTHarness.t.sol";
 import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
 import {ERC721Holder} from "openzeppelin/token/ERC721/utils/ERC721Holder.sol";
@@ -22,9 +22,23 @@ import {
     IDelegateRegistry
 } from "test/base/BaseLiquidDelegateTest.t.sol";
 
+contract FalseIsApprovedOrOwner {
+    function isApprovedOrOwner(address, uint256) external pure returns (bool) {
+        return false;
+    }
+}
+
+contract TrueIsApprovedOrOwner {
+    function isApprovedOrOwner(address, uint256) external pure returns (bool) {
+        return true;
+    }
+}
+
 contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
     DTHarness dtHarness;
     PrincipalToken ptShadow;
+    FalseIsApprovedOrOwner falseIsApprovedOrOwner;
+    TrueIsApprovedOrOwner trueIsApprovedOrOwner;
 
     function setUp() public {
         DelegateTokenStructs.DelegateTokenParameters memory delegateTokenParameters = DelegateTokenStructs.DelegateTokenParameters({
@@ -38,6 +52,8 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
             address(dtHarness),
             address(marketMetadata)
         );
+        falseIsApprovedOrOwner = new FalseIsApprovedOrOwner();
+        trueIsApprovedOrOwner = new TrueIsApprovedOrOwner();
     }
 
     function testDTConstantsAndInitialStateVars() public {
@@ -314,5 +330,149 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
             vm.prank(searchFrom);
             dt.safeTransferFrom(from, to, delegateTokenId);
         }
+    }
+
+    function testRevertBatchERC1155TransferUnsupported(address data1, address data2, uint256[] calldata data3, uint256[] calldata data4, bytes calldata data5) public {
+        vm.expectRevert(DelegateTokenErrors.BatchERC1155TransferUnsupported.selector);
+        dt.onERC1155BatchReceived(data1, data2, data3, data4, data5);
+    }
+
+    function testRevertInvalidERC721TransferOperator(address operator, address data1, uint256 data2, bytes calldata data3) public {
+        vm.assume(address(dt) != operator);
+        vm.expectRevert(DelegateTokenErrors.InvalidERC721TransferOperator.selector);
+        dt.onERC721Received(operator, data1, data2, data3);
+    }
+
+    function testNoRevertInvalidERC721TransferOperator(address data1, uint256 data2, bytes calldata data3) public view {
+        dt.onERC721Received(address(dt), data1, data2, data3);
+    }
+
+    function testIsApprovedOrOwnerRevertNotMinted(address spender, uint256 delegateTokenId) public {
+        vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.NotMinted.selector, delegateTokenId));
+        dt.isApprovedOrOwner(spender, delegateTokenId);
+    }
+
+    function testIsApprovedOrOwnerSpenderIsDelegateTokenHolder(address spender, bytes32 rights, uint256 delegateTokenId) public {
+        vm.startPrank(address(dt));
+        bytes32 hash = registry.delegateAll(spender, rights, true);
+        vm.stopPrank();
+        vm.store(address(dt), keccak256(abi.encode(bytes32(delegateTokenId), 1)), hash);
+        assertTrue(dt.isApprovedOrOwner(spender, delegateTokenId));
+    }
+
+    function testIsApprovedOrOwnerSpenderIsAccountOperator(address spender, address tokenHolder, bytes32 rights, uint256 delegateTokenId) public {
+        vm.assume(spender != tokenHolder);
+        vm.startPrank(address(dt));
+        bytes32 hash = registry.delegateAll(tokenHolder, rights, true);
+        vm.stopPrank();
+        vm.store(address(dt), keccak256(abi.encode(delegateTokenId, 1)), hash);
+        vm.store(address(dt), keccak256(abi.encode(spender, keccak256(abi.encode(tokenHolder, 3)))), bytes32(uint256(1)));
+        assertTrue(dt.isApprovedOrOwner(spender, delegateTokenId));
+    }
+
+    function testIsApprovedOrOwnerSpenderIsApproved(address spender, address tokenHolder, bytes32 rights, uint256 delegateTokenId) public {
+        vm.assume(spender != tokenHolder);
+        vm.startPrank(address(dt));
+        bytes32 hash = registry.delegateAll(tokenHolder, rights, true);
+        vm.stopPrank();
+        vm.store(address(dt), keccak256(abi.encode(delegateTokenId, 1)), hash);
+        vm.store(address(dt), bytes32(uint256(keccak256(abi.encode(delegateTokenId, 1))) + 1), bytes32(uint256(uint160(spender)) << 96));
+        assertTrue(dt.isApprovedOrOwner(spender, delegateTokenId));
+    }
+
+    function testIsNotApprovedOrOwner(address spender, address notSpender, address tokenHolder, bytes32 rights, uint256 delegateTokenId) public {
+        vm.assume(spender != notSpender && spender != tokenHolder);
+        vm.startPrank(address(dt));
+        bytes32 hash = registry.delegateAll(tokenHolder, rights, true);
+        vm.stopPrank();
+        vm.store(address(dt), keccak256(abi.encode(delegateTokenId, 1)), hash);
+        vm.store(address(dt), keccak256(abi.encode(notSpender, keccak256(abi.encode(tokenHolder, 3)))), bytes32(uint256(1)));
+        vm.store(address(dt), bytes32(uint256(keccak256(abi.encode(delegateTokenId, 1))) + 1), bytes32(uint256(uint160(notSpender)) << 96));
+        assertFalse(dt.isApprovedOrOwner(spender, delegateTokenId));
+    }
+
+    function testExtendRevertNotMinted(uint256 delegateTokenId, uint256 newExpiry) public {
+        vm.record();
+        vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.NotMinted.selector, delegateTokenId));
+        dt.extend(delegateTokenId, newExpiry);
+        (, bytes32[] memory writes) = vm.accesses(address(dt));
+        assertEq(writes.length, 0);
+    }
+
+    function testExtendRevertOldExpiry(address holder, uint256 delegateTokenId, uint256 newExpiry, uint256 time, bytes32 rights) public {
+        vm.startPrank(address(dt));
+        bytes32 hash = registry.delegateAll(holder, rights, true);
+        vm.stopPrank();
+        vm.store(address(dt), keccak256(abi.encode(bytes32(delegateTokenId), 1)), hash);
+        vm.warp(time);
+        vm.assume(newExpiry <= block.timestamp);
+        vm.record();
+        vm.expectRevert(DelegateTokenErrors.ExpiryInPast.selector);
+        dt.extend(delegateTokenId, newExpiry);
+        (, bytes32[] memory writes) = vm.accesses(address(dt));
+        assertEq(writes.length, 0);
+    }
+
+    function testExtendRevertInvalidUpdate(address holder, uint256 delegateTokenId, uint256 newExpiry, uint256 currentExpiry, bytes32 rights) public {
+        vm.startPrank(address(dt));
+        bytes32 hash = registry.delegateAll(holder, rights, true);
+        vm.stopPrank();
+        vm.store(address(dt), keccak256(abi.encode(bytes32(delegateTokenId), 1)), hash);
+        vm.assume(newExpiry > block.timestamp && newExpiry <= currentExpiry && currentExpiry <= type(uint96).max);
+        vm.store(address(dt), bytes32(uint256(keccak256(abi.encode(bytes32(delegateTokenId), 1))) + 1), bytes32(currentExpiry));
+        vm.record();
+        vm.expectRevert(DelegateTokenErrors.ExpiryTooSmall.selector);
+        dt.extend(delegateTokenId, newExpiry);
+        (, bytes32[] memory writes) = vm.accesses(address(dt));
+        assertEq(writes.length, 0);
+    }
+
+    function testExtendRevertPrincipalApprovedOwnerFalse(address holder, uint256 delegateTokenId, uint256 newExpiry, uint256 currentExpiry, bytes32 rights) public {
+        vm.startPrank(address(dt));
+        bytes32 hash = registry.delegateAll(holder, rights, true);
+        vm.stopPrank();
+        vm.store(address(dt), keccak256(abi.encode(bytes32(delegateTokenId), 1)), hash);
+        vm.assume(newExpiry > block.timestamp && newExpiry > currentExpiry && currentExpiry <= type(uint96).max);
+        vm.store(address(dt), bytes32(uint256(keccak256(abi.encode(bytes32(delegateTokenId), 1))) + 1), bytes32(currentExpiry));
+        vm.etch(address(principal), address(falseIsApprovedOrOwner).code);
+        vm.record();
+        vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.NotApproved.selector, address(this), delegateTokenId));
+        dt.extend(delegateTokenId, newExpiry);
+        (, bytes32[] memory writes) = vm.accesses(address(dt));
+        assertEq(writes.length, 0);
+    }
+
+    function testExtendRevertExpiryTooLarge(address holder, uint256 delegateTokenId, uint256 newExpiry, uint256 currentExpiry, bytes32 rights) public {
+        vm.startPrank(address(dt));
+        bytes32 hash = registry.delegateAll(holder, rights, true);
+        vm.stopPrank();
+        vm.store(address(dt), keccak256(abi.encode(bytes32(delegateTokenId), 1)), hash);
+        vm.assume(newExpiry > block.timestamp && newExpiry > type(uint96).max && currentExpiry <= type(uint96).max);
+        vm.store(address(dt), bytes32(uint256(keccak256(abi.encode(bytes32(delegateTokenId), 1))) + 1), bytes32(currentExpiry));
+        vm.etch(address(principal), address(trueIsApprovedOrOwner).code);
+        vm.record();
+        vm.expectRevert(DelegateTokenErrors.ExpiryTooLarge.selector);
+        dt.extend(delegateTokenId, newExpiry);
+        (, bytes32[] memory writes) = vm.accesses(address(dt));
+        assertEq(writes.length, 0);
+    }
+
+    function testExtendNoRevert(address holder, uint256 delegateTokenId, uint256 newExpiry, uint256 currentExpiry, bytes32 rights) public {
+        vm.startPrank(address(dt));
+        bytes32 hash = registry.delegateAll(holder, rights, true);
+        vm.stopPrank();
+        vm.store(address(dt), keccak256(abi.encode(bytes32(delegateTokenId), 1)), hash);
+        vm.assume(newExpiry > block.timestamp && newExpiry > currentExpiry && newExpiry <= type(uint96).max && currentExpiry <= type(uint96).max);
+        vm.store(address(dt), bytes32(uint256(keccak256(abi.encode(bytes32(delegateTokenId), 1))) + 1), bytes32(currentExpiry));
+        vm.etch(address(principal), address(trueIsApprovedOrOwner).code);
+        vm.record();
+        dt.extend(delegateTokenId, newExpiry);
+        (, bytes32[] memory writes) = vm.accesses(address(dt));
+        assertEq(writes.length, 1);
+        assertEq(vm.load(address(dt), writes[0]), bytes32(newExpiry));
+    }
+
+    function testSymbol() public {
+        assertEq("DT", dt.symbol());
     }
 }

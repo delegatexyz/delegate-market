@@ -39,39 +39,6 @@ library DelegateTokenStructs {
     }
 }
 
-library DelegateTokenConstants {
-    /// @dev Use this to syntactically store the max of the expiry
-    uint256 internal constant MAX_EXPIRY = type(uint96).max;
-
-    ///////////// Info positions /////////////
-
-    /// @dev Standardizes storage positions of delegateInfo mapping data
-    /// @dev must start at zero and end at 2
-    uint256 internal constant REGISTRY_HASH_POSITION = 0;
-    uint256 internal constant PACKED_INFO_POSITION = 1; // PACKED (address approved, uint96 expiry)
-    uint256 internal constant UNDERLYING_AMOUNT_POSITION = 2; // Not used by 721 delegations
-
-    ///////////// ID Flags /////////////
-
-    /// @dev Standardizes registryHash storage flags to prevent double-creation and griefing
-    /// @dev ID_AVAILABLE should be zero since this is the default for a storage slot
-    uint256 internal constant ID_AVAILABLE = 0;
-    uint256 internal constant ID_USED = 1;
-
-    ///////////// Callback Flags /////////////
-
-    /// @dev all callback flags should be non zero to reduce storage read / write costs
-    /// @dev all callback flags should be unique
-    /// Principal Token callbacks
-    uint256 internal constant MINT_NOT_AUTHORIZED = 1;
-    uint256 internal constant MINT_AUTHORIZED = 2;
-    uint256 internal constant BURN_NOT_AUTHORIZED = 3;
-    uint256 internal constant BURN_AUTHORIZED = 4;
-    /// 1155 callbacks
-    uint256 internal constant ERC1155_NOT_PULLED = 5;
-    uint256 internal constant ERC1155_PULLED = 6;
-}
-
 library DelegateTokenErrors {
     error DelegateRegistryZero();
     error PrincipalTokenZero();
@@ -124,56 +91,28 @@ library DelegateTokenErrors {
 
 library DelegateTokenHelpers {
     function revertOnCallingInvalidFlashloan(DelegateTokenStructs.FlashInfo calldata info) internal {
-        if (IDelegateFlashloan(info.receiver).onFlashloan{value: msg.value}(msg.sender, info) != IDelegateFlashloan.onFlashloan.selector) {
-            revert IDelegateFlashloan.InvalidFlashloan();
-        }
+        if (IDelegateFlashloan(info.receiver).onFlashloan{value: msg.value}(msg.sender, info) == IDelegateFlashloan.onFlashloan.selector) return;
+        revert IDelegateFlashloan.InvalidFlashloan();
     }
 
     function revertOnInvalidERC721ReceiverCallback(address from, address to, uint256 delegateTokenId, bytes calldata data) internal {
-        if (to.code.length != 0 && IERC721Receiver(to).onERC721Received(msg.sender, from, delegateTokenId, data) != IERC721Receiver.onERC721Received.selector) {
-            revert DelegateTokenErrors.NotERC721Receiver();
-        }
+        if (to.code.length == 0 || IERC721Receiver(to).onERC721Received(msg.sender, from, delegateTokenId, data) == IERC721Receiver.onERC721Received.selector) return;
+        revert DelegateTokenErrors.NotERC721Receiver();
     }
 
     function revertOnInvalidERC721ReceiverCallback(address from, address to, uint256 delegateTokenId) internal {
-        if (to.code.length != 0 && IERC721Receiver(to).onERC721Received(msg.sender, from, delegateTokenId, "") != IERC721Receiver.onERC721Received.selector) {
-            revert DelegateTokenErrors.NotERC721Receiver();
-        }
+        if (to.code.length == 0 || IERC721Receiver(to).onERC721Received(msg.sender, from, delegateTokenId, "") == IERC721Receiver.onERC721Received.selector) return;
+        revert DelegateTokenErrors.NotERC721Receiver();
     }
 
-    function revertInvalidExpiry(uint256 expiry) internal view {
+    /// @dev won't revert if expiry is too large (i.e. > type(uint96).max)
+    function revertOldExpiry(uint256 expiry) internal view {
         //slither-disable-next-line timestamp
-        if (expiry < block.timestamp) revert DelegateTokenErrors.ExpiryInPast();
-        if (expiry > DelegateTokenConstants.MAX_EXPIRY) revert DelegateTokenErrors.ExpiryTooLarge();
+        if (expiry > block.timestamp) return;
+        revert DelegateTokenErrors.ExpiryInPast();
     }
 
-    function revertInvalidERC721TransferOperator(address operator) internal view {
-        if (address(this) != operator) revert DelegateTokenErrors.InvalidERC721TransferOperator();
-    }
-
-    function revertNotMinted(bytes32 registryHash, uint256 delegateTokenId) internal pure {
-        if (uint256(registryHash) == DelegateTokenConstants.ID_AVAILABLE || uint256(registryHash) == DelegateTokenConstants.ID_USED) {
-            revert DelegateTokenErrors.NotMinted(delegateTokenId);
-        }
-    }
-
-    function revertToIsZero(address to) internal pure {
-        if (to == address(0)) revert DelegateTokenErrors.ToIsZero();
-    }
-
-    function revertDelegateTokenHolderZero(address delegateTokenHolder) internal pure {
-        if (delegateTokenHolder == address(0)) revert DelegateTokenErrors.DelegateTokenHolderZero();
-    }
-
-    function revertFromNotDelegateTokenHolder(address from, address delegateTokenHolder) internal pure {
-        if (from != delegateTokenHolder) revert DelegateTokenErrors.FromNotDelegateTokenHolder();
-    }
-
-    function revertBatchERC1155TransferUnsupported() internal pure {
-        revert DelegateTokenErrors.BatchERC1155TransferUnsupported();
-    }
-
-    function delegateId(address caller, uint256 salt) internal pure returns (uint256) {
+    function delegateIdNoRevert(address caller, uint256 salt) internal pure returns (uint256) {
         return uint256(keccak256(abi.encode(caller, salt)));
     }
 }

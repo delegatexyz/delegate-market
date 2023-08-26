@@ -280,7 +280,7 @@ library CreateOffererHelpers {
      */
     function createAndValidateDelegateTokenId(address delegateToken, uint256 createOrderHash, IDelegateTokenStructs.DelegateInfo memory delegateInfo) internal {
         uint256 actualDelegateId = IDelegateToken(delegateToken).create(delegateInfo, createOrderHash);
-        uint256 requestedDelegateId = DelegateTokenHelpers.delegateId(address(this), createOrderHash);
+        uint256 requestedDelegateId = DelegateTokenHelpers.delegateIdNoRevert(address(this), createOrderHash);
         if (actualDelegateId != requestedDelegateId) {
             revert CreateOffererErrors.DelegateTokenIdInvariant(requestedDelegateId, actualDelegateId);
         }
@@ -332,7 +332,7 @@ library CreateOffererHelpers {
                         amount: (tokenType != IDelegateRegistry.DelegationType.ERC721) ? consideration.amount : 0
                     })
                 )
-            ) != keccak256(abi.encode(IDelegateToken(delegateToken).getDelegateInfo(DelegateTokenHelpers.delegateId(address(this), offer.identifier))))
+            ) != keccak256(abi.encode(IDelegateToken(delegateToken).getDelegateInfo(DelegateTokenHelpers.delegateIdNoRevert(address(this), offer.identifier))))
         ) revert CreateOffererErrors.DelegateInfoInvariant();
         //slither-disable-end timestamp
     }

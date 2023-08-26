@@ -93,12 +93,12 @@ contract CalldataHarness {
         Helpers.delegateERC721(delegateRegistry, newRegistryHash, delegateInfo);
     }
 
-    function delegateERC20(address delegateRegistry, bytes32 newRegistryHash, DelegateTokenStructs.DelegateInfo calldata delegateInfo) external {
-        Helpers.delegateERC20(delegateRegistry, newRegistryHash, delegateInfo);
+    function incrementERC20(address delegateRegistry, bytes32 newRegistryHash, DelegateTokenStructs.DelegateInfo calldata delegateInfo) external {
+        Helpers.incrementERC20(delegateRegistry, newRegistryHash, delegateInfo);
     }
 
-    function delegateERC1155(address delegateRegistry, bytes32 newRegistryHash, DelegateTokenStructs.DelegateInfo calldata delegateInfo) external {
-        Helpers.delegateERC1155(delegateRegistry, newRegistryHash, delegateInfo);
+    function incrementERC1155(address delegateRegistry, bytes32 newRegistryHash, DelegateTokenStructs.DelegateInfo calldata delegateInfo) external {
+        Helpers.incrementERC1155(delegateRegistry, newRegistryHash, delegateInfo);
     }
 
     function revokeERC721(
@@ -112,7 +112,7 @@ contract CalldataHarness {
         Helpers.revokeERC721(delegateRegistry, registryHash, delegateTokenHolder, underlyingContract, underlyingTokenId, underlyingRights);
     }
 
-    function revokeERC20(
+    function decrementERC20(
         address delegateRegistry,
         bytes32 registryHash,
         address delegateTokenHolder,
@@ -120,10 +120,10 @@ contract CalldataHarness {
         uint256 underlyingAmount,
         bytes32 underlyingRights
     ) external {
-        Helpers.revokeERC20(delegateRegistry, registryHash, delegateTokenHolder, underlyingContract, underlyingAmount, underlyingRights);
+        Helpers.decrementERC20(delegateRegistry, registryHash, delegateTokenHolder, underlyingContract, underlyingAmount, underlyingRights);
     }
 
-    function revokeERC1155(
+    function decrementERC1155(
         address delegateRegistry,
         bytes32 registryHash,
         address delegateTokenHolder,
@@ -132,7 +132,7 @@ contract CalldataHarness {
         uint256 underlyingAmount,
         bytes32 underlyingRights
     ) external {
-        Helpers.revokeERC1155(delegateRegistry, registryHash, delegateTokenHolder, underlyingContract, underlyingTokenId, underlyingAmount, underlyingRights);
+        Helpers.decrementERC1155(delegateRegistry, registryHash, delegateTokenHolder, underlyingContract, underlyingTokenId, underlyingAmount, underlyingRights);
     }
 }
 
@@ -2522,7 +2522,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
             amount: startingAmount
         });
         _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
-        harness.delegateERC20(
+        harness.incrementERC20(
             address(registry),
             newRegistryHash,
             DelegateTokenStructs.DelegateInfo({
@@ -2571,7 +2571,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         });
         _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
         vm.expectRevert(DelegateTokenErrors.HashMismatch.selector);
-        harness.delegateERC20(
+        harness.incrementERC20(
             address(registry),
             keccak256(abi.encode(newRegistryHash)),
             DelegateTokenStructs.DelegateInfo({
@@ -2609,7 +2609,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
             amount: startingAmount
         });
         _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
-        harness.delegateERC1155(
+        harness.incrementERC1155(
             address(registry),
             newRegistryHash,
             DelegateTokenStructs.DelegateInfo({
@@ -2663,7 +2663,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         });
         _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
         vm.expectRevert(DelegateTokenErrors.HashMismatch.selector);
-        harness.delegateERC1155(
+        harness.incrementERC1155(
             address(registry),
             keccak256(abi.encode(newRegistryHash)),
             DelegateTokenStructs.DelegateInfo({
@@ -2742,7 +2742,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
             amount: startingAmount
         });
         _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
-        harness.revokeERC20(address(registry), newRegistryHash, delegateTokenHolder, underlyingContract, removeAmount, underlyingRights);
+        harness.decrementERC20(address(registry), newRegistryHash, delegateTokenHolder, underlyingContract, removeAmount, underlyingRights);
         uint256 expectedAmount;
         unchecked {
             expectedAmount = startingAmount - removeAmount;
@@ -2778,7 +2778,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         });
         _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
         vm.expectRevert(DelegateTokenErrors.HashMismatch.selector);
-        harness.revokeERC20(address(registry), keccak256(abi.encode(newRegistryHash)), delegateTokenHolder, underlyingContract, removeAmount, underlyingRights);
+        harness.decrementERC20(address(registry), keccak256(abi.encode(newRegistryHash)), delegateTokenHolder, underlyingContract, removeAmount, underlyingRights);
         vm.stopPrank();
     }
 
@@ -2803,7 +2803,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
             amount: startingAmount
         });
         _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
-        harness.revokeERC1155(address(registry), newRegistryHash, delegateTokenHolder, underlyingContract, underlyingTokenId, removeAmount, underlyingRights);
+        harness.decrementERC1155(address(registry), newRegistryHash, delegateTokenHolder, underlyingContract, underlyingTokenId, removeAmount, underlyingRights);
         uint256 expectedAmount;
         unchecked {
             expectedAmount = startingAmount - removeAmount;
@@ -2844,7 +2844,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         });
         _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
         vm.expectRevert(DelegateTokenErrors.HashMismatch.selector);
-        harness.revokeERC1155(
+        harness.decrementERC1155(
             address(registry), keccak256(abi.encode(newRegistryHash)), delegateTokenHolder, underlyingContract, underlyingTokenId, removeAmount, underlyingRights
         );
         vm.stopPrank();
