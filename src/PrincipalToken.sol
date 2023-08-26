@@ -26,7 +26,8 @@ contract PrincipalToken is ERC721("PrincipalToken", "PT") {
     }
 
     function _checkDelegateTokenCaller() internal view {
-        if (msg.sender != delegateToken) revert CallerNotDelegateToken();
+        if (msg.sender == delegateToken) return;
+        revert CallerNotDelegateToken();
     }
 
     /// @notice exposes _mint method
@@ -44,9 +45,12 @@ contract PrincipalToken is ERC721("PrincipalToken", "PT") {
     /// @dev must revert if delegate token has not authorized the burn
     function burn(address spender, uint256 id) external {
         _checkDelegateTokenCaller();
-        if (!_isApprovedOrOwner(spender, id)) revert NotApproved(spender, id);
-        _burn(id);
-        IDelegateToken(delegateToken).burnAuthorizedCallback();
+        if (_isApprovedOrOwner(spender, id)) {
+            _burn(id);
+            IDelegateToken(delegateToken).burnAuthorizedCallback();
+            return;
+        }
+        revert NotApproved(spender, id);
     }
 
     /// @notice exposes _isApprovedOrOwner method
