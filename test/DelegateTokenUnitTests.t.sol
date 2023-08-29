@@ -457,6 +457,8 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
         assertEq(writes.length, 0);
     }
 
+    event ExpiryExtended(uint256 indexed delegateTokenId, uint256 previousExpiry, uint256 newExpiry);
+
     function testExtendNoRevert(address holder, uint256 delegateTokenId, uint256 newExpiry, uint256 currentExpiry, bytes32 rights) public {
         vm.startPrank(address(dt));
         bytes32 hash = registry.delegateAll(holder, rights, true);
@@ -466,6 +468,8 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
         vm.store(address(dt), bytes32(uint256(keccak256(abi.encode(bytes32(delegateTokenId), 1))) + 1), bytes32(currentExpiry));
         vm.etch(address(principal), address(trueIsApprovedOrOwner).code);
         vm.record();
+        vm.expectEmit(true, true, true, true, address(dt));
+        emit ExpiryExtended(delegateTokenId, currentExpiry, newExpiry);
         dt.extend(delegateTokenId, newExpiry);
         (, bytes32[] memory writes) = vm.accesses(address(dt));
         assertEq(writes.length, 1);

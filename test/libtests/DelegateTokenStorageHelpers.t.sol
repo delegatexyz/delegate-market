@@ -359,31 +359,6 @@ contract DelegateTokenStorageHelpersTest is Test, BaseLiquidDelegateTest {
         }
     }
 
-    function testRevertInvalidExpiryUpdate(uint256 delegateTokenId, uint256 newExpiry, uint256 oldExpiry) public {
-        vm.assume(newExpiry <= oldExpiry && oldExpiry < type(uint96).max);
-        info[delegateTokenId][packedPosition] = uint96(oldExpiry);
-        vm.expectRevert(DelegateTokenErrors.ExpiryTooSmall.selector);
-        Helpers.revertInvalidExpiryUpdate(info, delegateTokenId, newExpiry);
-    }
-
-    function testNoRevertInvalidExpiryUpdate(uint256 delegateTokenId, uint256 newExpiry, uint256 oldExpiry) public {
-        vm.assume(newExpiry > oldExpiry && oldExpiry < type(uint96).max);
-        info[delegateTokenId][packedPosition] = uint96(oldExpiry);
-        Helpers.revertInvalidExpiryUpdate(info, delegateTokenId, newExpiry);
-    }
-
-    function testRecordRevertInvalidExpiryUpdate(uint256 delegateTokenId, uint256 newExpiry, uint256 oldExpiry) public {
-        vm.assume(oldExpiry < type(uint96).max);
-        info[delegateTokenId][packedPosition] = uint96(oldExpiry);
-        vm.record();
-        if (newExpiry <= oldExpiry) vm.expectRevert(DelegateTokenErrors.ExpiryTooSmall.selector);
-        Helpers.revertInvalidExpiryUpdate(info, delegateTokenId, newExpiry);
-        (bytes32[] memory reads, bytes32[] memory writes) = vm.accesses(address(this));
-        assertEq(writes.length, 0);
-        assertEq(reads.length, 1);
-        assertEq(uint256(vm.load(address(this), reads[0])), oldExpiry);
-    }
-
     function testRevertInvalidWithdrawalConditions(uint256 delegateTokenId, address delegateTokenHolder, uint256 expiry, address approved, address operator) public {
         vm.assume(expiry <= type(uint96).max && expiry > block.timestamp);
         vm.assume(delegateTokenHolder != msg.sender && msg.sender != approved && msg.sender != operator);

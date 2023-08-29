@@ -328,9 +328,11 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
     function extend(uint256 delegateTokenId, uint256 newExpiry) external {
         StorageHelpers.revertNotMinted(delegateTokenInfo, delegateTokenId);
         Helpers.revertOldExpiry(newExpiry);
-        StorageHelpers.revertInvalidExpiryUpdate(delegateTokenInfo, delegateTokenId, newExpiry);
+        uint256 previousExpiry = StorageHelpers.readExpiry(delegateTokenInfo, delegateTokenId);
+        if (newExpiry <= previousExpiry) revert Errors.ExpiryTooSmall();
         if (PrincipalToken(principalToken).isApprovedOrOwner(msg.sender, delegateTokenId)) {
             StorageHelpers.writeExpiry(delegateTokenInfo, delegateTokenId, newExpiry);
+            emit ExpiryExtended(delegateTokenId, previousExpiry, newExpiry);
             return;
         }
         revert Errors.NotApproved(msg.sender, delegateTokenId);

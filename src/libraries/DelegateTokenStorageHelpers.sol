@@ -156,15 +156,6 @@ library DelegateTokenStorageHelpers {
         revert Errors.NotApproved(msg.sender, delegateTokenId);
     }
 
-    /// @dev will not revert if newExpiry isn't > block.timestamp or newExpiry > type(uint96).max
-    function revertInvalidExpiryUpdate(mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo, uint256 delegateTokenId, uint256 newExpiry)
-        internal
-        view
-    {
-        uint256 currentExpiry = readExpiry(delegateTokenInfo, delegateTokenId);
-        if (newExpiry <= currentExpiry) revert Errors.ExpiryTooSmall();
-    }
-
     /// @dev should only revert if expiry has not expired AND caller is not the delegateTokenHolder AND not approved for the delegateTokenId AND not an operator for
     /// delegateTokenHolder
     function revertInvalidWithdrawalConditions(
