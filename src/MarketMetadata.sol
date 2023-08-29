@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.21;
 
-import {IDelegateToken, Structs as IDelegateTokenStructs} from "src/interfaces/IDelegateToken.sol";
+import {IDelegateToken} from "src/interfaces/IDelegateToken.sol";
+import {DelegateTokenStructs} from "src/libraries/DelegateTokenLib.sol";
 
 import {Ownable2Step} from "openzeppelin/access/Ownable2Step.sol";
 import {ERC2981} from "openzeppelin/token/common/ERC2981.sol";
@@ -71,7 +72,7 @@ contract MarketMetadata is Ownable2Step, ERC2981 {
     function principalTokenURI(address delegateToken, uint256 id) external view returns (string memory) {
         IDelegateToken dt = IDelegateToken(delegateToken);
 
-        IDelegateTokenStructs.DelegateInfo memory delegateInfo = dt.getDelegateInfo(id);
+        DelegateTokenStructs.DelegateInfo memory delegateInfo = dt.getDelegateInfo(id);
 
         string memory idstr = Strings.toString(delegateInfo.tokenId);
         string memory imageUrl = string.concat(delegateTokenBaseURI, "principal/", idstr);

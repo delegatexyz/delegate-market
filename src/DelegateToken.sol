@@ -3,20 +3,14 @@ pragma solidity ^0.8.21;
 
 import {IDelegateToken, IERC721Metadata, IERC721Receiver, IERC1155Receiver} from "./interfaces/IDelegateToken.sol";
 import {MarketMetadata} from "src/MarketMetadata.sol";
+import {PrincipalToken} from "src/PrincipalToken.sol";
 
 import {ReentrancyGuard} from "openzeppelin/security/ReentrancyGuard.sol";
 
-import {
-    IDelegateRegistry,
-    DelegateTokenConstants as Constants,
-    DelegateTokenErrors as Errors,
-    DelegateTokenStructs as Structs,
-    DelegateTokenHelpers as Helpers
-} from "src/libraries/DelegateTokenLib.sol";
+import {IDelegateRegistry, DelegateTokenErrors as Errors, DelegateTokenStructs as Structs, DelegateTokenHelpers as Helpers} from "src/libraries/DelegateTokenLib.sol";
 import {DelegateTokenStorageHelpers as StorageHelpers} from "src/libraries/DelegateTokenStorageHelpers.sol";
 import {DelegateTokenRegistryHelpers as RegistryHelpers, RegistryHashes} from "src/libraries/DelegateTokenRegistryHelpers.sol";
 import {DelegateTokenTransferHelpers as TransferHelpers, SafeERC20, IERC721, IERC20, IERC1155} from "src/libraries/DelegateTokenTransferHelpers.sol";
-import {DelegateTokenPrincipalHelpers as PrincipalTokenHelpers} from "src/libraries/DelegateTokenPrincipalHelpers.sol";
 
 contract DelegateToken is ReentrancyGuard, IDelegateToken {
     /*//////////////////////////////////////////////////////////////
@@ -45,11 +39,11 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
     mapping(address account => mapping(address operator => bool enabled)) internal accountOperator;
 
     /// @notice internal variables for Principle Token callbacks
-    Structs.Uint256 internal principalMintAuthorization = Structs.Uint256(Constants.MINT_NOT_AUTHORIZED);
-    Structs.Uint256 internal principalBurnAuthorization = Structs.Uint256(Constants.BURN_NOT_AUTHORIZED);
+    Structs.Uint256 internal principalMintAuthorization = Structs.Uint256(StorageHelpers.MINT_NOT_AUTHORIZED);
+    Structs.Uint256 internal principalBurnAuthorization = Structs.Uint256(StorageHelpers.BURN_NOT_AUTHORIZED);
 
     /// @notice internal variable 11155 callbacks
-    Structs.Uint256 internal erc1155PullAuthorization = Structs.Uint256(Constants.ERC1155_NOT_PULLED);
+    Structs.Uint256 internal erc1155PullAuthorization = Structs.Uint256(TransferHelpers.ERC1155_NOT_PULLED);
 
     /*//////////////////////////////////////////////////////////////
     /                      Constructor                             /
@@ -58,7 +52,7 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
     constructor(Structs.DelegateTokenParameters memory parameters) {
         if (parameters.delegateRegistry == address(0)) revert Errors.DelegateRegistryZero();
         if (parameters.principalToken == address(0)) revert Errors.PrincipalTokenZero();
-        if (parameters.marketMetadata == address(0)) revert Errors.InitialMetadataOwnerZero();
+        if (parameters.marketMetadata == address(0)) revert Errors.MarketMetadataZero();
         delegateRegistry = parameters.delegateRegistry;
         principalToken = parameters.principalToken;
         marketMetadata = parameters.marketMetadata;
@@ -82,13 +76,13 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
 
     /// @inheritdoc IERC1155Receiver
     function onERC1155BatchReceived(address, address, uint256[] calldata, uint256[] calldata, bytes calldata) external pure returns (bytes4) {
-        Helpers.revertBatchERC1155TransferUnsupported();
+        revert Errors.BatchERC1155TransferUnsupported();
     }
 
     /// @inheritdoc IERC721Receiver
     function onERC721Received(address operator, address, uint256, bytes calldata) external view returns (bytes4) {
-        Helpers.revertInvalidERC721TransferOperator(operator);
-        return IERC721Receiver.onERC721Received.selector;
+        if (address(this) == operator) return IERC721Receiver.onERC721Received.selector;
+        revert Errors.InvalidERC721TransferOperator();
     }
 
     /// @inheritdoc IERC1155Receiver
@@ -103,19 +97,19 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
 
     /// @inheritdoc IERC721
     function balanceOf(address delegateTokenHolder) external view returns (uint256) {
-        Helpers.revertDelegateTokenHolderZero(delegateTokenHolder);
+        if (delegateTokenHolder == address(0)) revert Errors.DelegateTokenHolderZero();
         return balances[delegateTokenHolder];
     }
 
     /// @inheritdoc IERC721
     function ownerOf(uint256 delegateTokenId) external view returns (address delegateTokenHolder) {
         delegateTokenHolder = RegistryHelpers.loadTokenHolder(delegateRegistry, StorageHelpers.readRegistryHash(delegateTokenInfo, delegateTokenId));
-        Helpers.revertDelegateTokenHolderZero(delegateTokenHolder);
+        if (delegateTokenHolder == address(0)) revert Errors.DelegateTokenHolderZero();
     }
 
     /// @inheritdoc IERC721
     function getApproved(uint256 delegateTokenId) external view returns (address) {
-        Helpers.revertNotMinted(StorageHelpers.readRegistryHash(delegateTokenInfo, delegateTokenId), delegateTokenId);
+        StorageHelpers.revertNotMinted(delegateTokenInfo, delegateTokenId);
         return StorageHelpers.readApproved(delegateTokenInfo, delegateTokenId);
     }
 
@@ -139,7 +133,7 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
     /// @inheritdoc IERC721
     function approve(address spender, uint256 delegateTokenId) external {
         bytes32 registryHash = StorageHelpers.readRegistryHash(delegateTokenInfo, delegateTokenId);
-        Helpers.revertNotMinted(registryHash, delegateTokenId);
+        StorageHelpers.revertNotMinted(registryHash, delegateTokenId);
         address delegateTokenHolder = RegistryHelpers.loadTokenHolder(delegateRegistry, registryHash);
         StorageHelpers.revertNotOperator(accountOperator, delegateTokenHolder);
         StorageHelpers.writeApproved(delegateTokenInfo, delegateTokenId, spender);
@@ -165,11 +159,11 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
     /// @dev registryHash for the DelegateTokenId must point to the new registry delegation associated with the to
     /// address
     function transferFrom(address from, address to, uint256 delegateTokenId) public {
-        Helpers.revertToIsZero(to);
+        if (to == address(0)) revert Errors.ToIsZero();
         bytes32 registryHash = StorageHelpers.readRegistryHash(delegateTokenInfo, delegateTokenId);
-        Helpers.revertNotMinted(registryHash, delegateTokenId);
+        StorageHelpers.revertNotMinted(registryHash, delegateTokenId);
         (address delegateTokenHolder, address underlyingContract) = RegistryHelpers.loadTokenHolderAndContract(delegateRegistry, registryHash);
-        Helpers.revertFromNotDelegateTokenHolder(from, delegateTokenHolder);
+        if (from != delegateTokenHolder) revert Errors.FromNotDelegateTokenHolder();
         // We can use from here instead of delegateTokenHolder since we've just verified that from ==
         // delegateTokenHolder
         StorageHelpers.revertNotApprovedOrOperator(accountOperator, delegateTokenInfo, from, delegateTokenId);
@@ -233,7 +227,7 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
     /// @inheritdoc IERC721Metadata
     function tokenURI(uint256 delegateTokenId) external view returns (string memory) {
         bytes32 registryHash = StorageHelpers.readRegistryHash(delegateTokenInfo, delegateTokenId);
-        Helpers.revertNotMinted(registryHash, delegateTokenId);
+        StorageHelpers.revertNotMinted(registryHash, delegateTokenId);
         return MarketMetadata(marketMetadata).delegateTokenURI(
             RegistryHelpers.loadContract(delegateRegistry, registryHash),
             RegistryHelpers.loadTokenId(delegateRegistry, registryHash),
@@ -245,7 +239,7 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
     /// @inheritdoc IDelegateToken
     function isApprovedOrOwner(address spender, uint256 delegateTokenId) external view returns (bool) {
         bytes32 registryHash = StorageHelpers.readRegistryHash(delegateTokenInfo, delegateTokenId);
-        Helpers.revertNotMinted(registryHash, delegateTokenId);
+        StorageHelpers.revertNotMinted(registryHash, delegateTokenId);
         address delegateTokenHolder = RegistryHelpers.loadTokenHolder(delegateRegistry, registryHash);
         return
             spender == delegateTokenHolder || accountOperator[delegateTokenHolder][spender] || StorageHelpers.readApproved(delegateTokenInfo, delegateTokenId) == spender;
@@ -272,7 +266,7 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
     /// @inheritdoc IDelegateToken
     function getDelegateInfo(uint256 delegateTokenId) external view returns (Structs.DelegateInfo memory delegateInfo) {
         bytes32 registryHash = StorageHelpers.readRegistryHash(delegateTokenInfo, delegateTokenId);
-        Helpers.revertNotMinted(registryHash, delegateTokenId);
+        StorageHelpers.revertNotMinted(registryHash, delegateTokenId);
         delegateInfo.tokenType = RegistryHashes.decodeType(registryHash);
         (delegateInfo.delegateHolder, delegateInfo.tokenContract) = RegistryHelpers.loadTokenHolderAndContract(delegateRegistry, registryHash);
         delegateInfo.rights = RegistryHelpers.loadRights(delegateRegistry, registryHash);
@@ -286,26 +280,26 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
 
     /// @inheritdoc IDelegateToken
     function getDelegateId(address caller, uint256 salt) external view returns (uint256 delegateTokenId) {
-        delegateTokenId = Helpers.delegateId(caller, salt);
+        delegateTokenId = Helpers.delegateIdNoRevert(caller, salt);
         StorageHelpers.revertAlreadyExisted(delegateTokenInfo, delegateTokenId);
     }
 
     /// @inheritdoc IDelegateToken
-    function burnAuthorizedCallback() external {
-        PrincipalTokenHelpers.checkBurnAuthorized(principalToken, principalBurnAuthorization);
+    function burnAuthorizedCallback() external view {
+        StorageHelpers.checkBurnAuthorized(principalToken, principalBurnAuthorization);
     }
 
     /// @inheritdoc IDelegateToken
-    function mintAuthorizedCallback() external {
-        PrincipalTokenHelpers.checkMintAuthorized(principalToken, principalMintAuthorization);
+    function mintAuthorizedCallback() external view {
+        StorageHelpers.checkMintAuthorized(principalToken, principalMintAuthorization);
     }
 
     /// @inheritdoc IDelegateToken
     function create(Structs.DelegateInfo calldata delegateInfo, uint256 salt) external nonReentrant returns (uint256 delegateTokenId) {
         TransferHelpers.checkAndPullByType(erc1155PullAuthorization, delegateInfo);
-        Helpers.revertInvalidExpiry(delegateInfo.expiry);
-        Helpers.revertToIsZero(delegateInfo.delegateHolder);
-        delegateTokenId = Helpers.delegateId(msg.sender, salt);
+        Helpers.revertOldExpiry(delegateInfo.expiry);
+        if (delegateInfo.delegateHolder == address(0)) revert Errors.ToIsZero();
+        delegateTokenId = Helpers.delegateIdNoRevert(msg.sender, salt);
         StorageHelpers.revertAlreadyExisted(delegateTokenInfo, delegateTokenId);
         StorageHelpers.incrementBalance(balances, delegateInfo.delegateHolder);
         StorageHelpers.writeExpiry(delegateTokenInfo, delegateTokenId, delegateInfo.expiry);
@@ -319,24 +313,29 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
             StorageHelpers.writeUnderlyingAmount(delegateTokenInfo, delegateTokenId, delegateInfo.amount);
             newRegistryHash = RegistryHashes.erc20Hash(address(this), delegateInfo.rights, delegateInfo.delegateHolder, delegateInfo.tokenContract);
             StorageHelpers.writeRegistryHash(delegateTokenInfo, delegateTokenId, newRegistryHash);
-            RegistryHelpers.delegateERC20(delegateRegistry, newRegistryHash, delegateInfo);
+            RegistryHelpers.incrementERC20(delegateRegistry, newRegistryHash, delegateInfo);
         } else if (delegateInfo.tokenType == IDelegateRegistry.DelegationType.ERC1155) {
             StorageHelpers.writeUnderlyingAmount(delegateTokenInfo, delegateTokenId, delegateInfo.amount);
             newRegistryHash =
                 RegistryHashes.erc1155Hash(address(this), delegateInfo.rights, delegateInfo.delegateHolder, delegateInfo.tokenId, delegateInfo.tokenContract);
             StorageHelpers.writeRegistryHash(delegateTokenInfo, delegateTokenId, newRegistryHash);
-            RegistryHelpers.delegateERC1155(delegateRegistry, newRegistryHash, delegateInfo);
+            RegistryHelpers.incrementERC1155(delegateRegistry, newRegistryHash, delegateInfo);
         }
-        PrincipalTokenHelpers.mint(principalToken, principalMintAuthorization, delegateInfo.principalHolder, delegateTokenId);
+        StorageHelpers.mintPrincipal(principalToken, principalMintAuthorization, delegateInfo.principalHolder, delegateTokenId);
     }
 
     /// @inheritdoc IDelegateToken
     function extend(uint256 delegateTokenId, uint256 newExpiry) external {
-        Helpers.revertNotMinted(StorageHelpers.readRegistryHash(delegateTokenInfo, delegateTokenId), delegateTokenId);
-        Helpers.revertInvalidExpiry(newExpiry);
-        StorageHelpers.revertInvalidExpiryUpdate(delegateTokenInfo, delegateTokenId, newExpiry);
-        PrincipalTokenHelpers.notPrincipalOperator(principalToken, delegateTokenId);
-        StorageHelpers.writeExpiry(delegateTokenInfo, delegateTokenId, newExpiry);
+        StorageHelpers.revertNotMinted(delegateTokenInfo, delegateTokenId);
+        Helpers.revertOldExpiry(newExpiry);
+        uint256 previousExpiry = StorageHelpers.readExpiry(delegateTokenInfo, delegateTokenId);
+        if (newExpiry <= previousExpiry) revert Errors.ExpiryTooSmall();
+        if (PrincipalToken(principalToken).isApprovedOrOwner(msg.sender, delegateTokenId)) {
+            StorageHelpers.writeExpiry(delegateTokenInfo, delegateTokenId, newExpiry);
+            emit ExpiryExtended(delegateTokenId, previousExpiry, newExpiry);
+            return;
+        }
+        revert Errors.NotApproved(msg.sender, delegateTokenId);
     }
 
     /// @inheritdoc IDelegateToken
@@ -356,35 +355,35 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
     /// @inheritdoc IDelegateToken
     function withdraw(uint256 delegateTokenId) external nonReentrant {
         bytes32 registryHash = StorageHelpers.readRegistryHash(delegateTokenInfo, delegateTokenId);
-        StorageHelpers.writeRegistryHash(delegateTokenInfo, delegateTokenId, bytes32(Constants.ID_USED));
+        StorageHelpers.writeRegistryHash(delegateTokenInfo, delegateTokenId, bytes32(StorageHelpers.ID_USED));
         // Sets registry pointer to used flag
-        Helpers.revertNotMinted(registryHash, delegateTokenId);
+        StorageHelpers.revertNotMinted(registryHash, delegateTokenId);
         (address delegateTokenHolder, address underlyingContract) = RegistryHelpers.loadTokenHolderAndContract(delegateRegistry, registryHash);
         StorageHelpers.revertInvalidWithdrawalConditions(delegateTokenInfo, accountOperator, delegateTokenId, delegateTokenHolder);
         StorageHelpers.decrementBalance(balances, delegateTokenHolder);
-        delete delegateTokenInfo[delegateTokenId][Constants.PACKED_INFO_POSITION]; // Deletes both expiry AND approved
+        delete delegateTokenInfo[delegateTokenId][StorageHelpers.PACKED_INFO_POSITION]; // Deletes both expiry AND approved
         emit Transfer(delegateTokenHolder, address(0), delegateTokenId);
         IDelegateRegistry.DelegationType delegationType = RegistryHashes.decodeType(registryHash);
         bytes32 underlyingRights = RegistryHelpers.loadRights(delegateRegistry, registryHash);
         if (delegationType == IDelegateRegistry.DelegationType.ERC721) {
             uint256 erc721UnderlyingTokenId = RegistryHelpers.loadTokenId(delegateRegistry, registryHash);
             RegistryHelpers.revokeERC721(delegateRegistry, registryHash, delegateTokenHolder, underlyingContract, erc721UnderlyingTokenId, underlyingRights);
-            PrincipalTokenHelpers.burn(principalToken, principalBurnAuthorization, delegateTokenId);
+            StorageHelpers.burnPrincipal(principalToken, principalBurnAuthorization, delegateTokenId);
             IERC721(underlyingContract).transferFrom(address(this), msg.sender, erc721UnderlyingTokenId);
         } else if (delegationType == IDelegateRegistry.DelegationType.ERC20) {
             uint256 erc20UnderlyingAmount = StorageHelpers.readUnderlyingAmount(delegateTokenInfo, delegateTokenId);
             StorageHelpers.writeUnderlyingAmount(delegateTokenInfo, delegateTokenId, 0); // Deletes amount
-            RegistryHelpers.revokeERC20(delegateRegistry, registryHash, delegateTokenHolder, underlyingContract, erc20UnderlyingAmount, underlyingRights);
-            PrincipalTokenHelpers.burn(principalToken, principalBurnAuthorization, delegateTokenId);
+            RegistryHelpers.decrementERC20(delegateRegistry, registryHash, delegateTokenHolder, underlyingContract, erc20UnderlyingAmount, underlyingRights);
+            StorageHelpers.burnPrincipal(principalToken, principalBurnAuthorization, delegateTokenId);
             SafeERC20.safeTransfer(IERC20(underlyingContract), msg.sender, erc20UnderlyingAmount);
         } else if (delegationType == IDelegateRegistry.DelegationType.ERC1155) {
             uint256 erc1155UnderlyingAmount = StorageHelpers.readUnderlyingAmount(delegateTokenInfo, delegateTokenId);
             StorageHelpers.writeUnderlyingAmount(delegateTokenInfo, delegateTokenId, 0); // Deletes amount
             uint256 erc11551UnderlyingTokenId = RegistryHelpers.loadTokenId(delegateRegistry, registryHash);
-            RegistryHelpers.revokeERC1155(
+            RegistryHelpers.decrementERC1155(
                 delegateRegistry, registryHash, delegateTokenHolder, underlyingContract, erc11551UnderlyingTokenId, erc1155UnderlyingAmount, underlyingRights
             );
-            PrincipalTokenHelpers.burn(principalToken, principalBurnAuthorization, delegateTokenId);
+            StorageHelpers.burnPrincipal(principalToken, principalBurnAuthorization, delegateTokenId);
             IERC1155(underlyingContract).safeTransferFrom(address(this), msg.sender, erc11551UnderlyingTokenId, erc1155UnderlyingAmount, "");
         }
     }
