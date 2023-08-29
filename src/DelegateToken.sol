@@ -52,7 +52,7 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
     constructor(Structs.DelegateTokenParameters memory parameters) {
         if (parameters.delegateRegistry == address(0)) revert Errors.DelegateRegistryZero();
         if (parameters.principalToken == address(0)) revert Errors.PrincipalTokenZero();
-        if (parameters.marketMetadata == address(0)) revert Errors.InitialMetadataOwnerZero();
+        if (parameters.marketMetadata == address(0)) revert Errors.MarketMetadataZero();
         delegateRegistry = parameters.delegateRegistry;
         principalToken = parameters.principalToken;
         marketMetadata = parameters.marketMetadata;

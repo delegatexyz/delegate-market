@@ -43,10 +43,8 @@ library DelegateTokenErrors {
     error DelegateRegistryZero();
     error PrincipalTokenZero();
     error DelegateTokenHolderZero();
-    error InitialMetadataOwnerZero();
+    error MarketMetadataZero();
     error ToIsZero();
-    error FromIsZero();
-    error TokenAmountIsZero();
 
     error NotERC721Receiver();
     error InvalidERC721TransferOperator();

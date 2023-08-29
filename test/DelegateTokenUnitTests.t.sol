@@ -73,23 +73,22 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
         assertEq(dtHarness.exposedSlotUint256(3), 0); // approvals mappings
     }
 
-    function testDTConstructor(address delegateRegistry, address principalToken, string calldata baseURI_, address initialMetadataOwner) public {
-        vm.assume(delegateRegistry != address(0) && principalToken != address(0) && initialMetadataOwner != address(0));
-        marketMetadata = new MarketMetadata(initialMetadataOwner, baseURI_);
+    function testDTConstructor(address delegateRegistry, address principalToken, address marketMetadata_) public {
+        vm.assume(delegateRegistry != address(0) && principalToken != address(0) && marketMetadata_ != address(0));
         // Check zero reverts
         vm.expectRevert(DelegateTokenErrors.DelegateRegistryZero.selector);
         new DelegateToken(DelegateTokenStructs.DelegateTokenParameters({
             delegateRegistry: address(0), 
             principalToken: principalToken, 
-            marketMetadata: address(marketMetadata)
+            marketMetadata: marketMetadata_
             }));
         vm.expectRevert(DelegateTokenErrors.PrincipalTokenZero.selector);
         new DelegateToken(DelegateTokenStructs.DelegateTokenParameters({
             delegateRegistry: delegateRegistry, 
             principalToken: address(0), 
-            marketMetadata: address(marketMetadata)
+            marketMetadata: marketMetadata_
             }));
-        vm.expectRevert(DelegateTokenErrors.InitialMetadataOwnerZero.selector);
+        vm.expectRevert(DelegateTokenErrors.MarketMetadataZero.selector);
         new DelegateToken(DelegateTokenStructs.DelegateTokenParameters({
             delegateRegistry: delegateRegistry, 
             principalToken: principalToken, 
@@ -97,11 +96,10 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
             }));
         // Check successful constructor
         dt =
-        new DelegateToken(DelegateTokenStructs.DelegateTokenParameters({delegateRegistry: delegateRegistry, principalToken: principalToken, marketMetadata: address(marketMetadata)}));
+        new DelegateToken(DelegateTokenStructs.DelegateTokenParameters({delegateRegistry: delegateRegistry, principalToken: principalToken, marketMetadata: marketMetadata_}));
         assertEq(delegateRegistry, dt.delegateRegistry());
         assertEq(principalToken, dt.principalToken());
-        assertEq(baseURI_, dt.baseURI());
-        // assertEq(initialMetadataOwner, dt.owner());
+        assertEq(marketMetadata_, dt.marketMetadata());
     }
 
     function testSupportsInterface(bytes32 interfaceSeed) public {
