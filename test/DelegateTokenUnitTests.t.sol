@@ -140,16 +140,16 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
         assertEq(bytes4(dt.onERC721Received(address(dt), addr1, data, data2)), bytes4(0x150b7a02));
     }
 
-    function testBalanceOf(address delegateTokenHolder, uint256 balance) public {
-        // Check zero address revert
-        if (delegateTokenHolder == address(0)) {
-            vm.expectRevert(DelegateTokenErrors.DelegateTokenHolderZero.selector);
-            dt.balanceOf(delegateTokenHolder);
-        } else {
-            // Check balance is stored correctly, mapping is at slot 2
-            vm.store(address(dt), keccak256(abi.encode(delegateTokenHolder, 2)), bytes32(balance));
-            assertEq(dt.balanceOf(delegateTokenHolder), balance);
-        }
+    function testBalanceOfRevert() public {
+        vm.expectRevert(DelegateTokenErrors.DelegateTokenHolderZero.selector);
+        dt.balanceOf(address(0));
+    }
+
+    function testBalanceOfNoRevert(address delegateTokenHolder, uint256 balance) public {
+        vm.assume(delegateTokenHolder != address(0));
+        // Check balance is stored correctly, mapping is at slot 2
+        vm.store(address(dt), keccak256(abi.encode(delegateTokenHolder, 2)), bytes32(balance));
+        assertEq(dt.balanceOf(delegateTokenHolder), balance);
     }
 
     function testOwnerOf(address delegateTokenHolder, uint256 delegateTokenId, bytes32 rights) public {
@@ -167,6 +167,30 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
         } else {
             assertEq(delegateTokenHolder, dt.ownerOf(delegateTokenId));
         }
+    }
+
+    function testCreateRevertToIsZero(address from, bytes32 rights, uint256 tokenId, uint256 expiry) public {
+        vm.assume(expiry > block.timestamp && expiry <= type(uint96).max);
+        vm.assume(address(dt) != from);
+        vm.assume(from != address(0));
+        vm.startPrank(from);
+        mockERC721.mint(from, tokenId);
+        mockERC721.approve(address(dt), tokenId);
+        vm.expectRevert(DelegateTokenErrors.ToIsZero.selector);
+        dt.create(
+            DelegateTokenStructs.DelegateInfo({
+                principalHolder: from,
+                tokenType: IDelegateRegistry.DelegationType.ERC721,
+                delegateHolder: address(0),
+                amount: 0,
+                tokenContract: address(mockERC721),
+                tokenId: tokenId,
+                rights: rights,
+                expiry: expiry
+            }),
+            1
+        );
+        vm.stopPrank();
     }
 
     function testSafeTransferFromReverts(address from, address to, bytes32 rights, uint256 expiry) public {
