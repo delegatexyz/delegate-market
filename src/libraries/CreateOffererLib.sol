@@ -26,7 +26,9 @@ library CreateOffererErrors {
     error ERC20AllowanceInvariant(address tokenAddress);
     error InvalidContractNonce(uint256 actual, uint256 seaportExpected);
     error DelegateInfoInvariant();
+    error InvalidContextLength();
     error TargetTokenInvalid(CreateOffererEnums.TargetToken invalidTargetToken);
+    error TokenReceiverInvalid(CreateOffererEnums.TargetToken targetToken, address expected, address actual);
 }
 
 library CreateOffererEnums {
@@ -72,10 +74,9 @@ library CreateOffererStructs {
         uint256 value;
     }
 
-    /// @notice Used to keep track of the receiver of the principal / delegate tokens during a seaport call on CreateOfferer.
     struct Receivers {
-        address principal;
-        address delegate;
+        address targetTokenReceiver;
+        address fulfiller;
     }
 
     /// @notice Used in the constructor of CreateOfferer.
@@ -92,7 +93,6 @@ library CreateOffererStructs {
         uint256 expiryLength;
         CreateOffererEnums.ExpiryType expiryType;
         CreateOffererEnums.TargetToken targetToken;
-        Receivers receivers;
     }
 
     /// @notice Contains data common to all order types.
@@ -176,30 +176,6 @@ abstract contract CreateOffererModifiers {
 /// @notice Contains helper function used by CreateOfferer.
 library CreateOffererHelpers {
     /**
-     * @notice Updates Receivers struct with the intents of the targetTokenReceiver.
-     * @param tokenReceivers Receivers struct storage pointer to be updated.
-     * @param targetTokenReceiver Address to receive the target token.
-     * @param targetToken Either delegate / principal token receiver to be overridden with targetTokenReceiver in the Receivers struct.
-     * @dev If targetToken == principal, tokenReceivers.principal will be overridden with targetTokenReceiver, tokenReceivers.delegate will be preserved (and vice versa).
-     * @dev Should revert for invalid targetToken.
-     * @return updatedReceivers updated storage result provided in memory for use.
-     */
-    function updateReceivers(CreateOffererStructs.Receivers storage tokenReceivers, address targetTokenReceiver, CreateOffererEnums.TargetToken targetToken)
-        internal
-        returns (CreateOffererStructs.Receivers memory updatedReceivers)
-    {
-        if (targetToken == CreateOffererEnums.TargetToken.principal) {
-            updatedReceivers = CreateOffererStructs.Receivers({principal: targetTokenReceiver, delegate: tokenReceivers.delegate});
-            tokenReceivers.principal = targetTokenReceiver;
-        } else if (targetToken == CreateOffererEnums.TargetToken.delegate) {
-            updatedReceivers = CreateOffererStructs.Receivers({principal: tokenReceivers.principal, delegate: targetTokenReceiver});
-            tokenReceivers.delegate = targetTokenReceiver;
-        } else {
-            revert CreateOffererErrors.TargetTokenInvalid(targetToken);
-        }
-    }
-
-    /**
      * @notice Validates and updates a Nonce struct.
      * @param nonce The storage pointer to the Nonce struct to be validated and updated.
      * @param contractNonce Used to valid against the expected nonce in storage.
@@ -223,6 +199,7 @@ library CreateOffererHelpers {
      */
     function updateTransientState(
         CreateOffererStructs.TransientState storage transientState,
+        address fulfiller,
         SpentItem calldata minimumReceived,
         SpentItem calldata maximumSpent,
         CreateOffererStructs.Context memory decodedContext
@@ -268,7 +245,7 @@ library CreateOffererHelpers {
         } else {
             revert CreateOffererErrors.InvalidTokenType(tokenType);
         }
-        transientState.receivers = decodedContext.receivers;
+        transientState.receivers.fulfiller = fulfiller;
     }
 
     /**
@@ -309,13 +286,21 @@ library CreateOffererHelpers {
     /**
      * @notice Verifies the properties of a delegateToken against the first element of a seaport ContractOfferer ratify order calldata.
      * @param delegateToken Should be the address of the DelegateToken contract.
-     * @param offer The offer specified in the ratify order call data (used to define the delegateToken contract and to deterministically calculate the delegateTokenId).
+     * @param identifier The offer identifier.
      * @param consideration The consideration specified in the ratify order call data (used as input data of the underlying used to create the delegate token).
      * @param context Should contain an unpacked encoding of the Context struct which provides additional order data for comparison.
      * @dev Should revert if the delegateToken with tokenId in the offer does not match with the expected result.
+     * @dev Should revert if context is the wrong length.
      */
-    function verifyCreate(address delegateToken, SpentItem calldata offer, ReceivedItem calldata consideration, bytes calldata context) internal view {
-        IDelegateRegistry.DelegationType tokenType = RegistryHashes.decodeType(bytes32(offer.identifier));
+    function verifyCreate(
+        address delegateToken,
+        uint256 identifier,
+        CreateOffererStructs.Receivers storage receivers,
+        ReceivedItem calldata consideration,
+        bytes calldata context
+    ) internal view {
+        IDelegateRegistry.DelegationType tokenType = RegistryHashes.decodeType(bytes32(identifier));
+        if (context.length != 160) revert CreateOffererErrors.InvalidContextLength();
         CreateOffererStructs.Context memory decodedContext = abi.decode(context, (CreateOffererStructs.Context));
         //slither-disable-start timestamp
         if (
@@ -323,8 +308,8 @@ library CreateOffererHelpers {
                 abi.encode(
                     IDelegateTokenStructs.DelegateInfo({
                         tokenType: tokenType,
-                        principalHolder: decodedContext.receivers.principal,
-                        delegateHolder: decodedContext.receivers.delegate,
+                        principalHolder: decodedContext.targetToken == CreateOffererEnums.TargetToken.principal ? receivers.targetTokenReceiver : receivers.fulfiller,
+                        delegateHolder: decodedContext.targetToken == CreateOffererEnums.TargetToken.delegate ? receivers.targetTokenReceiver : receivers.fulfiller,
                         expiry: CreateOffererHelpers.calculateExpiry(decodedContext.expiryType, decodedContext.expiryLength),
                         rights: decodedContext.rights,
                         tokenContract: consideration.token,
@@ -332,7 +317,7 @@ library CreateOffererHelpers {
                         amount: (tokenType != IDelegateRegistry.DelegationType.ERC721) ? consideration.amount : 0
                     })
                 )
-            ) != keccak256(abi.encode(IDelegateToken(delegateToken).getDelegateInfo(DelegateTokenHelpers.delegateIdNoRevert(address(this), offer.identifier))))
+            ) != keccak256(abi.encode(IDelegateToken(delegateToken).getDelegateInfo(DelegateTokenHelpers.delegateIdNoRevert(address(this), identifier))))
         ) revert CreateOffererErrors.DelegateInfoInvariant();
         //slither-disable-end timestamp
     }
