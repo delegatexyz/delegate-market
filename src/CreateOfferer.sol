@@ -36,7 +36,7 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
             rights: 0,
             expiryLength: 1,
             signerSalt: 1,
-            tokenContract: address(1),
+            tokenContract: address(42),
             expiryType: Enums.ExpiryType.absolute,
             targetToken: Enums.TargetToken.principal
         });
@@ -44,7 +44,7 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
             erc721Order: Structs.ERC721Order({tokenId: 1, info: defaultInfo}),
             erc20Order: Structs.ERC20Order({amount: 1, info: defaultInfo}),
             erc1155Order: Structs.ERC1155Order({tokenId: 1, amount: 1, info: defaultInfo}),
-            receivers: Structs.Receivers({principal: address(1), delegate: address(1)})
+            receivers: Structs.Receivers({fulfiller: address(1), targetTokenReceiver: address(1)})
         });
     }
 
@@ -56,15 +56,16 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
      * @return offer Returns minimumReceived.
      * @return consideration Returns maximumSpent but with the beneficiary specified as this contract.
      */
-    function generateOrder(address, SpentItem[] calldata minimumReceived, SpentItem[] calldata maximumSpent, bytes calldata context)
+    function generateOrder(address fulfiller, SpentItem[] calldata minimumReceived, SpentItem[] calldata maximumSpent, bytes calldata context)
         external
         checkStage(Enums.Stage.generate, Enums.Stage.transfer)
         onlySeaport(msg.sender)
         returns (SpentItem[] memory offer, ReceivedItem[] memory consideration)
     {
-        (offer, consideration) = Helpers.processSpentItems(minimumReceived, maximumSpent);
+        if (context.length != 160) revert Errors.InvalidContextLength();
         Structs.Context memory decodedContext = abi.decode(context, (Structs.Context));
-        Helpers.updateTransientState(transientState, minimumReceived[0], maximumSpent[0], decodedContext);
+        (offer, consideration) = Helpers.processSpentItems(minimumReceived, maximumSpent);
+        Helpers.updateTransientState(transientState, fulfiller, minimumReceived[0], maximumSpent[0], decodedContext);
     }
 
     /**
@@ -81,7 +82,7 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
         returns (bytes4)
     {
         Helpers.processNonce(nonce, contractNonce);
-        Helpers.verifyCreate(delegateToken, offer[0], consideration[0], context);
+        Helpers.verifyCreate(delegateToken, offer[0].identifier, transientState.receivers, consideration[0], context);
         return this.ratifyOrder.selector;
     }
 
@@ -94,20 +95,19 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
     //slither-disable-next-line erc20-interface
     function transferFrom(address from, address targetTokenReceiver, uint256 createOrderHashAsTokenId) external checkStage(Enums.Stage.transfer, Enums.Stage.ratify) {
         if (from != address(this)) revert Errors.FromNotCreateOfferer(from);
-        Structs.Receivers memory processedReceivers;
+        transientState.receivers.targetTokenReceiver = targetTokenReceiver;
         IDelegateRegistry.DelegationType tokenType = RegistryHashes.decodeType(bytes32(createOrderHashAsTokenId));
         if (tokenType == IDelegateRegistry.DelegationType.ERC721) {
             Structs.ERC721Order memory erc721Order = transientState.erc721Order;
             Helpers.validateCreateOrderHash(targetTokenReceiver, createOrderHashAsTokenId, abi.encode(erc721Order), tokenType);
-            processedReceivers = Helpers.updateReceivers(transientState.receivers, targetTokenReceiver, erc721Order.info.targetToken);
             IERC721(erc721Order.info.tokenContract).setApprovalForAll(address(delegateToken), true);
             Helpers.createAndValidateDelegateTokenId(
                 delegateToken,
                 createOrderHashAsTokenId,
                 IDelegateTokenStructs.DelegateInfo({
-                    principalHolder: processedReceivers.principal,
+                    principalHolder: erc721Order.info.targetToken == Enums.TargetToken.principal ? targetTokenReceiver : transientState.receivers.fulfiller,
                     tokenType: tokenType,
-                    delegateHolder: processedReceivers.delegate,
+                    delegateHolder: erc721Order.info.targetToken == Enums.TargetToken.delegate ? targetTokenReceiver : transientState.receivers.fulfiller,
                     amount: 0,
                     tokenContract: erc721Order.info.tokenContract,
                     tokenId: erc721Order.tokenId,
@@ -119,7 +119,6 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
         } else if (tokenType == IDelegateRegistry.DelegationType.ERC20) {
             Structs.ERC20Order memory erc20Order = transientState.erc20Order;
             Helpers.validateCreateOrderHash(targetTokenReceiver, createOrderHashAsTokenId, abi.encode(erc20Order), tokenType);
-            processedReceivers = Helpers.updateReceivers(transientState.receivers, targetTokenReceiver, erc20Order.info.targetToken);
             if (!IERC20(erc20Order.info.tokenContract).approve(address(delegateToken), erc20Order.amount)) {
                 revert Errors.ERC20ApproveFailed(erc20Order.info.tokenContract);
             }
@@ -127,9 +126,9 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
                 delegateToken,
                 createOrderHashAsTokenId,
                 IDelegateTokenStructs.DelegateInfo({
-                    principalHolder: processedReceivers.principal,
+                    principalHolder: erc20Order.info.targetToken == Enums.TargetToken.principal ? targetTokenReceiver : transientState.receivers.fulfiller,
                     tokenType: tokenType,
-                    delegateHolder: processedReceivers.delegate,
+                    delegateHolder: erc20Order.info.targetToken == Enums.TargetToken.delegate ? targetTokenReceiver : transientState.receivers.fulfiller,
                     amount: erc20Order.amount,
                     tokenContract: erc20Order.info.tokenContract,
                     tokenId: 0,
@@ -143,15 +142,14 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
         } else if (tokenType == IDelegateRegistry.DelegationType.ERC1155) {
             Structs.ERC1155Order memory erc1155Order = transientState.erc1155Order;
             Helpers.validateCreateOrderHash(targetTokenReceiver, createOrderHashAsTokenId, abi.encode(erc1155Order), tokenType);
-            processedReceivers = Helpers.updateReceivers(transientState.receivers, targetTokenReceiver, erc1155Order.info.targetToken);
             IERC1155(erc1155Order.info.tokenContract).setApprovalForAll(address(delegateToken), true);
             Helpers.createAndValidateDelegateTokenId(
                 delegateToken,
                 createOrderHashAsTokenId,
                 IDelegateTokenStructs.DelegateInfo({
-                    principalHolder: processedReceivers.principal,
+                    principalHolder: erc1155Order.info.targetToken == Enums.TargetToken.principal ? targetTokenReceiver : transientState.receivers.fulfiller,
                     tokenType: tokenType,
-                    delegateHolder: processedReceivers.delegate,
+                    delegateHolder: erc1155Order.info.targetToken == Enums.TargetToken.delegate ? targetTokenReceiver : transientState.receivers.fulfiller,
                     amount: erc1155Order.amount,
                     tokenContract: erc1155Order.info.tokenContract,
                     tokenId: erc1155Order.tokenId,
@@ -171,12 +169,13 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
      * @return offer Returns minimumReceived.
      * @return consideration Returns maximumSpent but with the beneficiary specified as this contract.
      */
-    function previewOrder(address caller, address, SpentItem[] calldata minimumReceived, SpentItem[] calldata maximumSpent, bytes calldata)
+    function previewOrder(address caller, address, SpentItem[] calldata minimumReceived, SpentItem[] calldata maximumSpent, bytes calldata context)
         external
         view
         onlySeaport(caller)
         returns (SpentItem[] memory offer, ReceivedItem[] memory consideration)
     {
+        if (context.length != 160) revert Errors.InvalidContextLength();
         (offer, consideration) = Helpers.processSpentItems(minimumReceived, maximumSpent);
     }
 

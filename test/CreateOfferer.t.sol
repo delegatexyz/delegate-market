@@ -77,8 +77,7 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
                 signerSalt: erc721Order.info.signerSalt,
                 expiryLength: erc721Order.info.expiryLength,
                 expiryType: erc721Order.info.expiryType,
-                targetToken: erc721Order.info.targetToken,
-                receivers: OffererStructs.Receivers({principal: seller.addr, delegate: buyer.addr})
+                targetToken: erc721Order.info.targetToken
             })
         );
         uint256 expectedETH = 0.3 ether;
@@ -158,8 +157,7 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
                 signerSalt: erc721Order.info.signerSalt,
                 expiryLength: erc721Order.info.expiryLength,
                 expiryType: erc721Order.info.expiryType,
-                targetToken: erc721Order.info.targetToken,
-                receivers: OffererStructs.Receivers({principal: seller.addr, delegate: buyer.addr})
+                targetToken: erc721Order.info.targetToken
             })
         );
         uint256 expectedETH = 0.22 ether;
@@ -240,8 +238,7 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
                 signerSalt: erc20Order.info.signerSalt,
                 expiryLength: erc20Order.info.expiryLength,
                 expiryType: erc20Order.info.expiryType,
-                targetToken: erc20Order.info.targetToken,
-                receivers: OffererStructs.Receivers({principal: seller.addr, delegate: buyer.addr})
+                targetToken: erc20Order.info.targetToken
             })
         );
         uint256 expectedETH = 0.3 ether;
@@ -322,8 +319,7 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
                 signerSalt: erc20Order.info.signerSalt,
                 expiryLength: erc20Order.info.expiryLength,
                 expiryType: erc20Order.info.expiryType,
-                targetToken: erc20Order.info.targetToken,
-                receivers: OffererStructs.Receivers({principal: seller.addr, delegate: buyer.addr})
+                targetToken: erc20Order.info.targetToken
             })
         );
         uint256 expectedETH = 0.22 ether;
@@ -406,8 +402,7 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
                 signerSalt: erc1155Order.info.signerSalt,
                 expiryLength: erc1155Order.info.expiryLength,
                 expiryType: erc1155Order.info.expiryType,
-                targetToken: erc1155Order.info.targetToken,
-                receivers: OffererStructs.Receivers({principal: seller.addr, delegate: buyer.addr})
+                targetToken: erc1155Order.info.targetToken
             })
         );
         uint256 expectedETH = 0.3 ether;
@@ -494,8 +489,7 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
                 signerSalt: erc1155Order.info.signerSalt,
                 expiryLength: erc1155Order.info.expiryLength,
                 expiryType: erc1155Order.info.expiryType,
-                targetToken: erc1155Order.info.targetToken,
-                receivers: OffererStructs.Receivers({principal: seller.addr, delegate: buyer.addr})
+                targetToken: erc1155Order.info.targetToken
             })
         );
         uint256 expectedETH = 0.22 ether;
@@ -638,6 +632,16 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
             conduitKey: conduitKey,
             totalOriginalConsiderationItems: 1
         });
+        SpentItem[] memory minimumReceived = new SpentItem[](1);
+        minimumReceived[0] = SpentItem({itemType: offer[0].itemType, token: offer[0].token, identifier: offer[0].identifierOrCriteria, amount: offer[0].endAmount});
+        SpentItem[] memory maximumSpent = new SpentItem[](1);
+        maximumSpent[0] = SpentItem({
+            itemType: consideration[0].itemType,
+            token: consideration[0].token,
+            identifier: consideration[0].identifierOrCriteria,
+            amount: consideration[0].endAmount
+        });
+        createOfferer.previewOrder(address(seaport), address(0), minimumReceived, maximumSpent, extraData);
         return AdvancedOrder({parameters: orderParams, numerator: 1, denominator: 1, signature: "", extraData: extraData});
     }
 
