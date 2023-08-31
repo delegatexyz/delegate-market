@@ -108,7 +108,7 @@ contract CreateOffererUnitTests is Test, BaseSeaportTest, BaseLiquidDelegateTest
 
     function testGetSeaportMetadata() public {
         (string memory metadataString, Schema[] memory schema) = createOfferer.getSeaportMetadata();
-        assertEq("Liquid Delegate Contract Offerer", metadataString);
+        assertEq("Delegate Market Contract Offerer", metadataString);
         assertEq(schema.length, 0);
     }
 
