@@ -182,17 +182,24 @@ contract CreateOffererModifiersTest is Test, CreateOffererTestHelpers {
 contract HelpersCalldataHarness {
     Structs.TransientState internal transientState_;
 
+    function updateReceivers(address fulfiller, address targetTokenReceiver) external {
+        transientState_.receivers.fulfiller = fulfiller;
+        transientState_.receivers.targetTokenReceiver = targetTokenReceiver;
+    }
+
     function transientState() external view returns (Structs.TransientState memory) {
         return transientState_;
     }
 
-    function updateTransientState(SpentItem calldata minimumReceived, SpentItem calldata maximumSpent, Structs.Context memory decodedContext) external {
+    function updateTransientState(address fulfiller, SpentItem calldata minimumReceived, SpentItem calldata maximumSpent, Structs.Context memory decodedContext)
+        external
+    {
         Structs.TransientState storage ptr = transientState_;
-        Helpers.updateTransientState(ptr, minimumReceived, maximumSpent, decodedContext);
+        Helpers.updateTransientState(ptr, fulfiller, minimumReceived, maximumSpent, decodedContext);
     }
 
-    function verifyCreate(address delegateToken, SpentItem calldata offer, ReceivedItem calldata consideration, bytes calldata context) external view {
-        Helpers.verifyCreate(delegateToken, offer, consideration, context);
+    function verifyCreate(address delegateToken, uint256 identifier, ReceivedItem calldata consideration, bytes calldata context) external view {
+        Helpers.verifyCreate(delegateToken, identifier, transientState_.receivers, consideration, context);
     }
 
     function processSpentItems(SpentItem[] calldata minimumReceived, SpentItem[] calldata maximumSpent)
@@ -205,33 +212,11 @@ contract HelpersCalldataHarness {
 }
 
 contract CreateOffererHelpersTest is Test, CreateOffererTestHelpers {
-    Structs.Receivers receivers;
     Structs.Nonce nonce;
     HelpersCalldataHarness harness;
 
     function setUp() public {
         harness = new HelpersCalldataHarness();
-    }
-
-    function testUpdateReceivers(address initialPT, address initialDT, address targetTokenReceiver, uint256 seed) public {
-        receivers = Structs.Receivers({principal: initialPT, delegate: initialDT});
-        Enums.TargetToken targetToken = _createRandomTargetToken(seed);
-        if (targetToken == Enums.TargetToken.none) {
-            vm.expectRevert(abi.encodeWithSelector(Errors.TargetTokenInvalid.selector, targetToken));
-            Helpers.updateReceivers(receivers, targetTokenReceiver, targetToken);
-        } else if (targetToken == Enums.TargetToken.principal) {
-            Structs.Receivers memory updatedReceivers = Helpers.updateReceivers(receivers, targetTokenReceiver, targetToken);
-            assertEq(updatedReceivers.principal, targetTokenReceiver);
-            assertEq(updatedReceivers.delegate, initialDT);
-            assertEq(receivers.principal, targetTokenReceiver);
-            assertEq(receivers.delegate, initialDT);
-        } else if (targetToken == Enums.TargetToken.delegate) {
-            Structs.Receivers memory updatedReceivers = Helpers.updateReceivers(receivers, targetTokenReceiver, targetToken);
-            assertEq(updatedReceivers.principal, initialPT);
-            assertEq(updatedReceivers.delegate, targetTokenReceiver);
-            assertEq(receivers.principal, initialPT);
-            assertEq(receivers.delegate, targetTokenReceiver);
-        }
     }
 
     function testProcessNonce(uint256 initialNonce) public {
@@ -251,9 +236,7 @@ contract CreateOffererHelpersTest is Test, CreateOffererTestHelpers {
         Helpers.processNonce(nonce, contractNonce);
     }
 
-    function testUpdateTransientStateERC721(uint256 seed, address token, uint256 tokenId, bytes32 rights, uint256 expiryLength, address ptReceiver, address dtReceiver)
-        public
-    {
+    function testUpdateTransientStateERC721(uint256 seed, address fulfiller, address token, uint256 tokenId, bytes32 rights, uint256 expiryLength) public {
         Structs.TransientState memory transientStateBefore = harness.transientState();
         SpentItem memory minimumReceived =
             SpentItem({itemType: ItemType.ERC721, token: address(this), identifier: seed << 8 | uint256(IDelegateRegistry.DelegationType.ERC721), amount: 1});
@@ -263,13 +246,16 @@ contract CreateOffererHelpersTest is Test, CreateOffererTestHelpers {
             signerSalt: uint256(keccak256(abi.encode("salt", seed))),
             expiryLength: expiryLength,
             expiryType: _createRandomExpiryType(uint256(keccak256(abi.encode("expiry", seed)))),
-            targetToken: _createRandomTargetToken(uint256(keccak256(abi.encode("targetToken", seed)))),
-            receivers: Structs.Receivers({delegate: dtReceiver, principal: ptReceiver})
+            targetToken: _createRandomTargetToken(uint256(keccak256(abi.encode("targetToken", seed))))
         });
-        harness.updateTransientState(minimumReceived, maximumSpent, decodedContext);
-        assertEq(keccak256(abi.encode(transientStateBefore.erc20Order)), keccak256(abi.encode(harness.transientState().erc20Order)));
-        assertEq(keccak256(abi.encode(transientStateBefore.erc1155Order)), keccak256(abi.encode(harness.transientState().erc1155Order)));
-        assertEq(keccak256(abi.encode(harness.transientState().receivers)), keccak256(abi.encode(Structs.Receivers({delegate: dtReceiver, principal: ptReceiver}))));
+        {
+            address targetTokenReceiverBefore = harness.transientState().receivers.targetTokenReceiver;
+            harness.updateTransientState(fulfiller, minimumReceived, maximumSpent, decodedContext);
+            assertEq(keccak256(abi.encode(transientStateBefore.erc20Order)), keccak256(abi.encode(harness.transientState().erc20Order)));
+            assertEq(keccak256(abi.encode(transientStateBefore.erc1155Order)), keccak256(abi.encode(harness.transientState().erc1155Order)));
+            assertEq(harness.transientState().receivers.fulfiller, fulfiller);
+            assertEq(harness.transientState().receivers.targetTokenReceiver, targetTokenReceiverBefore);
+        }
         assertEq(
             keccak256(abi.encode(harness.transientState().erc721Order)),
             keccak256(
@@ -290,9 +276,7 @@ contract CreateOffererHelpersTest is Test, CreateOffererTestHelpers {
         );
     }
 
-    function testUpdateTransientStateERC20(uint256 seed, address token, uint256 amount, bytes32 rights, uint256 expiryLength, address ptReceiver, address dtReceiver)
-        public
-    {
+    function testUpdateTransientStateERC20(uint256 seed, address fulfiller, address token, uint256 amount, bytes32 rights, uint256 expiryLength) public {
         Structs.TransientState memory transientStateBefore = harness.transientState();
         SpentItem memory minimumReceived =
             SpentItem({itemType: ItemType.ERC721, token: address(this), identifier: seed << 8 | uint256(IDelegateRegistry.DelegationType.ERC20), amount: 1});
@@ -302,13 +286,16 @@ contract CreateOffererHelpersTest is Test, CreateOffererTestHelpers {
             signerSalt: uint256(keccak256(abi.encode("salt", seed))),
             expiryLength: expiryLength,
             expiryType: _createRandomExpiryType(uint256(keccak256(abi.encode("expiry", seed)))),
-            targetToken: _createRandomTargetToken(uint256(keccak256(abi.encode("targetToken", seed)))),
-            receivers: Structs.Receivers({delegate: dtReceiver, principal: ptReceiver})
+            targetToken: _createRandomTargetToken(uint256(keccak256(abi.encode("targetToken", seed))))
         });
-        harness.updateTransientState(minimumReceived, maximumSpent, decodedContext);
-        assertEq(keccak256(abi.encode(transientStateBefore.erc721Order)), keccak256(abi.encode(harness.transientState().erc721Order)));
-        assertEq(keccak256(abi.encode(transientStateBefore.erc1155Order)), keccak256(abi.encode(harness.transientState().erc1155Order)));
-        assertEq(keccak256(abi.encode(harness.transientState().receivers)), keccak256(abi.encode(Structs.Receivers({delegate: dtReceiver, principal: ptReceiver}))));
+        {
+            address targetTokenReceiverBefore = harness.transientState().receivers.targetTokenReceiver;
+            harness.updateTransientState(fulfiller, minimumReceived, maximumSpent, decodedContext);
+            assertEq(keccak256(abi.encode(transientStateBefore.erc721Order)), keccak256(abi.encode(harness.transientState().erc721Order)));
+            assertEq(keccak256(abi.encode(transientStateBefore.erc1155Order)), keccak256(abi.encode(harness.transientState().erc1155Order)));
+            assertEq(harness.transientState().receivers.fulfiller, fulfiller);
+            assertEq(harness.transientState().receivers.targetTokenReceiver, targetTokenReceiverBefore);
+        }
         assertEq(
             keccak256(abi.encode(harness.transientState().erc20Order)),
             keccak256(
@@ -329,9 +316,7 @@ contract CreateOffererHelpersTest is Test, CreateOffererTestHelpers {
         );
     }
 
-    function testUpdateTransientStateERC1155(uint256 seed, address token, uint256 amount, bytes32 rights, uint256 expiryLength, address ptReceiver, address dtReceiver)
-        public
-    {
+    function testUpdateTransientStateERC1155(uint256 seed, address fulfiller, address token, uint256 amount, bytes32 rights, uint256 expiryLength) public {
         Structs.TransientState memory transientStateBefore = harness.transientState();
         SpentItem memory minimumReceived =
             SpentItem({itemType: ItemType.ERC721, token: address(this), identifier: seed << 8 | uint256(IDelegateRegistry.DelegationType.ERC1155), amount: 1});
@@ -342,13 +327,16 @@ contract CreateOffererHelpersTest is Test, CreateOffererTestHelpers {
             signerSalt: uint256(keccak256(abi.encode("salt", seed))),
             expiryLength: expiryLength,
             expiryType: _createRandomExpiryType(uint256(keccak256(abi.encode("expiry", seed)))),
-            targetToken: _createRandomTargetToken(uint256(keccak256(abi.encode("targetToken", seed)))),
-            receivers: Structs.Receivers({delegate: dtReceiver, principal: ptReceiver})
+            targetToken: _createRandomTargetToken(uint256(keccak256(abi.encode("targetToken", seed))))
         });
-        harness.updateTransientState(minimumReceived, maximumSpent, decodedContext);
-        assertEq(keccak256(abi.encode(transientStateBefore.erc721Order)), keccak256(abi.encode(harness.transientState().erc721Order)));
-        assertEq(keccak256(abi.encode(transientStateBefore.erc20Order)), keccak256(abi.encode(harness.transientState().erc20Order)));
-        assertEq(keccak256(abi.encode(harness.transientState().receivers)), keccak256(abi.encode(Structs.Receivers({delegate: dtReceiver, principal: ptReceiver}))));
+        {
+            address targetTokenReceiverBefore = harness.transientState().receivers.targetTokenReceiver;
+            harness.updateTransientState(fulfiller, minimumReceived, maximumSpent, decodedContext);
+            assertEq(keccak256(abi.encode(transientStateBefore.erc721Order)), keccak256(abi.encode(harness.transientState().erc721Order)));
+            assertEq(keccak256(abi.encode(transientStateBefore.erc20Order)), keccak256(abi.encode(harness.transientState().erc20Order)));
+            assertEq(harness.transientState().receivers.fulfiller, fulfiller);
+            assertEq(harness.transientState().receivers.targetTokenReceiver, targetTokenReceiverBefore);
+        }
         assertEq(
             keccak256(abi.encode(harness.transientState().erc1155Order)),
             keccak256(
@@ -370,9 +358,7 @@ contract CreateOffererHelpersTest is Test, CreateOffererTestHelpers {
         );
     }
 
-    function testUpdateTransientStateRevert(uint256 seed, address token, uint256 amount, bytes32 rights, uint256 expiryLength, address ptReceiver, address dtReceiver)
-        public
-    {
+    function testUpdateTransientStateRevert(uint256 seed, address fulfiller, address token, uint256 amount, bytes32 rights, uint256 expiryLength) public {
         Structs.TransientState memory transientStateBefore = harness.transientState();
         SpentItem memory minimumReceived =
             SpentItem({itemType: ItemType.ERC721, token: address(this), identifier: uint256(IDelegateRegistry.DelegationType.NONE), amount: 1});
@@ -383,17 +369,16 @@ contract CreateOffererHelpersTest is Test, CreateOffererTestHelpers {
             signerSalt: uint256(keccak256(abi.encode("salt", seed))),
             expiryLength: expiryLength,
             expiryType: _createRandomExpiryType(uint256(keccak256(abi.encode("expiry", seed)))),
-            targetToken: _createRandomTargetToken(uint256(keccak256(abi.encode("targetToken", seed)))),
-            receivers: Structs.Receivers({delegate: dtReceiver, principal: ptReceiver})
+            targetToken: _createRandomTargetToken(uint256(keccak256(abi.encode("targetToken", seed))))
         });
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidTokenType.selector, IDelegateRegistry.DelegationType.NONE));
-        harness.updateTransientState(minimumReceived, maximumSpent, decodedContext);
+        harness.updateTransientState(fulfiller, minimumReceived, maximumSpent, decodedContext);
         minimumReceived.identifier = uint256(IDelegateRegistry.DelegationType.ALL);
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidTokenType.selector, IDelegateRegistry.DelegationType.ALL));
-        harness.updateTransientState(minimumReceived, maximumSpent, decodedContext);
+        harness.updateTransientState(fulfiller, minimumReceived, maximumSpent, decodedContext);
         minimumReceived.identifier = uint256(IDelegateRegistry.DelegationType.CONTRACT);
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidTokenType.selector, IDelegateRegistry.DelegationType.CONTRACT));
-        harness.updateTransientState(minimumReceived, maximumSpent, decodedContext);
+        harness.updateTransientState(fulfiller, minimumReceived, maximumSpent, decodedContext);
         assertEq(keccak256(abi.encode(transientStateBefore)), keccak256(abi.encode(harness.transientState())));
     }
 
@@ -715,7 +700,7 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
         vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
         (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct) =
             _generateValidVerifyCreateCase(seed, token, tokenId, amount, rights, ptReceiver, dtReceiver);
-        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
+        harness.verifyCreate(address(dt), offer.identifier, consideration, abi.encode(contextStruct));
     }
 
     function testVerifyCreateRevertOfferIdentifier(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
@@ -727,7 +712,7 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
             _generateValidVerifyCreateCase(seed, token, tokenId, amount, rights, ptReceiver, dtReceiver);
         offer.identifier = 10;
         vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.NotMinted.selector, uint256(keccak256(abi.encode(address(harness), 10)))));
-        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
+        harness.verifyCreate(address(dt), offer.identifier, consideration, abi.encode(contextStruct));
     }
 
     function testVerifyCreateRevertConsiderationToken(
@@ -745,7 +730,7 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
             _generateValidVerifyCreateCase(seed, token, tokenId, amount, rights, ptReceiver, dtReceiver);
         consideration.token = address(uint160(uint256(keccak256(abi.encode("cat")))));
         vm.expectRevert(Errors.DelegateInfoInvariant.selector);
-        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
+        harness.verifyCreate(address(dt), offer.identifier, consideration, abi.encode(contextStruct));
     }
 
     function testVerifyCreateRevertConsiderationIdentifier(
@@ -765,7 +750,7 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
             consideration.identifier = uint256(keccak256(abi.encode("cat")));
             vm.expectRevert(Errors.DelegateInfoInvariant.selector);
         }
-        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
+        harness.verifyCreate(address(dt), offer.identifier, consideration, abi.encode(contextStruct));
     }
 
     function testVerifyCreateRevertConsiderationAmount(
@@ -785,7 +770,7 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
             consideration.amount = uint256(keccak256(abi.encode("cat")));
             vm.expectRevert(Errors.DelegateInfoInvariant.selector);
         }
-        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
+        harness.verifyCreate(address(dt), offer.identifier, consideration, abi.encode(contextStruct));
     }
 
     function testVerifyCreateRevertInvalidContext(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
@@ -795,7 +780,7 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
         vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
         (SpentItem memory offer, ReceivedItem memory consideration,) = _generateValidVerifyCreateCase(seed, token, tokenId, amount, rights, ptReceiver, dtReceiver);
         vm.expectRevert();
-        harness.verifyCreate(address(dt), offer, consideration, abi.encode("cat"));
+        harness.verifyCreate(address(dt), offer.identifier, consideration, abi.encode("cat"));
     }
 
     function testVerifyCreateRevertPrincipal(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
@@ -805,9 +790,9 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
         vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
         (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct) =
             _generateValidVerifyCreateCase(seed, token, tokenId, amount, rights, ptReceiver, dtReceiver);
-        contextStruct.receivers.principal = address(uint160(uint256(keccak256(abi.encode("cat")))));
+        harness.updateReceivers(address(uint160(uint256(keccak256(abi.encode("cat"))))), dtReceiver);
         vm.expectRevert(Errors.DelegateInfoInvariant.selector);
-        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
+        harness.verifyCreate(address(dt), offer.identifier, consideration, abi.encode(contextStruct));
     }
 
     function testVerifyCreateRevertDelegate(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
@@ -817,9 +802,9 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
         vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
         (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct) =
             _generateValidVerifyCreateCase(seed, token, tokenId, amount, rights, ptReceiver, dtReceiver);
-        contextStruct.receivers.delegate = address(uint160(uint256(keccak256(abi.encode("cat")))));
+        harness.updateReceivers(ptReceiver, address(uint160(uint256(keccak256(abi.encode("cat"))))));
         vm.expectRevert(Errors.DelegateInfoInvariant.selector);
-        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
+        harness.verifyCreate(address(dt), offer.identifier, consideration, abi.encode(contextStruct));
     }
 
     function testVerifyCreateRevertExpiryLength(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
@@ -831,7 +816,7 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
             _generateValidVerifyCreateCase(seed, token, tokenId, amount, rights, ptReceiver, dtReceiver);
         contextStruct.expiryLength = uint256(keccak256(abi.encode("cat")));
         vm.expectRevert(Errors.DelegateInfoInvariant.selector);
-        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
+        harness.verifyCreate(address(dt), offer.identifier, consideration, abi.encode(contextStruct));
     }
 
     function testVerifyCreateRevertExpiryType(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
@@ -843,10 +828,10 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
             _generateValidVerifyCreateCase(seed, token, tokenId, amount, rights, ptReceiver, dtReceiver);
         contextStruct.expiryType = Enums.ExpiryType.relative;
         vm.expectRevert(Errors.DelegateInfoInvariant.selector);
-        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
+        harness.verifyCreate(address(dt), offer.identifier, consideration, abi.encode(contextStruct));
         contextStruct.expiryType = Enums.ExpiryType.none;
         vm.expectRevert(abi.encodeWithSelector(Errors.InvalidExpiryType.selector, contextStruct.expiryType));
-        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
+        harness.verifyCreate(address(dt), offer.identifier, consideration, abi.encode(contextStruct));
     }
 
     function testVerifyCreateRevertRights(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver) public {
@@ -856,7 +841,7 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
             _generateValidVerifyCreateCase(seed, token, tokenId, amount, rights, ptReceiver, dtReceiver);
         contextStruct.rights = keccak256(abi.encode("cat"));
         vm.expectRevert(Errors.DelegateInfoInvariant.selector);
-        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
+        harness.verifyCreate(address(dt), offer.identifier, consideration, abi.encode(contextStruct));
     }
 
     function testVerifyCreatePassesUnusedData(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
@@ -872,14 +857,14 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
         consideration.itemType = ItemType.ERC20;
         consideration.recipient = payable(address(uint160(uint256(keccak256(abi.encode("cat"))))));
         contextStruct.signerSalt = uint256(keccak256(abi.encode("cat")));
-        contextStruct.targetToken = Enums.TargetToken.none;
-        harness.verifyCreate(address(dt), offer, consideration, abi.encode(contextStruct));
+        harness.verifyCreate(address(dt), offer.identifier, consideration, abi.encode(contextStruct));
     }
 
     function _generateValidVerifyCreateCase(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
         internal
         returns (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct)
     {
+        harness.updateReceivers(ptReceiver, dtReceiver);
         (IDelegateRegistry.DelegationType tokenType, ItemType itemType) = _createRandomValidDelegationTypeAndItemType(seed);
         uint256 createOrderHash = seed << 8 | uint256(tokenType);
         offer = SpentItem({itemType: ItemType.ERC721, token: address(harness), identifier: createOrderHash, amount: 1});
@@ -890,14 +875,8 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
             amount: itemType != ItemType.ERC721 ? amount : 1,
             recipient: payable(address(harness))
         });
-        contextStruct = Structs.Context({
-            rights: rights,
-            signerSalt: seed,
-            expiryLength: 10 ** 4,
-            expiryType: Enums.ExpiryType.absolute,
-            targetToken: Enums.TargetToken.delegate,
-            receivers: Structs.Receivers({principal: ptReceiver, delegate: dtReceiver})
-        });
+        contextStruct =
+            Structs.Context({rights: rights, signerSalt: seed, expiryLength: 10 ** 4, expiryType: Enums.ExpiryType.absolute, targetToken: Enums.TargetToken.delegate});
         // Create delegation as DelegateToken and save
         vm.startPrank(address(dt));
         bytes32 registryHash;
