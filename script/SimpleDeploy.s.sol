@@ -30,8 +30,7 @@ contract SimpleDeploy is Script {
         DelegateTokenStructs.DelegateTokenParameters memory delegateTokenParameters =
             DelegateTokenStructs.DelegateTokenParameters({delegateRegistry: delegateRegistry, principalToken: ptPrediction, marketMetadata: marketMetadata});
         address delegateToken = address(new DelegateToken(delegateTokenParameters));
-        OffererStructs.Parameters memory createOffererParameters =
-            OffererStructs.Parameters({seaport: seaport15, delegateToken: delegateToken, principalToken: principalToken});
+        OffererStructs.Parameters memory createOffererParameters = OffererStructs.Parameters({seaport: seaport15, delegateToken: delegateToken, principalToken: principalToken});
         address createOfferer = address(new CreateOfferer(createOffererParameters));
 
         console2.log("Delegate Registry", delegateRegistry);

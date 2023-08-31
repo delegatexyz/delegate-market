@@ -7,10 +7,10 @@ import {IDelegateRegistry, DelegateTokenErrors as Errors, DelegateTokenStructs a
 
 library DelegateTokenRegistryHelpers {
     /**
-     * @notice Loads a delegateTokenHolder directly from a given registryHash.
-     * @param delegateRegistry Should be the address of the DelegateRegistry v2 contract.
-     * @param registryHash The hash of the delegation to retrieve data for.
-     * @return delegateTokenHolder Which is the delegate "to" address corresponding to the registryHash.
+     * @notice Loads a delegateTokenHolder directly from a given registryHash
+     * @param delegateRegistry The address of the DelegateRegistry v2 contract
+     * @param registryHash The hash of the delegation to retrieve data for
+     * @return delegateTokenHolder Which is the delegate "to" address corresponding to the registryHash
      */
     function loadTokenHolder(address delegateRegistry, bytes32 registryHash) internal view returns (address delegateTokenHolder) {
         unchecked {
@@ -21,11 +21,11 @@ library DelegateTokenRegistryHelpers {
     }
 
     /**
-     * @notice Loads a underlyingContract directly from a given registryHash.
-     * @param delegateRegistry Should be the address of the DelegateRegistry v2 contract.
-     * @param registryHash The hash of the delegation to retrieve data for.
-     * @return underlyingContract Which is the "contract_" address corresponding to the registryHash.
-     * @dev Two slots need to be loaded in the registry given the packed configuration, this function should only be used when you don't need "to" or "from".
+     * @notice Loads a underlyingContract directly from a given registryHash
+     * @param delegateRegistry Address of the DelegateRegistry v2 contract
+     * @param registryHash The hash of the delegation to retrieve data for
+     * @return underlyingContract Which is the "contract_" address corresponding to the registryHash
+     * @dev Two slots need to be loaded in the registry given the packed configuration, this function should only be used when you don't need "to" or "from"
      */
     function loadContract(address delegateRegistry, bytes32 registryHash) internal view returns (address underlyingContract) {
         unchecked {
@@ -39,12 +39,12 @@ library DelegateTokenRegistryHelpers {
     }
 
     /**
-     * @notice Loads a delegateTokenHolder and a underlyingContract from a given registryHash.
-     * @param delegateRegistry Should be the address of the DelegateRegistry v2 contract.
-     * @param registryHash The hash of the delegation to retrieve data for.
-     * @return delegateTokenHolder Which is the delegate "to" address corresponding to the registryHash.
-     * @return underlyingContract Which is the "contract_" address corresponding to the registryHash.
-     * @dev Two slots need to be loaded from the registry given the packed position.
+     * @notice Loads a delegateTokenHolder and a underlyingContract from a given registryHash
+     * @param delegateRegistry Address of the DelegateRegistry v2 contract
+     * @param registryHash The hash of the delegation to retrieve data for
+     * @return delegateTokenHolder Which is the delegate "to" address corresponding to the registryHash
+     * @return underlyingContract Which is the "contract_" address corresponding to the registryHash
+     * @dev Two slots need to be loaded from the registry given the packed position
      */
     function loadTokenHolderAndContract(address delegateRegistry, bytes32 registryHash) internal view returns (address delegateTokenHolder, address underlyingContract) {
         unchecked {
@@ -58,9 +58,9 @@ library DelegateTokenRegistryHelpers {
     }
 
     /**
-     * @notice Loads the "from" address from a given registryHash.
-     * @param delegateRegistry Should be the address of the DelegateRegistry v2 contract.
-     * @param registryHash The hash of the delegation to retrieve data for.
+     * @notice Loads the "from" address from a given registryHash
+     * @param delegateRegistry Address of the DelegateRegistry v2 contract
+     * @param registryHash The hash of the delegation to retrieve data for
      */
     function loadFrom(address delegateRegistry, bytes32 registryHash) internal view returns (address) {
         unchecked {
@@ -71,9 +71,9 @@ library DelegateTokenRegistryHelpers {
     }
 
     /**
-     * @notice Loads the "amount" from a given registryHash.
-     * @param delegateRegistry Should be the address of the DelegateRegistry v2 contract.
-     * @param registryHash The hash of the delegation to retrieve data for.
+     * @notice Loads the "amount" from a given registryHash
+     * @param delegateRegistry Address of the DelegateRegistry v2 contract
+     * @param registryHash The hash of the delegation to retrieve data for
      */
     function loadAmount(address delegateRegistry, bytes32 registryHash) internal view returns (uint256) {
         unchecked {
@@ -82,9 +82,9 @@ library DelegateTokenRegistryHelpers {
     }
 
     /**
-     * @notice Loads the "rights" from a given registryHash.
-     * @param delegateRegistry Should be the address of the DelegateRegistry v2 contract.
-     * @param registryHash The hash of the delegation to retrieve data for.
+     * @notice Loads the "rights" from a given registryHash
+     * @param delegateRegistry Address of the DelegateRegistry v2 contract
+     * @param registryHash The hash of the delegation to retrieve data for
      */
     function loadRights(address delegateRegistry, bytes32 registryHash) internal view returns (bytes32) {
         unchecked {
@@ -93,9 +93,9 @@ library DelegateTokenRegistryHelpers {
     }
 
     /**
-     * @notice Loads the "tokenId" from a given registryHash.
-     * @param delegateRegistry Should be the address of the DelegateRegistry v2 contract.
-     * @param registryHash The hash of the delegation to retrieve data for.
+     * @notice Loads the "tokenId" from a given registryHash
+     * @param delegateRegistry Address of the DelegateRegistry v2 contract
+     * @param registryHash The hash of the delegation to retrieve data for
      */
     function loadTokenId(address delegateRegistry, bytes32 registryHash) internal view returns (uint256) {
         unchecked {
@@ -104,30 +104,30 @@ library DelegateTokenRegistryHelpers {
     }
 
     /**
-     * @notice Calculates a new decreased value given an "amount" from a given registryHash.
-     * @param delegateRegistry Should be the address of the DelegateRegistry v2 contract.
-     * @param registryHash The hash of the delegation to retrieve data for.
-     * @param decreaseAmount The value to decrement "amount" by.
-     * @dev Assumes the decreased amount won't underflow with "amount".
+     * @notice Calculates a new decreased value given an "amount" from a given registryHash
+     * @param delegateRegistry Address of the DelegateRegistry v2 contract
+     * @param registryHash The hash of the delegation to retrieve data for
+     * @param decreaseAmount The value to decrement "amount" by
+     * @dev Assumes the decreased amount won't underflow with "amount"
      */
     function calculateDecreasedAmount(address delegateRegistry, bytes32 registryHash, uint256 decreaseAmount) internal view returns (uint256) {
         unchecked {
-            return uint256(IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(registryHash)) + RegistryStorage.POSITIONS_AMOUNT)))
-                - decreaseAmount;
+            return
+                uint256(IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(registryHash)) + RegistryStorage.POSITIONS_AMOUNT))) - decreaseAmount;
         }
     }
 
     /**
-     * @notice Calculates a new increased value given an "amount" from a given registryHash.
-     * @param delegateRegistry Should be the address of the DelegateRegistry v2 contract.
-     * @param registryHash The hash of the delegation to retrieve data for.
-     * @param increaseAmount The value to increment "amount" by.
-     * @dev Assumes the increased amount won't overflow with "amount".
+     * @notice Calculates a new increased value given an "amount" from a given registryHash
+     * @param delegateRegistry Address of the DelegateRegistry v2 contract
+     * @param registryHash The hash of the delegation to retrieve data for
+     * @param increaseAmount The value to increment "amount" by
+     * @dev Assumes the increased amount won't overflow with "amount"
      */
     function calculateIncreasedAmount(address delegateRegistry, bytes32 registryHash, uint256 increaseAmount) internal view returns (uint256) {
         unchecked {
-            return uint256(IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(registryHash)) + RegistryStorage.POSITIONS_AMOUNT)))
-                + increaseAmount;
+            return
+                uint256(IDelegateRegistry(delegateRegistry).readSlot(bytes32(uint256(RegistryHashes.location(registryHash)) + RegistryStorage.POSITIONS_AMOUNT))) + increaseAmount;
         }
     }
 
@@ -146,8 +146,7 @@ library DelegateTokenRegistryHelpers {
     function revertERC20FlashAmountUnavailable(address delegateRegistry, Structs.FlashInfo calldata info) internal view {
         uint256 availableAmount = 0;
         unchecked {
-            // We sum the delegation amounts for "flashloan" and "" rights since liquid delegate doesn't allow double
-            // spending for different rights
+            // We sum the delegation amounts for "flashloan" and "" rights since liquid delegate doesn't allow double spends for different rights
             availableAmount = loadAmount(delegateRegistry, RegistryHashes.erc20Hash(address(this), "flashloan", info.delegateHolder, info.tokenContract))
                 + loadAmount(delegateRegistry, RegistryHashes.erc20Hash(address(this), "", info.delegateHolder, info.tokenContract));
         } // Unreasonable that this block will overflow
@@ -159,13 +158,13 @@ library DelegateTokenRegistryHelpers {
         unchecked {
             availableAmount = loadAmount(delegateRegistry, RegistryHashes.erc1155Hash(address(this), "flashloan", info.delegateHolder, info.tokenId, info.tokenContract))
                 + loadAmount(delegateRegistry, RegistryHashes.erc1155Hash(address(this), "", info.delegateHolder, info.tokenId, info.tokenContract));
-        } // Unreasonable that this will overflow
+        } // Unreasonable that this block will overflow
         if (info.amount > availableAmount) {
             revert Errors.ERC1155FlashAmountUnavailable();
         }
     }
 
-    /// @dev will not revert if from didn't have a delegation in the first place
+    /// @dev Will not revert if from didn't have a delegation in the first place
     function transferERC721(
         address delegateRegistry,
         bytes32 registryHash,
@@ -183,9 +182,9 @@ library DelegateTokenRegistryHelpers {
         revert Errors.HashMismatch();
     }
 
-    /// @dev will not revert if from didn't have a delegation in the first place
-    /// @dev will not revert an underflow value if from's existing delegation amount > underlyingAmount
-    /// @dev will not revert an overflow value if to's existing delegation + underlyingAmount > type(uint256).max
+    /// @dev Will not revert if from didn't have a delegation in the first place
+    /// @dev Will not revert an underflow value if from's existing delegation amount > underlyingAmount
+    /// @dev Will not revert an overflow value if to's existing delegation + underlyingAmount > type(uint256).max
     function transferERC20(
         address delegateRegistry,
         bytes32 registryHash,
@@ -207,9 +206,9 @@ library DelegateTokenRegistryHelpers {
         revert Errors.HashMismatch();
     }
 
-    /// @dev will not revert if from didn't have a delegation in the first place
-    /// @dev will not revert an underflow value if from's existing delegation amount > underlyingAmount
-    /// @dev will not revert an overflowed value if to's existing delegation + underlyingAmount > type(uint256).max
+    /// @dev Will not revert if from didn't have a delegation in the first place
+    /// @dev Will not revert an underflow value if from's existing delegation amount > underlyingAmount
+    /// @dev Will not revert an overflowed value if to's existing delegation + underlyingAmount > type(uint256).max
     function transferERC1155(
         address delegateRegistry,
         bytes32 registryHash,
@@ -232,7 +231,7 @@ library DelegateTokenRegistryHelpers {
         revert Errors.HashMismatch();
     }
 
-    /// @dev will not revert if delegateHolder had a delegation in the first place
+    /// @dev Will not revert if delegateHolder had a delegation in the first place
     function delegateERC721(address delegateRegistry, bytes32 newRegistryHash, Structs.DelegateInfo calldata delegateInfo) internal {
         if (
             IDelegateRegistry(delegateRegistry).delegateERC721(delegateInfo.delegateHolder, delegateInfo.tokenContract, delegateInfo.tokenId, delegateInfo.rights, true)
@@ -241,23 +240,19 @@ library DelegateTokenRegistryHelpers {
         revert Errors.HashMismatch();
     }
 
-    /// @dev will not revert if delegateHolder had a delegation in the first place
-    /// @dev will not revert an overflow value if delegateHolder's existing delegation + amount > type(uint256).max
+    /// @dev Will not revert if delegateHolder had a delegation in the first place
+    /// @dev Will not revert an overflow value if delegateHolder's existing delegation + amount > type(uint256).max
     function incrementERC20(address delegateRegistry, bytes32 newRegistryHash, Structs.DelegateInfo calldata delegateInfo) internal {
         if (
             IDelegateRegistry(delegateRegistry).delegateERC20(
-                delegateInfo.delegateHolder,
-                delegateInfo.tokenContract,
-                calculateIncreasedAmount(delegateRegistry, newRegistryHash, delegateInfo.amount),
-                delegateInfo.rights,
-                true
+                delegateInfo.delegateHolder, delegateInfo.tokenContract, calculateIncreasedAmount(delegateRegistry, newRegistryHash, delegateInfo.amount), delegateInfo.rights, true
             ) == newRegistryHash
         ) return;
         revert Errors.HashMismatch();
     }
 
-    /// @dev will not revert if delegateHolder had a delegation in the first place
-    /// @dev will not revert an overflow value if delegateHolder's existing delegation + amount > type(uint256).max
+    /// @dev Will not revert if delegateHolder had a delegation in the first place
+    /// @dev Will not revert an overflow value if delegateHolder's existing delegation + amount > type(uint256).max
     function incrementERC1155(address delegateRegistry, bytes32 newRegistryHash, Structs.DelegateInfo calldata delegateInfo) internal {
         if (
             IDelegateRegistry(delegateRegistry).delegateERC1155(
@@ -272,7 +267,7 @@ library DelegateTokenRegistryHelpers {
         revert Errors.HashMismatch();
     }
 
-    /// @dev will not revert if delegateHolder never had a delegation in the first place
+    /// @dev Will not revert if delegateHolder never had a delegation in the first place
     function revokeERC721(
         address delegateRegistry,
         bytes32 registryHash,
@@ -287,8 +282,8 @@ library DelegateTokenRegistryHelpers {
         revert Errors.HashMismatch();
     }
 
-    /// @dev will not revert if delegateHolder never had a delegation in the first place
-    /// @dev will not revert an underflow value if delegateHolder's existing delegation - underlyingAmount < 0
+    /// @dev Will not revert if delegateHolder never had a delegation in the first place
+    /// @dev Will not revert an underflow value if delegateHolder's existing delegation - underlyingAmount < 0
     function decrementERC20(
         address delegateRegistry,
         bytes32 registryHash,
@@ -305,8 +300,8 @@ library DelegateTokenRegistryHelpers {
         revert Errors.HashMismatch();
     }
 
-    /// @dev will not revert if delegateHolder never had a delegation in the first place
-    /// @dev will not revert an underflow value if delegateHolder's existing delegation - underlyingAmount < 0
+    /// @dev Will not revert if delegateHolder never had a delegation in the first place
+    /// @dev Will not revert an underflow value if delegateHolder's existing delegation - underlyingAmount < 0
     function decrementERC1155(
         address delegateRegistry,
         bytes32 registryHash,
@@ -318,12 +313,7 @@ library DelegateTokenRegistryHelpers {
     ) internal {
         if (
             IDelegateRegistry(delegateRegistry).delegateERC1155(
-                delegateTokenHolder,
-                underlyingContract,
-                underlyingTokenId,
-                calculateDecreasedAmount(delegateRegistry, registryHash, underlyingAmount),
-                underlyingRights,
-                true
+                delegateTokenHolder, underlyingContract, underlyingTokenId, calculateDecreasedAmount(delegateRegistry, registryHash, underlyingAmount), underlyingRights, true
             ) == registryHash
         ) return;
         revert Errors.HashMismatch();

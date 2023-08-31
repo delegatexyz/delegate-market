@@ -9,7 +9,6 @@ import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
 import {IERC1155} from "openzeppelin/token/ERC1155/IERC1155.sol";
 
 import {ContractOffererInterface, SpentItem, ReceivedItem, Schema} from "seaport/contracts/interfaces/ContractOffererInterface.sol";
-import {ItemType} from "seaport/contracts/lib/ConsiderationEnums.sol";
 import {
     CreateOffererStructs as Structs,
     CreateOffererEnums as Enums,
@@ -20,7 +19,7 @@ import {
 
 import {ERC1155Holder} from "openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
 
-/// @dev experimental way to create delegate tokens with seaport and existing seaport conduit approvals
+/// @dev Experimental way to create delegate tokens with seaport and existing seaport conduit approvals
 contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
     address public immutable delegateToken;
     address public immutable principalToken;
@@ -32,14 +31,8 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
         delegateToken = parameters.delegateToken;
         if (parameters.principalToken == address(0)) revert Errors.PrincipalTokenIsZero();
         principalToken = parameters.principalToken;
-        Structs.Order memory defaultInfo = Structs.Order({
-            rights: 0,
-            expiryLength: 1,
-            signerSalt: 1,
-            tokenContract: address(42),
-            expiryType: Enums.ExpiryType.absolute,
-            targetToken: Enums.TargetToken.principal
-        });
+        Structs.Order memory defaultInfo =
+            Structs.Order({rights: 0, expiryLength: 1, signerSalt: 1, tokenContract: address(42), expiryType: Enums.ExpiryType.absolute, targetToken: Enums.TargetToken.principal});
         transientState = Structs.TransientState({
             erc721Order: Structs.ERC721Order({tokenId: 1, info: defaultInfo}),
             erc20Order: Structs.ERC20Order({amount: 1, info: defaultInfo}),
@@ -53,8 +46,8 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
      * @param minimumReceived The "ghost" create offerer token to be ordered
      * @param maximumSpent The underlying token required during the liquid delegate create process
      * @param context The upper bits of context should be encoded with the CreateOffererStruct
-     * @return offer Returns minimumReceived.
-     * @return consideration Returns maximumSpent but with the beneficiary specified as this contract.
+     * @return offer Returns minimumReceived
+     * @return consideration Returns maximumSpent but with the beneficiary specified as this contract
      */
     function generateOrder(address fulfiller, SpentItem[] calldata minimumReceived, SpentItem[] calldata maximumSpent, bytes calldata context)
         external
@@ -163,11 +156,11 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
 
     /**
      * @notice Implementation of seaport contract offerer previewOrder
-     * @param caller Must be the seaport address.
+     * @param caller Must be the seaport address
      * @param minimumReceived The "ghost" create offerer token to be ordered
      * @param maximumSpent The underlying token required during the liquid delegate create process
-     * @return offer Returns minimumReceived.
-     * @return consideration Returns maximumSpent but with the beneficiary specified as this contract.
+     * @return offer Returns minimumReceived
+     * @return consideration Returns maximumSpent but with the beneficiary specified as this contract
      */
     function previewOrder(address caller, address, SpentItem[] calldata minimumReceived, SpentItem[] calldata maximumSpent, bytes calldata context)
         external
@@ -183,10 +176,10 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
      * @notice Calculates the hash and id for an ERC721 order
      * @param targetTokenReceiver The receiver of the target token in the ERC721 order
      * @param conduit The conduit used in the order of the targetTokenReceiver
-     * @param erc721Order The ERC721Order struct with the details of the order.
-     * @return createOrderHash The hash used by CreateOfferer to capture the order intent.
-     * @return delegateTokenId The id of the delegateToken that would be created by CreateOfferer with these parameters.
-     * @dev Reverts if the delegateTokenId has already been used, use a different salt in the order struct.
+     * @param erc721Order The ERC721Order struct with the details of the order
+     * @return createOrderHash The hash used by CreateOfferer to capture the order intent
+     * @return delegateTokenId The id of the delegateToken that would be created by CreateOfferer with these parameters
+     * @dev Reverts if the delegateTokenId has already been used, use a different salt in the order struct
      */
     function calculateERC721OrderHashAndId(address targetTokenReceiver, address conduit, Structs.ERC721Order calldata erc721Order)
         external
@@ -201,10 +194,10 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
      * @notice Calculates the hash and id for an ERC721 order
      * @param targetTokenReceiver The receiver of the target token in the ERC721 order
      * @param conduit The conduit used in the order of the targetTokenReceiver
-     * @param erc20Order The ERC20Order struct with the details of the order.
-     * @return createOrderHash The hash used by CreateOfferer to capture the order intent.
-     * @return delegateTokenId The id of the delegateToken that would be created by CreateOfferer with these parameters.
-     * @dev Reverts if the delegateTokenId has already been used, use a different salt in the order struct.
+     * @param erc20Order The ERC20Order struct with the details of the order
+     * @return createOrderHash The hash used by CreateOfferer to capture the order intent
+     * @return delegateTokenId The id of the delegateToken that would be created by CreateOfferer with these parameters
+     * @dev Reverts if the delegateTokenId has already been used, use a different salt in the order struct
      */
     function calculateERC20OrderHashAndId(address targetTokenReceiver, address conduit, Structs.ERC20Order calldata erc20Order)
         external
@@ -220,9 +213,9 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
      * @param targetTokenReceiver The receiver of the target token in the ERC721 order
      * @param conduit The conduit used in the order of the targetTokenReceiver
      * @param erc1155Order The ERC1155Order struct with the details of the order.
-     * @return createOrderHash The hash used by CreateOfferer to capture the order intent.
-     * @return delegateTokenId The id of the delegateToken that would be created by CreateOfferer with these parameters.
-     * @dev Reverts if the delegateTokenId has already been used, use a different salt in the order struct.
+     * @return createOrderHash The hash used by CreateOfferer to capture the order intent
+     * @return delegateTokenId The id of the delegateToken that would be created by CreateOfferer with these parameters
+     * @dev Reverts if the delegateTokenId has already been used, use a different salt in the order struct
      */
     function calculateERC1155OrderHashAndId(address targetTokenReceiver, address conduit, Structs.ERC1155Order calldata erc1155Order)
         external
@@ -235,6 +228,6 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
 
     /// @notice Implementation of seaport contract offerer getSeaportMetadata
     function getSeaportMetadata() external pure returns (string memory, Schema[] memory) {
-        return ("Liquid Delegate Contract Offerer", new Schema[](0));
+        return ("Delegate Market Contract Offerer", new Schema[](0));
     }
 }

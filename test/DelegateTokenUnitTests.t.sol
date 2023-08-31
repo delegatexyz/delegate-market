@@ -13,13 +13,7 @@ import {IERC165} from "openzeppelin/utils/introspection/IERC165.sol";
 import {IERC1155Receiver} from "openzeppelin/token/ERC1155/IERC1155Receiver.sol";
 
 import {
-    PrincipalToken,
-    DelegateToken,
-    MarketMetadata,
-    DelegateTokenStructs,
-    BaseLiquidDelegateTest,
-    ComputeAddress,
-    IDelegateRegistry
+    PrincipalToken, DelegateToken, MarketMetadata, DelegateTokenStructs, BaseLiquidDelegateTest, ComputeAddress, IDelegateRegistry
 } from "test/base/BaseLiquidDelegateTest.t.sol";
 
 contract FalseIsApprovedOrOwner {
@@ -95,8 +89,7 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
             marketMetadata: address(0)
             }));
         // Check successful constructor
-        dt =
-        new DelegateToken(DelegateTokenStructs.DelegateTokenParameters({delegateRegistry: delegateRegistry, principalToken: principalToken, marketMetadata: marketMetadata_}));
+        dt = new DelegateToken(DelegateTokenStructs.DelegateTokenParameters({delegateRegistry: delegateRegistry, principalToken: principalToken, marketMetadata: marketMetadata_}));
         assertEq(delegateRegistry, dt.delegateRegistry());
         assertEq(principalToken, dt.principalToken());
         assertEq(marketMetadata_, dt.marketMetadata());
@@ -199,8 +192,7 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
         vm.startPrank(from);
         mockERC721.mintNext(from);
         mockERC721.approve(address(dt), 0);
-        uint256 delegateTokenId =
-            dt.create(DelegateTokenStructs.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 0, address(mockERC721), 0, rights, expiry), 1);
+        uint256 delegateTokenId = dt.create(DelegateTokenStructs.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 0, address(mockERC721), 0, rights, expiry), 1);
         vm.stopPrank();
         if (to.code.length != 0) {
             vm.expectRevert();
@@ -224,8 +216,7 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
         vm.startPrank(from);
         mockERC721.mintNext(from);
         mockERC721.approve(address(dt), 0);
-        uint256 delegateTokenId =
-            dt.create(DelegateTokenStructs.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 0, address(mockERC721), 0, rights, expiry), 1);
+        uint256 delegateTokenId = dt.create(DelegateTokenStructs.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 0, address(mockERC721), 0, rights, expiry), 1);
         vm.stopPrank();
         if (to.code.length != 0) {
             vm.expectRevert();
@@ -243,9 +234,7 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
 
     event Approval(address indexed owner_, address indexed approved_, uint256 indexed tokenId_);
 
-    function testApprove(address searchDelegateTokenHolder, address delegateTokenHolder, address spender, bytes32 rights, uint256 delegateTokenId, uint256 randomData)
-        public
-    {
+    function testApprove(address searchDelegateTokenHolder, address delegateTokenHolder, address spender, bytes32 rights, uint256 delegateTokenId, uint256 randomData) public {
         vm.assume(searchDelegateTokenHolder != delegateTokenHolder);
         // Create delegation
         vm.prank(address(dt));
@@ -324,8 +313,7 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
         vm.startPrank(from);
         mockERC721.mintNext(from);
         mockERC721.approve(address(dt), 0);
-        uint256 delegateTokenId =
-            dt.create(DelegateTokenStructs.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 0, address(mockERC721), 0, rights, expiry), 1);
+        uint256 delegateTokenId = dt.create(DelegateTokenStructs.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC721, from, 0, address(mockERC721), 0, rights, expiry), 1);
         vm.stopPrank();
         // Should revert if to is zero
         if (to == address(0)) {
