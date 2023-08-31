@@ -29,13 +29,13 @@ library DelegateTokenStructs {
     }
 
     struct FlashInfo {
-        address receiver; // The address to receive the loaned assets.
-        address delegateHolder; // The holder of the delegation.
-        IDelegateRegistry.DelegationType tokenType; // The type of contract, e.g. ERC20.
-        address tokenContract; // The contract of the underlying being loaned.
-        uint256 tokenId; // The tokenId of the underlying being loaned, if applicable.
-        uint256 amount; // The amount being lent, if applicable.
-        bytes data; // Arbitrary data structure, intended to contain user-defined parameters.
+        address receiver; // The address to receive the loaned assets
+        address delegateHolder; // The holder of the delegation
+        IDelegateRegistry.DelegationType tokenType; // The type of contract, e.g. ERC20
+        address tokenContract; // The contract of the underlying being loaned
+        uint256 tokenId; // The tokenId of the underlying being loaned, if applicable
+        uint256 amount; // The amount being lent, if applicable
+        bytes data; // Arbitrary data structure, intended to contain user-defined parameters
     }
 }
 

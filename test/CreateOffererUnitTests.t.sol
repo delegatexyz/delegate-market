@@ -7,15 +7,7 @@ import {BaseSeaportTest} from "./base/BaseSeaportTest.t.sol";
 import {MockERC20, BaseLiquidDelegateTest} from "./base/BaseLiquidDelegateTest.t.sol";
 import {IDelegateToken, Structs as IDelegateTokenStructs} from "src/interfaces/IDelegateToken.sol";
 import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
-import {
-    AdvancedOrder,
-    OrderParameters,
-    Fulfillment,
-    CriteriaResolver,
-    OfferItem,
-    ConsiderationItem,
-    FulfillmentComponent
-} from "seaport/contracts/lib/ConsiderationStructs.sol";
+import {AdvancedOrder, OrderParameters, Fulfillment, CriteriaResolver, OfferItem, ConsiderationItem, FulfillmentComponent} from "seaport/contracts/lib/ConsiderationStructs.sol";
 import {ItemType, OrderType} from "seaport/contracts/lib/ConsiderationEnums.sol";
 import {SpentItem, Schema} from "seaport/contracts/interfaces/ContractOffererInterface.sol";
 
@@ -116,7 +108,7 @@ contract CreateOffererUnitTests is Test, BaseSeaportTest, BaseLiquidDelegateTest
 
     function testGetSeaportMetadata() public {
         (string memory metadataString, Schema[] memory schema) = createOfferer.getSeaportMetadata();
-        assertEq("Liquid Delegate Contract Offerer", metadataString);
+        assertEq("Delegate Market Contract Offerer", metadataString);
         assertEq(schema.length, 0);
     }
 

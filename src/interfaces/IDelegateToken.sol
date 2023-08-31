@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import {IERC721Metadata} from "openzeppelin/token/ERC721/extensions/IERC721Metadata.sol";
 import {IERC721Receiver} from "openzeppelin/token/ERC721/IERC721Receiver.sol";
@@ -14,8 +14,7 @@ interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver, 
     //////////////////////////////////////////////////////////////*/
 
     /**
-     * To prevent doubled event emissions, the latest version of the DelegateToken uses the ERC721 Transfer(from, to,
-     * id) event standard to infer meaning that was
+     * To prevent doubled event emissions, the latest version of the DelegateToken uses the ERC721 Transfer(from, to, id) event standard to infer meaning that was
      * previously double covered by "RightsCreated" and "RightsBurned" events
      * A Transfer event with from = address(0) is a "create" event
      * A Transfer event with to = address(0) is a "withdraw" event
@@ -49,11 +48,9 @@ interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver, 
     function getDelegateInfo(uint256 delegateTokenId) external view returns (Structs.DelegateInfo memory delegateInfo);
 
     /**
-     * @notice Deterministic function for generating a delegateId. Because msg.sender is fixed in addition to the freely
-     * chosen salt, addresses cannot grief each other.
-     * The WrapOfferer is a special case, but trivial to regenerate a unique salt
-     * @param creator should be the caller of create
-     * @param salt allows the creation of a new unique id
+     * @notice Deterministic function for generating a delegateId. Because msg.sender and freely chosen salt are fixed, no griefing
+     * @param creator The caller of create
+     * @param salt Allows the creation of a new unique id
      * @return delegateId
      */
     function getDelegateId(address creator, uint256 salt) external view returns (uint256 delegateId);
@@ -77,24 +74,21 @@ interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver, 
     function create(Structs.DelegateInfo calldata delegateInfo, uint256 salt) external returns (uint256 delegateTokenId);
 
     /**
-     * @notice Allows the principal token owner or any approved operator to extend the expiry of the
-     * delegation rights.
+     * @notice Allows the principal token owner or any approved operator to extend the expiry of the delegation rights.
      * @param delegateTokenId The ID of the rights being extended.
      * @param newExpiry The absolute timestamp to set the expiry
      */
     function extend(uint256 delegateTokenId, uint256 newExpiry) external;
 
     /**
-     * @notice Allows the delegate owner or any approved operator to return a delegate token to the principal rights holder early, allowing the principal
-     * rights holder to redeem the underlying token(s) early.
-     * Allows anyone to forcefully return the delegate token to the principal rights holder if the delegate token has expired
-     * @param delegateTokenId ID of the delegate right to be rescinded
+     * @notice Allows the delegate owner or any approved operator to return a delegate token to the principal rights holder early, allowing the principal rights holder to redeem
+     * the underlying token(s) early. Allows anyone to forcefully return the delegate token to the principal rights holder if the delegate token has expired
+     * @param delegateTokenId Which delegate right to rescind
      */
     function rescind(uint256 delegateTokenId) external;
 
     /**
-     * @notice Allows principal rights owner or approved operator to withdraw the underlying token
-     * once the delegation rights have either met their expiration or been rescinded.
+     * @notice Allows principal rights owner or approved operator to withdraw the underlying token once the delegation rights have either met their expiration or been rescinded.
      * Can also be called early if the caller is approved or owner of the delegate token (i.e. they wouldn't need to
      * call rescind & withdraw), or approved operator of the delegate token holder
      * "Burns" the delegate token, principal token, and returns the underlying tokens to the caller.
@@ -103,8 +97,7 @@ interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver, 
     function withdraw(uint256 delegateTokenId) external;
 
     /**
-     * @notice Allows delegate token owner or approved operator to borrow their underlying tokens for the duration of a
-     * single atomic transaction.
+     * @notice Allows delegate token owner or approved operator to borrow their underlying tokens for the duration of a single atomic transaction.
      * @param info IDelegateFlashloan FlashInfo struct
      */
     function flashloan(Structs.FlashInfo calldata info) external payable;

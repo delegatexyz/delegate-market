@@ -51,9 +51,7 @@ library DelegateTokenStorageHelpers {
         delegateTokenInfo[delegateTokenId][REGISTRY_HASH_POSITION] = uint256(registryHash);
     }
 
-    function writeUnderlyingAmount(mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo, uint256 delegateTokenId, uint256 underlyingAmount)
-        internal
-    {
+    function writeUnderlyingAmount(mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo, uint256 delegateTokenId, uint256 underlyingAmount) internal {
         delegateTokenInfo[delegateTokenId][UNDERLYING_AMOUNT_POSITION] = underlyingAmount;
     }
 
@@ -138,11 +136,7 @@ library DelegateTokenStorageHelpers {
         return bytes32(delegateTokenInfo[delegateTokenId][REGISTRY_HASH_POSITION]);
     }
 
-    function readUnderlyingAmount(mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo, uint256 delegateTokenId)
-        internal
-        view
-        returns (uint256)
-    {
+    function readUnderlyingAmount(mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo, uint256 delegateTokenId) internal view returns (uint256) {
         return delegateTokenInfo[delegateTokenId][UNDERLYING_AMOUNT_POSITION];
     }
 

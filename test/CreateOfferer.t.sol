@@ -7,15 +7,7 @@ import {BaseLiquidDelegateTest} from "./base/BaseLiquidDelegateTest.t.sol";
 import {SeaportHelpers, User} from "./utils/SeaportHelpers.t.sol";
 import {IDelegateToken, Structs as IDelegateTokenStructs} from "src/interfaces/IDelegateToken.sol";
 import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
-import {
-    AdvancedOrder,
-    OrderParameters,
-    Fulfillment,
-    CriteriaResolver,
-    OfferItem,
-    ConsiderationItem,
-    FulfillmentComponent
-} from "seaport/contracts/lib/ConsiderationStructs.sol";
+import {AdvancedOrder, OrderParameters, Fulfillment, CriteriaResolver, OfferItem, ConsiderationItem, FulfillmentComponent} from "seaport/contracts/lib/ConsiderationStructs.sol";
 import {ItemType, OrderType} from "seaport/contracts/lib/ConsiderationEnums.sol";
 import {SpentItem} from "seaport/contracts/interfaces/ContractOffererInterface.sol";
 
@@ -141,8 +133,7 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
                 targetToken: OffererEnums.TargetToken.delegate
             })
         });
-        OfferItem memory offerItem =
-            OfferItem({itemType: ItemType.ERC721, token: address(mockERC721), identifierOrCriteria: erc721Order.tokenId, startAmount: 1, endAmount: 1});
+        OfferItem memory offerItem = OfferItem({itemType: ItemType.ERC721, token: address(mockERC721), identifierOrCriteria: erc721Order.tokenId, startAmount: 1, endAmount: 1});
         ConsiderationItem memory considerationItem = ConsiderationItem({
             itemType: ItemType.ERC721,
             token: erc721Order.info.tokenContract,
@@ -217,13 +208,8 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
                 targetToken: OffererEnums.TargetToken.principal
             })
         });
-        OfferItem memory offerItem = OfferItem({
-            itemType: ItemType.ERC20,
-            token: erc20Order.info.tokenContract,
-            identifierOrCriteria: 0,
-            startAmount: erc20Order.amount,
-            endAmount: erc20Order.amount
-        });
+        OfferItem memory offerItem =
+            OfferItem({itemType: ItemType.ERC20, token: erc20Order.info.tokenContract, identifierOrCriteria: 0, startAmount: erc20Order.amount, endAmount: erc20Order.amount});
         ConsiderationItem memory considerationItem = ConsiderationItem({
             itemType: ItemType.ERC20,
             token: erc20Order.info.tokenContract,
@@ -610,11 +596,7 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
         return AdvancedOrder({parameters: orderParams, numerator: 1, denominator: 1, signature: signOrder(seaport, user, orderParams), extraData: ""});
     }
 
-    function _createContractOrder(ConsiderationItem memory considerationItem, uint256 createOrderHash, bytes memory extraData)
-        internal
-        view
-        returns (AdvancedOrder memory)
-    {
+    function _createContractOrder(ConsiderationItem memory considerationItem, uint256 createOrderHash, bytes memory extraData) internal view returns (AdvancedOrder memory) {
         OfferItem[] memory offer = new OfferItem[](1);
         offer[0] = OfferItem({itemType: ItemType.ERC721, token: address(createOfferer), identifierOrCriteria: createOrderHash, startAmount: 1, endAmount: 1});
         ConsiderationItem[] memory consideration = new ConsiderationItem[](1);
@@ -635,12 +617,8 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
         SpentItem[] memory minimumReceived = new SpentItem[](1);
         minimumReceived[0] = SpentItem({itemType: offer[0].itemType, token: offer[0].token, identifier: offer[0].identifierOrCriteria, amount: offer[0].endAmount});
         SpentItem[] memory maximumSpent = new SpentItem[](1);
-        maximumSpent[0] = SpentItem({
-            itemType: consideration[0].itemType,
-            token: consideration[0].token,
-            identifier: consideration[0].identifierOrCriteria,
-            amount: consideration[0].endAmount
-        });
+        maximumSpent[0] =
+            SpentItem({itemType: consideration[0].itemType, token: consideration[0].token, identifier: consideration[0].identifierOrCriteria, amount: consideration[0].endAmount});
         createOfferer.previewOrder(address(seaport), address(0), minimumReceived, maximumSpent, extraData);
         return AdvancedOrder({parameters: orderParams, numerator: 1, denominator: 1, signature: "", extraData: extraData});
     }

@@ -7,13 +7,7 @@ import {DelegateTokenErrors} from "src/libraries/DelegateTokenLib.sol";
 import {CreateOffererEnums} from "src/libraries/CreateOffererLib.sol";
 
 import {
-    PrincipalToken,
-    DelegateToken,
-    MarketMetadata,
-    DelegateTokenStructs,
-    BaseLiquidDelegateTest,
-    ComputeAddress,
-    IDelegateRegistry
+    PrincipalToken, DelegateToken, MarketMetadata, DelegateTokenStructs, BaseLiquidDelegateTest, ComputeAddress, IDelegateRegistry
 } from "test/base/BaseLiquidDelegateTest.t.sol";
 
 contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
@@ -31,9 +25,7 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
         }
     }
 
-    function testFuzzingCreate721(address tokenOwner, address dtTo, address notLdTo, address principalTo, uint256 tokenId, bool expiryTypeRelative, uint256 time)
-        public
-    {
+    function testFuzzingCreate721(address tokenOwner, address dtTo, address notLdTo, address principalTo, uint256 tokenId, bool expiryTypeRelative, uint256 time) public {
         vm.assume(tokenOwner != address(0));
         vm.assume(principalTo != address(0));
         vm.assume(notLdTo != dtTo);
@@ -83,16 +75,9 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
         assertEq(0, registry.checkDelegateForERC20(notLdTo, address(dt), address(mockERC20), ""));
     }
 
-    function testFuzzingCreate1155(
-        address tokenOwner,
-        address dtTo,
-        address notLdTo,
-        address principalTo,
-        uint256 tokenId,
-        uint256 amount,
-        bool expiryTypeRelative,
-        uint256 time
-    ) public {
+    function testFuzzingCreate1155(address tokenOwner, address dtTo, address notLdTo, address principalTo, uint256 tokenId, uint256 amount, bool expiryTypeRelative, uint256 time)
+        public
+    {
         vm.assume(tokenOwner != address(0));
         vm.assume(principalTo != address(0));
         vm.assume(notLdTo != dtTo);
@@ -106,9 +91,8 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
         mockERC1155.mint(tokenOwner, tokenId, amount, "");
         vm.startPrank(tokenOwner);
         mockERC1155.setApprovalForAll(address(dt), true);
-        uint256 delegateId = dt.create(
-            DelegateTokenStructs.DelegateInfo(principalTo, IDelegateRegistry.DelegationType.ERC1155, dtTo, amount, address(mockERC1155), tokenId, "", expiry), SALT
-        );
+        uint256 delegateId =
+            dt.create(DelegateTokenStructs.DelegateInfo(principalTo, IDelegateRegistry.DelegationType.ERC1155, dtTo, amount, address(mockERC1155), tokenId, "", expiry), SALT);
 
         vm.stopPrank();
 
@@ -177,8 +161,7 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
         vm.startPrank(from);
         mockERC1155.setApprovalForAll(address(dt), true);
         uint256 delegateId = dt.create(
-            DelegateTokenStructs.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC1155, from, underlyingAmount, address(mockERC1155), underlyingTokenId, "", expiry),
-            SALT
+            DelegateTokenStructs.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC1155, from, underlyingAmount, address(mockERC1155), underlyingTokenId, "", expiry), SALT
         );
         if (to == address(0)) vm.expectRevert(DelegateTokenErrors.ToIsZero.selector);
         dt.transferFrom(from, to, delegateId);
@@ -250,8 +233,7 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
         vm.startPrank(from);
         mockERC1155.setApprovalForAll(address(dt), true);
         uint256 delegateId = dt.create(
-            DelegateTokenStructs.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC1155, from, underlyingAmount, address(mockERC1155), underlyingTokenId, "", expiry),
-            SALT
+            DelegateTokenStructs.DelegateInfo(from, IDelegateRegistry.DelegationType.ERC1155, from, underlyingAmount, address(mockERC1155), underlyingTokenId, "", expiry), SALT
         );
         dt.withdraw(delegateId);
 
@@ -279,9 +261,7 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
         vm.stopPrank();
     }
 
-    function testFuzzingMintRights(address tokenOwner, address dtTo, address notLdTo, address principalTo, uint256 tokenId, bool expiryTypeRelative, uint256 time)
-        public
-    {
+    function testFuzzingMintRights(address tokenOwner, address dtTo, address notLdTo, address principalTo, uint256 tokenId, bool expiryTypeRelative, uint256 time) public {
         vm.assume(tokenOwner != address(0));
         vm.assume(dtTo != address(0));
         vm.assume(principalTo != address(0));
@@ -311,10 +291,7 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
         vm.startPrank(tokenOwner);
         mockERC721.setApprovalForAll(address(dt), true);
         dt.create(
-            DelegateTokenStructs.DelegateInfo(
-                tokenOwner, IDelegateRegistry.DelegationType.ERC721, tokenOwner, 0, address(mockERC721), tokenId, "", block.timestamp + 10 days
-            ),
-            SALT
+            DelegateTokenStructs.DelegateInfo(tokenOwner, IDelegateRegistry.DelegationType.ERC721, tokenOwner, 0, address(mockERC721), tokenId, "", block.timestamp + 10 days), SALT
         );
         vm.stopPrank();
 
@@ -322,8 +299,7 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
         vm.prank(attacker);
         vm.expectRevert();
         dt.create(
-            DelegateTokenStructs.DelegateInfo(attacker, IDelegateRegistry.DelegationType.ERC721, attacker, 0, address(mockERC721), tokenId, "", block.timestamp + 10 days),
-            SALT
+            DelegateTokenStructs.DelegateInfo(attacker, IDelegateRegistry.DelegationType.ERC721, attacker, 0, address(mockERC721), tokenId, "", block.timestamp + 10 days), SALT
         );
     }
 
@@ -344,13 +320,9 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
         vm.expectRevert();
         dt.create(DelegateTokenStructs.DelegateInfo(minter, IDelegateRegistry.DelegationType.ERC721, minter, 1, tokenContract, tokenId, rights, expiry), SALT);
         vm.expectRevert();
-        dt.create(
-            DelegateTokenStructs.DelegateInfo(minter, IDelegateRegistry.DelegationType.ERC20, minter, underlyingAmount, tokenContract, tokenId, rights, expiry), SALT
-        );
+        dt.create(DelegateTokenStructs.DelegateInfo(minter, IDelegateRegistry.DelegationType.ERC20, minter, underlyingAmount, tokenContract, tokenId, rights, expiry), SALT);
         vm.expectRevert();
-        dt.create(
-            DelegateTokenStructs.DelegateInfo(minter, IDelegateRegistry.DelegationType.ERC1155, minter, underlyingAmount, tokenContract, tokenId, rights, expiry), SALT
-        );
+        dt.create(DelegateTokenStructs.DelegateInfo(minter, IDelegateRegistry.DelegationType.ERC1155, minter, underlyingAmount, tokenContract, tokenId, rights, expiry), SALT);
         vm.stopPrank();
     }
 
@@ -360,9 +332,8 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
         mockERC721.mint(address(user), id);
         vm.startPrank(user);
         mockERC721.setApprovalForAll(address(dt), true);
-        uint256 delegateId = dt.create(
-            DelegateTokenStructs.DelegateInfo(user, IDelegateRegistry.DelegationType.ERC721, user, 0, address(mockERC721), id, "", block.timestamp + 10 seconds), SALT
-        );
+        uint256 delegateId =
+            dt.create(DelegateTokenStructs.DelegateInfo(user, IDelegateRegistry.DelegationType.ERC721, user, 0, address(mockERC721), id, "", block.timestamp + 10 seconds), SALT);
         vm.stopPrank();
         vm.prank(dtOwner);
         marketMetadata.setDelegateTokenBaseURI("https://test-uri.com/");

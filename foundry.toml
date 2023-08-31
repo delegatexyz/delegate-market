@@ -10,7 +10,7 @@ optimizer_runs = 9_999_999
 viaIR = false
 
 [fmt]
-line_length = 170
+line_length = 180
 wrap_comments = true # Increases readability of comments
 
 [fuzz]

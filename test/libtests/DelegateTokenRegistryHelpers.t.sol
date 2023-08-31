@@ -620,9 +620,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         assertEq(expectedDecreasedAmount, Helpers.calculateDecreasedAmount(address(registry), hash, decreaseAmount));
     }
 
-    function testCalculateDecreasedAmountERC1155(address from, address to, address contract_, uint256 amount, uint256 tokenId, bytes32 rights, uint256 decreaseAmount)
-        public
-    {
+    function testCalculateDecreasedAmountERC1155(address from, address to, address contract_, uint256 amount, uint256 tokenId, bytes32 rights, uint256 decreaseAmount) public {
         vm.startPrank(from);
         bytes32 hash = registry.delegateERC1155(to, contract_, tokenId, amount, rights, true);
         vm.stopPrank();
@@ -712,9 +710,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         assertEq(expectedIncreasedAmount, Helpers.calculateIncreasedAmount(address(registry), hash, increaseAmount));
     }
 
-    function testCalculateIncreasedAmountERC1155(address from, address to, address contract_, uint256 amount, uint256 tokenId, bytes32 rights, uint256 increaseAmount)
-        public
-    {
+    function testCalculateIncreasedAmountERC1155(address from, address to, address contract_, uint256 amount, uint256 tokenId, bytes32 rights, uint256 increaseAmount) public {
         vm.startPrank(from);
         bytes32 hash = registry.delegateERC1155(to, contract_, tokenId, amount, rights, true);
         vm.stopPrank();
@@ -732,14 +728,9 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         assertEq(expectedIncreasedAmount, Helpers.calculateIncreasedAmount(address(registry), hash, increaseAmount));
     }
 
-    function testNoRevertERC721FlashUnavailableAllRights(
-        address delegateHolder,
-        address contract_,
-        uint256 tokenId,
-        address receiver,
-        uint256 amount,
-        bytes calldata data
-    ) public {
+    function testNoRevertERC721FlashUnavailableAllRights(address delegateHolder, address contract_, uint256 tokenId, address receiver, uint256 amount, bytes calldata data)
+        public
+    {
         vm.startPrank(address(harness));
         registry.delegateERC721(delegateHolder, contract_, tokenId, "", true);
         vm.stopPrank();
@@ -757,14 +748,9 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         );
     }
 
-    function testNoRevertERC721FlashUnavailableFlashloanRights(
-        address delegateHolder,
-        address contract_,
-        uint256 tokenId,
-        address receiver,
-        uint256 amount,
-        bytes calldata data
-    ) public {
+    function testNoRevertERC721FlashUnavailableFlashloanRights(address delegateHolder, address contract_, uint256 tokenId, address receiver, uint256 amount, bytes calldata data)
+        public
+    {
         vm.startPrank(address(harness));
         registry.delegateERC721(delegateHolder, contract_, tokenId, "flashloan", true);
         vm.stopPrank();
@@ -2059,9 +2045,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         vm.stopPrank();
     }
 
-    function testTransferERC20DelegationSymmetric(address from, bytes32 underlyingRights, address underlyingContract, uint256 startingAmount, uint256 transferAmount)
-        public
-    {
+    function testTransferERC20DelegationSymmetric(address from, bytes32 underlyingRights, address underlyingContract, uint256 startingAmount, uint256 transferAmount) public {
         bytes32 registryHash = registry.delegateERC20(from, underlyingContract, startingAmount, underlyingRights, true);
         _assertDelegation({
             hash: registryHash,
@@ -2097,13 +2081,9 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         _assertDelegationsCount(from, 1, address(this), 1);
     }
 
-    function testRevertTransferERC20DelegationSymmetric(
-        address from,
-        bytes32 underlyingRights,
-        address underlyingContract,
-        uint256 startingAmount,
-        uint256 transferAmount
-    ) public {
+    function testRevertTransferERC20DelegationSymmetric(address from, bytes32 underlyingRights, address underlyingContract, uint256 startingAmount, uint256 transferAmount)
+        public
+    {
         vm.startPrank(address(harness));
         bytes32 registryHash = registry.delegateERC20(from, underlyingContract, startingAmount, underlyingRights, true);
         _assertDelegation({
@@ -2554,9 +2534,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         vm.stopPrank();
     }
 
-    function testRevertDelegateERC20(address delegateTokenHolder, bytes32 underlyingRights, address underlyingContract, uint256 startingAmount, uint256 addAmount)
-        public
-    {
+    function testRevertDelegateERC20(address delegateTokenHolder, bytes32 underlyingRights, address underlyingContract, uint256 startingAmount, uint256 addAmount) public {
         vm.startPrank(address(harness));
         bytes32 newRegistryHash = registry.delegateERC20(delegateTokenHolder, underlyingContract, startingAmount, underlyingRights, true);
         _assertDelegation({
@@ -2761,9 +2739,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         vm.stopPrank();
     }
 
-    function testRevokeRevertERC20(address delegateTokenHolder, bytes32 underlyingRights, address underlyingContract, uint256 startingAmount, uint256 removeAmount)
-        public
-    {
+    function testRevokeRevertERC20(address delegateTokenHolder, bytes32 underlyingRights, address underlyingContract, uint256 startingAmount, uint256 removeAmount) public {
         vm.startPrank(address(harness));
         bytes32 newRegistryHash = registry.delegateERC20(delegateTokenHolder, underlyingContract, startingAmount, underlyingRights, true);
         _assertDelegation({

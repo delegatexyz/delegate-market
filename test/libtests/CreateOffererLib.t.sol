@@ -191,9 +191,7 @@ contract HelpersCalldataHarness {
         return transientState_;
     }
 
-    function updateTransientState(address fulfiller, SpentItem calldata minimumReceived, SpentItem calldata maximumSpent, Structs.Context memory decodedContext)
-        external
-    {
+    function updateTransientState(address fulfiller, SpentItem calldata minimumReceived, SpentItem calldata maximumSpent, Structs.Context memory decodedContext) external {
         Structs.TransientState storage ptr = transientState_;
         Helpers.updateTransientState(ptr, fulfiller, minimumReceived, maximumSpent, decodedContext);
     }
@@ -202,11 +200,7 @@ contract HelpersCalldataHarness {
         Helpers.verifyCreate(delegateToken, identifier, transientState_.receivers, consideration, context);
     }
 
-    function processSpentItems(SpentItem[] calldata minimumReceived, SpentItem[] calldata maximumSpent)
-        external
-        view
-        returns (SpentItem[] memory, ReceivedItem[] memory)
-    {
+    function processSpentItems(SpentItem[] calldata minimumReceived, SpentItem[] calldata maximumSpent) external view returns (SpentItem[] memory, ReceivedItem[] memory) {
         return Helpers.processSpentItems(minimumReceived, maximumSpent);
     }
 }
@@ -320,8 +314,7 @@ contract CreateOffererHelpersTest is Test, CreateOffererTestHelpers {
         Structs.TransientState memory transientStateBefore = harness.transientState();
         SpentItem memory minimumReceived =
             SpentItem({itemType: ItemType.ERC721, token: address(this), identifier: seed << 8 | uint256(IDelegateRegistry.DelegationType.ERC1155), amount: 1});
-        SpentItem memory maximumSpent =
-            SpentItem({itemType: ItemType.ERC1155, token: token, identifier: uint256(keccak256(abi.encode("identifier", seed))), amount: amount});
+        SpentItem memory maximumSpent = SpentItem({itemType: ItemType.ERC1155, token: token, identifier: uint256(keccak256(abi.encode("identifier", seed))), amount: amount});
         Structs.Context memory decodedContext = Structs.Context({
             rights: rights,
             signerSalt: uint256(keccak256(abi.encode("salt", seed))),
@@ -360,10 +353,8 @@ contract CreateOffererHelpersTest is Test, CreateOffererTestHelpers {
 
     function testUpdateTransientStateRevert(uint256 seed, address fulfiller, address token, uint256 amount, bytes32 rights, uint256 expiryLength) public {
         Structs.TransientState memory transientStateBefore = harness.transientState();
-        SpentItem memory minimumReceived =
-            SpentItem({itemType: ItemType.ERC721, token: address(this), identifier: uint256(IDelegateRegistry.DelegationType.NONE), amount: 1});
-        SpentItem memory maximumSpent =
-            SpentItem({itemType: ItemType.ERC1155, token: token, identifier: uint256(keccak256(abi.encode("identifier", seed))), amount: amount});
+        SpentItem memory minimumReceived = SpentItem({itemType: ItemType.ERC721, token: address(this), identifier: uint256(IDelegateRegistry.DelegationType.NONE), amount: 1});
+        SpentItem memory maximumSpent = SpentItem({itemType: ItemType.ERC1155, token: token, identifier: uint256(keccak256(abi.encode("identifier", seed))), amount: amount});
         Structs.Context memory decodedContext = Structs.Context({
             rights: rights,
             signerSalt: uint256(keccak256(abi.encode("salt", seed))),
@@ -486,8 +477,7 @@ contract CreateOffererHelpersTest is Test, CreateOffererTestHelpers {
         minimumReceived[0] = SpentItem({itemType: ItemType.ERC721, token: address(harness), identifier: createOrderHash, amount: 1});
         (, ItemType itemType) = _createRandomValidDelegationTypeAndItemType(seed);
         maximumSpent = new SpentItem[](1);
-        maximumSpent[0] =
-            SpentItem({itemType: itemType, token: token, identifier: itemType != ItemType.ERC20 ? tokenId : 0, amount: itemType != ItemType.ERC721 ? amount : 0});
+        maximumSpent[0] = SpentItem({itemType: itemType, token: token, identifier: itemType != ItemType.ERC20 ? tokenId : 0, amount: itemType != ItemType.ERC721 ? amount : 0});
     }
 
     function testValidateCreateOrderHash(address targetTokenReceiver, bytes memory encodedOrder, uint256 seed) public view {
@@ -633,8 +623,7 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
         (uint256 calculatedOrderHash, uint256 calculatedDelegateId) = Helpers.calculateOrderHashAndId(address(dt), targetTokenReceiver, conduit, orderInfo, tokenType);
         assertEq(calculatedOrderHash, uint256(keccak256(abi.encode(targetTokenReceiver, conduit, orderInfo))) << 8 | uint256(tokenType));
         assertEq(
-            calculatedDelegateId,
-            uint256(keccak256(abi.encode(address(this), uint256(keccak256(abi.encode(targetTokenReceiver, conduit, orderInfo))) << 8 | uint256(tokenType))))
+            calculatedDelegateId, uint256(keccak256(abi.encode(address(this), uint256(keccak256(abi.encode(targetTokenReceiver, conduit, orderInfo))) << 8 | uint256(tokenType))))
         );
     }
 
@@ -703,9 +692,7 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
         harness.verifyCreate(address(dt), offer.identifier, consideration, abi.encode(contextStruct));
     }
 
-    function testVerifyCreateRevertOfferIdentifier(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
-        public
-    {
+    function testVerifyCreateRevertOfferIdentifier(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver) public {
         vm.assume(amount > 0);
         vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
         (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct) =
@@ -715,15 +702,9 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
         harness.verifyCreate(address(dt), offer.identifier, consideration, abi.encode(contextStruct));
     }
 
-    function testVerifyCreateRevertConsiderationToken(
-        uint256 seed,
-        address token,
-        uint256 tokenId,
-        uint256 amount,
-        bytes32 rights,
-        address ptReceiver,
-        address dtReceiver
-    ) public {
+    function testVerifyCreateRevertConsiderationToken(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
+        public
+    {
         vm.assume(amount > 0);
         vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
         (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct) =
@@ -733,15 +714,9 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
         harness.verifyCreate(address(dt), offer.identifier, consideration, abi.encode(contextStruct));
     }
 
-    function testVerifyCreateRevertConsiderationIdentifier(
-        uint256 seed,
-        address token,
-        uint256 tokenId,
-        uint256 amount,
-        bytes32 rights,
-        address ptReceiver,
-        address dtReceiver
-    ) public {
+    function testVerifyCreateRevertConsiderationIdentifier(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
+        public
+    {
         vm.assume(amount > 0);
         vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
         (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct) =
@@ -753,15 +728,9 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
         harness.verifyCreate(address(dt), offer.identifier, consideration, abi.encode(contextStruct));
     }
 
-    function testVerifyCreateRevertConsiderationAmount(
-        uint256 seed,
-        address token,
-        uint256 tokenId,
-        uint256 amount,
-        bytes32 rights,
-        address ptReceiver,
-        address dtReceiver
-    ) public {
+    function testVerifyCreateRevertConsiderationAmount(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
+        public
+    {
         vm.assume(amount > 0);
         vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
         (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct) =
@@ -773,9 +742,7 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
         harness.verifyCreate(address(dt), offer.identifier, consideration, abi.encode(contextStruct));
     }
 
-    function testVerifyCreateRevertInvalidContext(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
-        public
-    {
+    function testVerifyCreateRevertInvalidContext(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver) public {
         vm.assume(amount > 0);
         vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
         (SpentItem memory offer, ReceivedItem memory consideration,) = _generateValidVerifyCreateCase(seed, token, tokenId, amount, rights, ptReceiver, dtReceiver);
@@ -783,9 +750,7 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
         harness.verifyCreate(address(dt), offer.identifier, consideration, abi.encode("cat"));
     }
 
-    function testVerifyCreateRevertPrincipal(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
-        public
-    {
+    function testVerifyCreateRevertPrincipal(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver) public {
         vm.assume(amount > 0);
         vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
         (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct) =
@@ -795,9 +760,7 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
         harness.verifyCreate(address(dt), offer.identifier, consideration, abi.encode(contextStruct));
     }
 
-    function testVerifyCreateRevertDelegate(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
-        public
-    {
+    function testVerifyCreateRevertDelegate(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver) public {
         vm.assume(amount > 0);
         vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
         (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct) =
@@ -807,9 +770,7 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
         harness.verifyCreate(address(dt), offer.identifier, consideration, abi.encode(contextStruct));
     }
 
-    function testVerifyCreateRevertExpiryLength(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
-        public
-    {
+    function testVerifyCreateRevertExpiryLength(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver) public {
         vm.assume(amount > 0);
         vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
         (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct) =
@@ -819,9 +780,7 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
         harness.verifyCreate(address(dt), offer.identifier, consideration, abi.encode(contextStruct));
     }
 
-    function testVerifyCreateRevertExpiryType(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
-        public
-    {
+    function testVerifyCreateRevertExpiryType(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver) public {
         vm.assume(amount > 0);
         vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
         (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct) =
@@ -844,9 +803,7 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
         harness.verifyCreate(address(dt), offer.identifier, consideration, abi.encode(contextStruct));
     }
 
-    function testVerifyCreatePassesUnusedData(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver)
-        public
-    {
+    function testVerifyCreatePassesUnusedData(uint256 seed, address token, uint256 tokenId, uint256 amount, bytes32 rights, address ptReceiver, address dtReceiver) public {
         vm.assume(amount > 0);
         vm.assume(dtReceiver != address(0) && ptReceiver != address(0));
         (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct) =
@@ -875,8 +832,7 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
             amount: itemType != ItemType.ERC721 ? amount : 1,
             recipient: payable(address(harness))
         });
-        contextStruct =
-            Structs.Context({rights: rights, signerSalt: seed, expiryLength: 10 ** 4, expiryType: Enums.ExpiryType.absolute, targetToken: Enums.TargetToken.delegate});
+        contextStruct = Structs.Context({rights: rights, signerSalt: seed, expiryLength: 10 ** 4, expiryType: Enums.ExpiryType.absolute, targetToken: Enums.TargetToken.delegate});
         // Create delegation as DelegateToken and save
         vm.startPrank(address(dt));
         bytes32 registryHash;
