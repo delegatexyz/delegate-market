@@ -92,6 +92,9 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
         IDelegateRegistry.DelegationType tokenType = RegistryHashes.decodeType(bytes32(createOrderHashAsTokenId));
         if (tokenType == IDelegateRegistry.DelegationType.ERC721) {
             Structs.ERC721Order memory erc721Order = transientState.erc721Order;
+            if (!(erc721Order.info.targetToken == Enums.TargetToken.delegate || erc721Order.info.targetToken == Enums.TargetToken.principal)) {
+                revert Errors.TargetTokenInvalid(erc721Order.info.targetToken);
+            }
             Helpers.validateCreateOrderHash(targetTokenReceiver, createOrderHashAsTokenId, abi.encode(erc721Order), tokenType);
             IERC721(erc721Order.info.tokenContract).setApprovalForAll(address(delegateToken), true);
             Helpers.createAndValidateDelegateTokenId(
@@ -111,6 +114,9 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
             IERC721(erc721Order.info.tokenContract).setApprovalForAll(address(delegateToken), false); // saves gas
         } else if (tokenType == IDelegateRegistry.DelegationType.ERC20) {
             Structs.ERC20Order memory erc20Order = transientState.erc20Order;
+            if (!(erc20Order.info.targetToken == Enums.TargetToken.delegate || erc20Order.info.targetToken == Enums.TargetToken.principal)) {
+                revert Errors.TargetTokenInvalid(erc20Order.info.targetToken);
+            }
             Helpers.validateCreateOrderHash(targetTokenReceiver, createOrderHashAsTokenId, abi.encode(erc20Order), tokenType);
             if (!IERC20(erc20Order.info.tokenContract).approve(address(delegateToken), erc20Order.amount)) {
                 revert Errors.ERC20ApproveFailed(erc20Order.info.tokenContract);
@@ -134,6 +140,9 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
             }
         } else if (tokenType == IDelegateRegistry.DelegationType.ERC1155) {
             Structs.ERC1155Order memory erc1155Order = transientState.erc1155Order;
+            if (!(erc1155Order.info.targetToken == Enums.TargetToken.delegate || erc1155Order.info.targetToken == Enums.TargetToken.principal)) {
+                revert Errors.TargetTokenInvalid(erc1155Order.info.targetToken);
+            }
             Helpers.validateCreateOrderHash(targetTokenReceiver, createOrderHashAsTokenId, abi.encode(erc1155Order), tokenType);
             IERC1155(erc1155Order.info.tokenContract).setApprovalForAll(address(delegateToken), true);
             Helpers.createAndValidateDelegateTokenId(
@@ -151,6 +160,8 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
                 })
             );
             IERC1155(erc1155Order.info.tokenContract).setApprovalForAll(address(delegateToken), false); // saves gas
+        } else {
+            revert Errors.InvalidTokenType(tokenType);
         }
     }
 
