@@ -28,7 +28,6 @@ library CreateOffererErrors {
     error DelegateInfoInvariant();
     error InvalidContextLength();
     error TargetTokenInvalid(CreateOffererEnums.TargetToken invalidTargetToken);
-    error TokenReceiverInvalid(CreateOffererEnums.TargetToken targetToken, address expected, address actual);
 }
 
 library CreateOffererEnums {
