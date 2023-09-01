@@ -822,33 +822,37 @@ contract CreateOffererDelegateTokenHelpers is Test, BaseLiquidDelegateTest, Crea
         returns (SpentItem memory offer, ReceivedItem memory consideration, Structs.Context memory contextStruct)
     {
         harness.updateReceivers(ptReceiver, dtReceiver);
-        (IDelegateRegistry.DelegationType tokenType, ItemType itemType) = _createRandomValidDelegationTypeAndItemType(seed);
-        uint256 createOrderHash = seed << 8 | uint256(tokenType);
-        offer = SpentItem({itemType: ItemType.ERC721, token: address(harness), identifier: createOrderHash, amount: 1});
-        consideration = ReceivedItem({
-            itemType: itemType,
-            token: token,
-            identifier: itemType != ItemType.ERC20 ? tokenId : 0,
-            amount: itemType != ItemType.ERC721 ? amount : 1,
-            recipient: payable(address(harness))
-        });
-        contextStruct = Structs.Context({rights: rights, signerSalt: seed, expiryLength: 10 ** 4, expiryType: Enums.ExpiryType.absolute, targetToken: Enums.TargetToken.delegate});
+        uint256 createOrderHash;
+        {
+            (IDelegateRegistry.DelegationType tokenType, ItemType itemType) = _createRandomValidDelegationTypeAndItemType(seed);
+            createOrderHash = seed << 8 | uint256(tokenType);
+            offer = SpentItem({itemType: ItemType.ERC721, token: address(harness), identifier: createOrderHash, amount: 1});
+            consideration = ReceivedItem({
+                itemType: itemType,
+                token: token,
+                identifier: itemType != ItemType.ERC20 ? tokenId : 0,
+                amount: itemType != ItemType.ERC721 ? amount : 1,
+                recipient: payable(address(harness))
+            });
+            contextStruct =
+                Structs.Context({rights: rights, signerSalt: seed, expiryLength: 10 ** 4, expiryType: Enums.ExpiryType.absolute, targetToken: Enums.TargetToken.delegate});
+        }
         // Create delegation as DelegateToken and save
         vm.startPrank(address(dt));
         bytes32 registryHash;
-        if (itemType == ItemType.ERC721) {
+        if (consideration.itemType == ItemType.ERC721) {
             registryHash = registry.delegateERC721(dtReceiver, token, tokenId, rights, true);
-        } else if (itemType == ItemType.ERC20) {
-            registryHash = registry.delegateERC20(dtReceiver, token, amount, rights, true);
-        } else if (itemType == ItemType.ERC1155) {
-            registryHash = registry.delegateERC1155(dtReceiver, token, tokenId, amount, rights, true);
+        } else if (consideration.itemType == ItemType.ERC20) {
+            registryHash = registry.delegateERC20(dtReceiver, token, rights, amount);
+        } else if (consideration.itemType == ItemType.ERC1155) {
+            registryHash = registry.delegateERC1155(dtReceiver, token, tokenId, rights, amount);
         }
         vm.stopPrank();
         uint256 delegateTokenSlot = uint256(keccak256(abi.encode(keccak256(abi.encode(address(harness), createOrderHash)), 1))); // Setting delegate id to zero
             // here
         vm.store(address(dt), bytes32(delegateTokenSlot), registryHash);
         vm.store(address(dt), bytes32(delegateTokenSlot + 1), bytes32(uint256(10 ** 4)));
-        if (itemType != ItemType.ERC721) {
+        if (consideration.itemType != ItemType.ERC721) {
             vm.store(address(dt), bytes32(delegateTokenSlot + 2), bytes32(amount));
         }
         // Override principal token bytecode with mock 721 and mint delegateId
