@@ -148,10 +148,6 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         bytes32 hash = registry.delegateAll(to, rights, true);
         vm.stopPrank();
         assertEq(to, Helpers.loadTokenHolder(address(registry), hash));
-        vm.startPrank(from);
-        assertEq(registry.delegateAll(to, rights, false), hash);
-        vm.stopPrank();
-        assertEq(address(0), Helpers.loadTokenHolder(address(registry), hash));
     }
 
     function testLoadTokenHolderContract(address from, address to, address contract_, bytes32 rights) public {
@@ -159,10 +155,6 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         bytes32 hash = registry.delegateContract(to, contract_, rights, true);
         vm.stopPrank();
         assertEq(to, Helpers.loadTokenHolder(address(registry), hash));
-        vm.startPrank(from);
-        assertEq(registry.delegateContract(to, contract_, rights, false), hash);
-        vm.stopPrank();
-        assertEq(address(0), Helpers.loadTokenHolder(address(registry), hash));
     }
 
     function testLoadTokenHolderERC721(address from, address to, address contract_, uint256 tokenId, bytes32 rights) public {
@@ -170,32 +162,22 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         bytes32 hash = registry.delegateERC721(to, contract_, tokenId, rights, true);
         vm.stopPrank();
         assertEq(to, Helpers.loadTokenHolder(address(registry), hash));
-        vm.startPrank(from);
-        assertEq(registry.delegateERC721(to, contract_, tokenId, rights, false), hash);
-        vm.stopPrank();
-        assertEq(address(0), Helpers.loadTokenHolder(address(registry), hash));
     }
 
     function testLoadTokenHolderERC20(address from, address to, address contract_, uint256 amount, bytes32 rights) public {
         vm.startPrank(from);
-        bytes32 hash = registry.delegateERC20(to, contract_, amount, rights, true);
+        bytes32 hash = registry.delegateERC20(to, contract_, rights, amount);
         vm.stopPrank();
-        assertEq(to, Helpers.loadTokenHolder(address(registry), hash));
-        vm.startPrank(from);
-        assertEq(registry.delegateERC20(to, contract_, amount, rights, false), hash);
-        vm.stopPrank();
-        assertEq(address(0), Helpers.loadTokenHolder(address(registry), hash));
+        if (amount != 0) assertEq(to, Helpers.loadTokenHolder(address(registry), hash));
+        else assertEq(address(0), Helpers.loadTokenHolder(address(registry), hash));
     }
 
     function testLoadTokenHolderERC1155(address from, address to, address contract_, uint256 amount, uint256 tokenId, bytes32 rights) public {
         vm.startPrank(from);
-        bytes32 hash = registry.delegateERC1155(to, contract_, tokenId, amount, rights, true);
+        bytes32 hash = registry.delegateERC1155(to, contract_, tokenId, rights, amount);
         vm.stopPrank();
-        assertEq(to, Helpers.loadTokenHolder(address(registry), hash));
-        vm.startPrank(from);
-        assertEq(registry.delegateERC1155(to, contract_, tokenId, amount, rights, false), hash);
-        vm.stopPrank();
-        assertEq(address(0), Helpers.loadTokenHolder(address(registry), hash));
+        if (amount != 0) assertEq(to, Helpers.loadTokenHolder(address(registry), hash));
+        else assertEq(address(0), Helpers.loadTokenHolder(address(registry), hash));
     }
 
     function testLoadContractAll(address from, address to, bytes32 rights) public {
@@ -214,10 +196,6 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         bytes32 hash = registry.delegateContract(to, contract_, rights, true);
         vm.stopPrank();
         assertEq(contract_, Helpers.loadContract(address(registry), hash));
-        vm.startPrank(from);
-        assertEq(registry.delegateContract(to, contract_, rights, false), hash);
-        vm.stopPrank();
-        assertEq(address(0), Helpers.loadContract(address(registry), hash));
     }
 
     function testLoadContractERC721(address from, address to, address contract_, uint256 tokenId, bytes32 rights) public {
@@ -225,32 +203,22 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         bytes32 hash = registry.delegateERC721(to, contract_, tokenId, rights, true);
         vm.stopPrank();
         assertEq(contract_, Helpers.loadContract(address(registry), hash));
-        vm.startPrank(from);
-        assertEq(registry.delegateERC721(to, contract_, tokenId, rights, false), hash);
-        vm.stopPrank();
-        assertEq(address(0), Helpers.loadContract(address(registry), hash));
     }
 
     function testLoadContractERC20(address from, address to, address contract_, uint256 amount, bytes32 rights) public {
         vm.startPrank(from);
-        bytes32 hash = registry.delegateERC20(to, contract_, amount, rights, true);
+        bytes32 hash = registry.delegateERC20(to, contract_, rights, amount);
         vm.stopPrank();
-        assertEq(contract_, Helpers.loadContract(address(registry), hash));
-        vm.startPrank(from);
-        assertEq(registry.delegateERC20(to, contract_, amount, rights, false), hash);
-        vm.stopPrank();
-        assertEq(address(0), Helpers.loadContract(address(registry), hash));
+        if (amount != 0) assertEq(contract_, Helpers.loadContract(address(registry), hash));
+        else assertEq(address(0), Helpers.loadContract(address(registry), hash));
     }
 
     function testLoadContractERC1155(address from, address to, address contract_, uint256 amount, uint256 tokenId, bytes32 rights) public {
         vm.startPrank(from);
-        bytes32 hash = registry.delegateERC1155(to, contract_, tokenId, amount, rights, true);
+        bytes32 hash = registry.delegateERC1155(to, contract_, tokenId, rights, amount);
         vm.stopPrank();
-        assertEq(contract_, Helpers.loadContract(address(registry), hash));
-        vm.startPrank(from);
-        assertEq(registry.delegateERC1155(to, contract_, tokenId, amount, rights, false), hash);
-        vm.stopPrank();
-        assertEq(address(0), Helpers.loadContract(address(registry), hash));
+        if (amount != 0) assertEq(contract_, Helpers.loadContract(address(registry), hash));
+        else assertEq(address(0), Helpers.loadContract(address(registry), hash));
     }
 
     function testLoadTokenHolderAndContractAll(address from, address to, bytes32 rights) public {
@@ -259,12 +227,6 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         vm.stopPrank();
         (address loadedHolder, address loadedContract) = Helpers.loadTokenHolderAndContract(address(registry), hash);
         assertEq(loadedHolder, to);
-        assertEq(loadedContract, address(0));
-        vm.startPrank(from);
-        assertEq(registry.delegateAll(to, rights, false), hash);
-        vm.stopPrank();
-        (loadedHolder, loadedContract) = Helpers.loadTokenHolderAndContract(address(registry), hash);
-        assertEq(loadedHolder, address(0));
         assertEq(loadedContract, address(0));
     }
 
@@ -275,12 +237,6 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         (address loadedHolder, address loadedContract) = Helpers.loadTokenHolderAndContract(address(registry), hash);
         assertEq(loadedHolder, to);
         assertEq(loadedContract, contract_);
-        vm.startPrank(from);
-        assertEq(registry.delegateContract(to, contract_, rights, false), hash);
-        vm.stopPrank();
-        (loadedHolder, loadedContract) = Helpers.loadTokenHolderAndContract(address(registry), hash);
-        assertEq(loadedHolder, address(0));
-        assertEq(loadedContract, address(0));
     }
 
     function testLoadTokenHolderAndContractERC721(address from, address to, address contract_, uint256 tokenId, bytes32 rights) public {
@@ -290,42 +246,34 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         (address loadedHolder, address loadedContract) = Helpers.loadTokenHolderAndContract(address(registry), hash);
         assertEq(loadedHolder, to);
         assertEq(loadedContract, contract_);
-        vm.startPrank(from);
-        assertEq(registry.delegateERC721(to, contract_, tokenId, rights, false), hash);
-        vm.stopPrank();
-        (loadedHolder, loadedContract) = Helpers.loadTokenHolderAndContract(address(registry), hash);
-        assertEq(loadedHolder, address(0));
-        assertEq(loadedContract, address(0));
     }
 
     function testLoadTokenHolderAndContractERC20(address from, address to, address contract_, uint256 amount, bytes32 rights) public {
         vm.startPrank(from);
-        bytes32 hash = registry.delegateERC20(to, contract_, amount, rights, true);
+        bytes32 hash = registry.delegateERC20(to, contract_, rights, amount);
         vm.stopPrank();
         (address loadedHolder, address loadedContract) = Helpers.loadTokenHolderAndContract(address(registry), hash);
-        assertEq(loadedHolder, to);
-        assertEq(loadedContract, contract_);
-        vm.startPrank(from);
-        assertEq(registry.delegateERC20(to, contract_, amount, rights, false), hash);
-        vm.stopPrank();
-        (loadedHolder, loadedContract) = Helpers.loadTokenHolderAndContract(address(registry), hash);
-        assertEq(loadedHolder, address(0));
-        assertEq(loadedContract, address(0));
+        if (amount != 0) {
+            assertEq(loadedHolder, to);
+            assertEq(loadedContract, contract_);
+        } else {
+            assertEq(loadedHolder, address(0));
+            assertEq(loadedContract, address(0));
+        }
     }
 
     function testLoadTokenHolderAndContractERC1155(address from, address to, address contract_, uint256 amount, uint256 tokenId, bytes32 rights) public {
         vm.startPrank(from);
-        bytes32 hash = registry.delegateERC1155(to, contract_, tokenId, amount, rights, true);
+        bytes32 hash = registry.delegateERC1155(to, contract_, tokenId, rights, amount);
         vm.stopPrank();
         (address loadedHolder, address loadedContract) = Helpers.loadTokenHolderAndContract(address(registry), hash);
-        assertEq(loadedHolder, to);
-        assertEq(loadedContract, contract_);
-        vm.startPrank(from);
-        assertEq(registry.delegateERC1155(to, contract_, tokenId, amount, rights, false), hash);
-        vm.stopPrank();
-        (loadedHolder, loadedContract) = Helpers.loadTokenHolderAndContract(address(registry), hash);
-        assertEq(loadedHolder, address(0));
-        assertEq(loadedContract, address(0));
+        if (amount != 0) {
+            assertEq(loadedHolder, to);
+            assertEq(loadedContract, contract_);
+        } else {
+            assertEq(loadedHolder, address(0));
+            assertEq(loadedContract, address(0));
+        }
     }
 
     function testLoadFromAll(address from, address to, bytes32 rights) public {
@@ -362,23 +310,25 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
     }
 
     function testLoadFromERC20(address from, address to, address contract_, uint256 amount, bytes32 rights) public {
+        vm.assume(amount != 0);
         vm.startPrank(from);
-        bytes32 hash = registry.delegateERC20(to, contract_, amount, rights, true);
+        bytes32 hash = registry.delegateERC20(to, contract_, rights, amount);
         vm.stopPrank();
         assertEq(from, Helpers.loadFrom(address(registry), hash));
         vm.startPrank(from);
-        assertEq(registry.delegateERC20(to, contract_, amount, rights, false), hash);
+        assertEq(registry.delegateERC20(to, contract_, rights, 0), hash);
         vm.stopPrank();
         assertEq(address(1), Helpers.loadFrom(address(registry), hash));
     }
 
     function testLoadFromERC1155(address from, address to, address contract_, uint256 amount, uint256 tokenId, bytes32 rights) public {
+        vm.assume(amount != 0);
         vm.startPrank(from);
-        bytes32 hash = registry.delegateERC1155(to, contract_, tokenId, amount, rights, true);
+        bytes32 hash = registry.delegateERC1155(to, contract_, tokenId, rights, amount);
         vm.stopPrank();
         assertEq(from, Helpers.loadFrom(address(registry), hash));
         vm.startPrank(from);
-        assertEq(registry.delegateERC1155(to, contract_, tokenId, amount, rights, false), hash);
+        assertEq(registry.delegateERC1155(to, contract_, tokenId, rights, 0), hash);
         vm.stopPrank();
         assertEq(address(1), Helpers.loadFrom(address(registry), hash));
     }
@@ -418,22 +368,22 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
 
     function testLoadAmountERC20(address from, address to, address contract_, uint256 amount, bytes32 rights) public {
         vm.startPrank(from);
-        bytes32 hash = registry.delegateERC20(to, contract_, amount, rights, true);
+        bytes32 hash = registry.delegateERC20(to, contract_, rights, amount);
         vm.stopPrank();
         assertEq(amount, Helpers.loadAmount(address(registry), hash));
         vm.startPrank(from);
-        assertEq(registry.delegateERC20(to, contract_, amount, rights, false), hash);
+        assertEq(registry.delegateERC20(to, contract_, rights, 0), hash);
         vm.stopPrank();
         assertEq(0, Helpers.loadAmount(address(registry), hash));
     }
 
     function testLoadAmountERC1155(address from, address to, address contract_, uint256 amount, uint256 tokenId, bytes32 rights) public {
         vm.startPrank(from);
-        bytes32 hash = registry.delegateERC1155(to, contract_, tokenId, amount, rights, true);
+        bytes32 hash = registry.delegateERC1155(to, contract_, tokenId, rights, amount);
         vm.stopPrank();
         assertEq(amount, Helpers.loadAmount(address(registry), hash));
         vm.startPrank(from);
-        assertEq(registry.delegateERC1155(to, contract_, tokenId, amount, rights, false), hash);
+        assertEq(registry.delegateERC1155(to, contract_, tokenId, rights, 0), hash);
         vm.stopPrank();
         assertEq(0, Helpers.loadAmount(address(registry), hash));
     }
@@ -443,10 +393,6 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         bytes32 hash = registry.delegateAll(to, rights, true);
         vm.stopPrank();
         assertEq(rights, Helpers.loadRights(address(registry), hash));
-        vm.startPrank(from);
-        assertEq(registry.delegateAll(to, rights, false), hash);
-        vm.stopPrank();
-        assertEq(0, Helpers.loadRights(address(registry), hash));
     }
 
     function testLoadRightsContract(address from, address to, address contract_, bytes32 rights) public {
@@ -454,10 +400,6 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         bytes32 hash = registry.delegateContract(to, contract_, rights, true);
         vm.stopPrank();
         assertEq(rights, Helpers.loadRights(address(registry), hash));
-        vm.startPrank(from);
-        assertEq(registry.delegateContract(to, contract_, rights, false), hash);
-        vm.stopPrank();
-        assertEq(0, Helpers.loadRights(address(registry), hash));
     }
 
     function testLoadRightsERC721(address from, address to, address contract_, uint256 tokenId, bytes32 rights) public {
@@ -465,32 +407,22 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         bytes32 hash = registry.delegateERC721(to, contract_, tokenId, rights, true);
         vm.stopPrank();
         assertEq(rights, Helpers.loadRights(address(registry), hash));
-        vm.startPrank(from);
-        assertEq(registry.delegateERC721(to, contract_, tokenId, rights, false), hash);
-        vm.stopPrank();
-        assertEq(0, Helpers.loadRights(address(registry), hash));
     }
 
     function testLoadRightsERC20(address from, address to, address contract_, uint256 amount, bytes32 rights) public {
         vm.startPrank(from);
-        bytes32 hash = registry.delegateERC20(to, contract_, amount, rights, true);
+        bytes32 hash = registry.delegateERC20(to, contract_, rights, amount);
         vm.stopPrank();
-        assertEq(rights, Helpers.loadRights(address(registry), hash));
-        vm.startPrank(from);
-        assertEq(registry.delegateERC20(to, contract_, amount, rights, false), hash);
-        vm.stopPrank();
-        assertEq(0, Helpers.loadRights(address(registry), hash));
+        if (amount != 0) assertEq(rights, Helpers.loadRights(address(registry), hash));
+        else assertEq(0, Helpers.loadRights(address(registry), hash));
     }
 
     function testLoadRightsERC1155(address from, address to, address contract_, uint256 amount, uint256 tokenId, bytes32 rights) public {
         vm.startPrank(from);
-        bytes32 hash = registry.delegateERC1155(to, contract_, tokenId, amount, rights, true);
+        bytes32 hash = registry.delegateERC1155(to, contract_, tokenId, rights, amount);
         vm.stopPrank();
-        assertEq(rights, Helpers.loadRights(address(registry), hash));
-        vm.startPrank(from);
-        assertEq(registry.delegateERC1155(to, contract_, tokenId, amount, rights, false), hash);
-        vm.stopPrank();
-        assertEq(0, Helpers.loadRights(address(registry), hash));
+        if (amount != 0) assertEq(rights, Helpers.loadRights(address(registry), hash));
+        else assertEq(0, Helpers.loadRights(address(registry), hash));
     }
 
     function testLoadTokenIdAll(address from, address to, bytes32 rights) public {
@@ -520,32 +452,21 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         bytes32 hash = registry.delegateERC721(to, contract_, tokenId, rights, true);
         vm.stopPrank();
         assertEq(tokenId, Helpers.loadTokenId(address(registry), hash));
-        vm.startPrank(from);
-        assertEq(registry.delegateERC721(to, contract_, tokenId, rights, false), hash);
-        vm.stopPrank();
-        assertEq(0, Helpers.loadTokenId(address(registry), hash));
     }
 
     function testLoadTokenIdERC20(address from, address to, address contract_, uint256 amount, bytes32 rights) public {
         vm.startPrank(from);
-        bytes32 hash = registry.delegateERC20(to, contract_, amount, rights, true);
-        vm.stopPrank();
-        assertEq(0, Helpers.loadTokenId(address(registry), hash));
-        vm.startPrank(from);
-        assertEq(registry.delegateERC20(to, contract_, amount, rights, false), hash);
+        bytes32 hash = registry.delegateERC20(to, contract_, rights, amount);
         vm.stopPrank();
         assertEq(0, Helpers.loadTokenId(address(registry), hash));
     }
 
     function testLoadTokenIdERC1155(address from, address to, address contract_, uint256 amount, uint256 tokenId, bytes32 rights) public {
         vm.startPrank(from);
-        bytes32 hash = registry.delegateERC1155(to, contract_, tokenId, amount, rights, true);
+        bytes32 hash = registry.delegateERC1155(to, contract_, tokenId, rights, amount);
         vm.stopPrank();
-        assertEq(tokenId, Helpers.loadTokenId(address(registry), hash));
-        vm.startPrank(from);
-        assertEq(registry.delegateERC1155(to, contract_, tokenId, amount, rights, false), hash);
-        vm.stopPrank();
-        assertEq(0, Helpers.loadTokenId(address(registry), hash));
+        if (amount != 0) assertEq(tokenId, Helpers.loadTokenId(address(registry), hash));
+        else assertEq(0, Helpers.loadTokenId(address(registry), hash));
     }
 
     function testCalculateDecreasedAmountAll(address from, address to, bytes32 rights, uint256 decreaseAmount) public {
@@ -604,7 +525,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
 
     function testCalculateDecreasedAmountERC20(address from, address to, address contract_, uint256 amount, bytes32 rights, uint256 decreaseAmount) public {
         vm.startPrank(from);
-        bytes32 hash = registry.delegateERC20(to, contract_, amount, rights, true);
+        bytes32 hash = registry.delegateERC20(to, contract_, rights, amount);
         vm.stopPrank();
         uint256 expectedDecreasedAmount;
         unchecked {
@@ -612,7 +533,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         }
         assertEq(expectedDecreasedAmount, Helpers.calculateDecreasedAmount(address(registry), hash, decreaseAmount));
         vm.startPrank(from);
-        assertEq(registry.delegateERC20(to, contract_, amount, rights, false), hash);
+        assertEq(registry.delegateERC20(to, contract_, rights, 0), hash);
         vm.stopPrank();
         unchecked {
             expectedDecreasedAmount = 0 - decreaseAmount;
@@ -622,7 +543,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
 
     function testCalculateDecreasedAmountERC1155(address from, address to, address contract_, uint256 amount, uint256 tokenId, bytes32 rights, uint256 decreaseAmount) public {
         vm.startPrank(from);
-        bytes32 hash = registry.delegateERC1155(to, contract_, tokenId, amount, rights, true);
+        bytes32 hash = registry.delegateERC1155(to, contract_, tokenId, rights, amount);
         vm.stopPrank();
         uint256 expectedDecreasedAmount;
         unchecked {
@@ -630,7 +551,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         }
         assertEq(expectedDecreasedAmount, Helpers.calculateDecreasedAmount(address(registry), hash, decreaseAmount));
         vm.startPrank(from);
-        assertEq(registry.delegateERC1155(to, contract_, tokenId, amount, rights, false), hash);
+        assertEq(registry.delegateERC1155(to, contract_, tokenId, rights, 0), hash);
         vm.stopPrank();
         unchecked {
             expectedDecreasedAmount = 0 - decreaseAmount;
@@ -694,7 +615,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
 
     function testCalculateIncreasedAmountERC20(address from, address to, address contract_, uint256 amount, bytes32 rights, uint256 increaseAmount) public {
         vm.startPrank(from);
-        bytes32 hash = registry.delegateERC20(to, contract_, amount, rights, true);
+        bytes32 hash = registry.delegateERC20(to, contract_, rights, amount);
         vm.stopPrank();
         uint256 expectedIncreasedAmount;
         unchecked {
@@ -702,7 +623,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         }
         assertEq(expectedIncreasedAmount, Helpers.calculateIncreasedAmount(address(registry), hash, increaseAmount));
         vm.startPrank(from);
-        assertEq(registry.delegateERC20(to, contract_, amount, rights, false), hash);
+        assertEq(registry.delegateERC20(to, contract_, rights, 0), hash);
         vm.stopPrank();
         unchecked {
             expectedIncreasedAmount = 0 + increaseAmount;
@@ -712,7 +633,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
 
     function testCalculateIncreasedAmountERC1155(address from, address to, address contract_, uint256 amount, uint256 tokenId, bytes32 rights, uint256 increaseAmount) public {
         vm.startPrank(from);
-        bytes32 hash = registry.delegateERC1155(to, contract_, tokenId, amount, rights, true);
+        bytes32 hash = registry.delegateERC1155(to, contract_, tokenId, rights, amount);
         vm.stopPrank();
         uint256 expectedIncreasedAmount;
         unchecked {
@@ -720,7 +641,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         }
         assertEq(expectedIncreasedAmount, Helpers.calculateIncreasedAmount(address(registry), hash, increaseAmount));
         vm.startPrank(from);
-        assertEq(registry.delegateERC1155(to, contract_, tokenId, amount, rights, false), hash);
+        assertEq(registry.delegateERC1155(to, contract_, tokenId, rights, 0), hash);
         vm.stopPrank();
         unchecked {
             expectedIncreasedAmount = 0 + increaseAmount;
@@ -927,8 +848,8 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         vm.startPrank(address(harness));
         registry.delegateAll(delegateHolder, rights, true);
         registry.delegateContract(delegateHolder, contract_, rights, true);
-        registry.delegateERC20(delegateHolder, contract_, amount, rights, true);
-        registry.delegateERC1155(delegateHolder, contract_, tokenId, amount, rights, true);
+        registry.delegateERC20(delegateHolder, contract_, rights, amount);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, rights, amount);
         vm.stopPrank();
         vm.expectRevert(DelegateTokenErrors.ERC721FlashUnavailable.selector);
         harness.revertERC721FlashUnavailable(
@@ -960,8 +881,8 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         registry.delegateAll(delegateHolder, rights, true);
         registry.delegateERC721(delegateHolder, contract_, tokenId, rights, true);
         registry.delegateContract(delegateHolder, contract_, rights, true);
-        registry.delegateERC20(delegateHolder, contract_, amount, rights, true);
-        registry.delegateERC1155(delegateHolder, contract_, tokenId, amount, rights, true);
+        registry.delegateERC20(delegateHolder, contract_, rights, amount);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, rights, amount);
         vm.stopPrank();
         vm.expectRevert(DelegateTokenErrors.ERC721FlashUnavailable.selector);
         harness.revertERC721FlashUnavailable(
@@ -989,7 +910,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
     ) public {
         vm.assume(flashAmount <= delegateAmount);
         vm.startPrank(address(harness));
-        registry.delegateERC20(delegateHolder, contract_, delegateAmount, "", true);
+        registry.delegateERC20(delegateHolder, contract_, "", delegateAmount);
         vm.stopPrank();
         harness.revertERC20FlashAmountUnavailable(
             address(registry),
@@ -1016,7 +937,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
     ) public {
         vm.assume(flashAmount <= delegateAmount);
         vm.startPrank(address(harness));
-        registry.delegateERC20(delegateHolder, contract_, delegateAmount, "flashloan", true);
+        registry.delegateERC20(delegateHolder, contract_, "flashloan", delegateAmount);
         vm.stopPrank();
         harness.revertERC20FlashAmountUnavailable(
             address(registry),
@@ -1045,8 +966,8 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         vm.assume(delegateAmount1 < type(uint128).max && delegateAmount2 < type(uint128).max);
         vm.assume(flashAmount <= delegateAmount1 + delegateAmount2);
         vm.startPrank(address(harness));
-        registry.delegateERC20(delegateHolder, contract_, delegateAmount1, "", true);
-        registry.delegateERC20(delegateHolder, contract_, delegateAmount2, "flashloan", true);
+        registry.delegateERC20(delegateHolder, contract_, "", delegateAmount1);
+        registry.delegateERC20(delegateHolder, contract_, "flashloan", delegateAmount2);
         vm.stopPrank();
         harness.revertERC20FlashAmountUnavailable(
             address(registry),
@@ -1073,7 +994,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
     ) public {
         vm.assume(flashAmount > delegateAmount);
         vm.startPrank(address(harness));
-        registry.delegateERC20(delegateHolder, contract_, delegateAmount, "", true);
+        registry.delegateERC20(delegateHolder, contract_, "", delegateAmount);
         vm.stopPrank();
         vm.expectRevert(DelegateTokenErrors.ERC20FlashAmountUnavailable.selector);
         harness.revertERC20FlashAmountUnavailable(
@@ -1101,7 +1022,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
     ) public {
         vm.assume(flashAmount > delegateAmount);
         vm.startPrank(address(harness));
-        registry.delegateERC20(delegateHolder, contract_, delegateAmount, "flashloan", true);
+        registry.delegateERC20(delegateHolder, contract_, "flashloan", delegateAmount);
         vm.stopPrank();
         vm.expectRevert(DelegateTokenErrors.ERC20FlashAmountUnavailable.selector);
         harness.revertERC20FlashAmountUnavailable(
@@ -1131,8 +1052,8 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         vm.assume(delegateAmount1 < type(uint128).max && delegateAmount2 < type(uint128).max);
         vm.assume(flashAmount > delegateAmount1 + delegateAmount2);
         vm.startPrank(address(harness));
-        registry.delegateERC20(delegateHolder, contract_, delegateAmount1, "", true);
-        registry.delegateERC20(delegateHolder, contract_, delegateAmount2, "flashloan", true);
+        registry.delegateERC20(delegateHolder, contract_, "", delegateAmount1);
+        registry.delegateERC20(delegateHolder, contract_, "flashloan", delegateAmount2);
         vm.stopPrank();
         vm.expectRevert(DelegateTokenErrors.ERC20FlashAmountUnavailable.selector);
         harness.revertERC20FlashAmountUnavailable(
@@ -1163,9 +1084,9 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         vm.assume(flashAmount <= delegateAmount && flashAmount != 0);
         vm.assume(delegateHolder != badDelegateHolder);
         vm.startPrank(address(harness));
-        registry.delegateERC20(delegateHolder, contract_, delegateAmount, "", true);
-        registry.delegateERC20(delegateHolder, contract_, delegateAmount, "flashloan", true);
-        registry.delegateERC20(delegateHolder, contract_, delegateAmount, rights, true);
+        registry.delegateERC20(delegateHolder, contract_, "", delegateAmount);
+        registry.delegateERC20(delegateHolder, contract_, "flashloan", delegateAmount);
+        registry.delegateERC20(delegateHolder, contract_, rights, delegateAmount);
         vm.stopPrank();
         vm.expectRevert(DelegateTokenErrors.ERC20FlashAmountUnavailable.selector);
         harness.revertERC20FlashAmountUnavailable(
@@ -1196,9 +1117,9 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         vm.assume(flashAmount <= delegateAmount && flashAmount != 0);
         vm.assume(contract_ != badContract);
         vm.startPrank(address(harness));
-        registry.delegateERC20(delegateHolder, contract_, delegateAmount, "", true);
-        registry.delegateERC20(delegateHolder, contract_, delegateAmount, "flashloan", true);
-        registry.delegateERC20(delegateHolder, contract_, delegateAmount, rights, true);
+        registry.delegateERC20(delegateHolder, contract_, "", delegateAmount);
+        registry.delegateERC20(delegateHolder, contract_, "flashloan", delegateAmount);
+        registry.delegateERC20(delegateHolder, contract_, rights, delegateAmount);
         vm.stopPrank();
         vm.expectRevert(DelegateTokenErrors.ERC20FlashAmountUnavailable.selector);
         harness.revertERC20FlashAmountUnavailable(
@@ -1230,7 +1151,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         registry.delegateAll(delegateHolder, rights, true);
         registry.delegateContract(delegateHolder, contract_, rights, true);
         registry.delegateERC721(delegateHolder, contract_, tokenId, rights, true);
-        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, rights, true);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, rights, delegateAmount);
         vm.stopPrank();
         vm.expectRevert(DelegateTokenErrors.ERC20FlashAmountUnavailable.selector);
         harness.revertERC20FlashAmountUnavailable(
@@ -1264,8 +1185,8 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         registry.delegateAll(delegateHolder, rights, true);
         registry.delegateContract(delegateHolder, contract_, rights, true);
         registry.delegateERC721(delegateHolder, contract_, tokenId, rights, true);
-        registry.delegateERC20(delegateHolder, contract_, delegateAmount, rights, true);
-        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, rights, true);
+        registry.delegateERC20(delegateHolder, contract_, rights, delegateAmount);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, rights, delegateAmount);
         vm.stopPrank();
         vm.expectRevert(DelegateTokenErrors.ERC20FlashAmountUnavailable.selector);
         harness.revertERC20FlashAmountUnavailable(
@@ -1293,7 +1214,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
     ) public {
         vm.assume(flashAmount <= delegateAmount);
         vm.startPrank(address(harness));
-        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, "", true);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, "", delegateAmount);
         vm.stopPrank();
         harness.revertERC1155FlashAmountUnavailable(
             address(registry),
@@ -1320,7 +1241,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
     ) public {
         vm.assume(flashAmount <= delegateAmount);
         vm.startPrank(address(harness));
-        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, "flashloan", true);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, "flashloan", delegateAmount);
         vm.stopPrank();
         harness.revertERC1155FlashAmountUnavailable(
             address(registry),
@@ -1349,8 +1270,8 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         vm.assume(delegateAmount1 < type(uint128).max && delegateAmount2 < type(uint128).max);
         vm.assume(flashAmount <= delegateAmount1 + delegateAmount2);
         vm.startPrank(address(harness));
-        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount1, "", true);
-        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount2, "flashloan", true);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, "", delegateAmount1);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, "flashloan", delegateAmount2);
         vm.stopPrank();
         harness.revertERC1155FlashAmountUnavailable(
             address(registry),
@@ -1377,7 +1298,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
     ) public {
         vm.assume(flashAmount > delegateAmount);
         vm.startPrank(address(harness));
-        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, "", true);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, "", delegateAmount);
         vm.stopPrank();
         vm.expectRevert(DelegateTokenErrors.ERC1155FlashAmountUnavailable.selector);
         harness.revertERC1155FlashAmountUnavailable(
@@ -1405,7 +1326,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
     ) public {
         vm.assume(flashAmount > delegateAmount);
         vm.startPrank(address(harness));
-        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, "flashloan", true);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, "flashloan", delegateAmount);
         vm.stopPrank();
         vm.expectRevert(DelegateTokenErrors.ERC1155FlashAmountUnavailable.selector);
         harness.revertERC1155FlashAmountUnavailable(
@@ -1435,8 +1356,8 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         vm.assume(delegateAmount1 < type(uint128).max && delegateAmount2 < type(uint128).max);
         vm.assume(flashAmount > delegateAmount1 + delegateAmount2);
         vm.startPrank(address(harness));
-        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount1, "", true);
-        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount2, "flashloan", true);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, "", delegateAmount1);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, "flashloan", delegateAmount2);
         vm.stopPrank();
         vm.expectRevert(DelegateTokenErrors.ERC1155FlashAmountUnavailable.selector);
         harness.revertERC1155FlashAmountUnavailable(
@@ -1467,9 +1388,9 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         vm.assume(flashAmount <= delegateAmount && flashAmount != 0);
         vm.assume(delegateHolder != badDelegateHolder);
         vm.startPrank(address(harness));
-        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, "", true);
-        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, "flashloan", true);
-        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, rights, true);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, "", delegateAmount);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, "flashloan", delegateAmount);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, rights, delegateAmount);
         vm.stopPrank();
         vm.expectRevert(DelegateTokenErrors.ERC1155FlashAmountUnavailable.selector);
         harness.revertERC1155FlashAmountUnavailable(
@@ -1500,9 +1421,9 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         vm.assume(flashAmount <= delegateAmount && flashAmount != 0);
         vm.assume(contract_ != badContract);
         vm.startPrank(address(harness));
-        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, "", true);
-        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, "flashloan", true);
-        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, rights, true);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, "", delegateAmount);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, "flashloan", delegateAmount);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, rights, delegateAmount);
         vm.stopPrank();
         vm.expectRevert(DelegateTokenErrors.ERC1155FlashAmountUnavailable.selector);
         harness.revertERC1155FlashAmountUnavailable(
@@ -1533,9 +1454,9 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         vm.assume(flashAmount <= delegateAmount && flashAmount != 0);
         vm.assume(tokenId != badTokenId);
         vm.startPrank(address(harness));
-        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, "", true);
-        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, "flashloan", true);
-        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, rights, true);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, "", delegateAmount);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, "flashloan", delegateAmount);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, rights, delegateAmount);
         vm.stopPrank();
         vm.expectRevert(DelegateTokenErrors.ERC1155FlashAmountUnavailable.selector);
         harness.revertERC1155FlashAmountUnavailable(
@@ -1567,7 +1488,7 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         registry.delegateAll(delegateHolder, rights, true);
         registry.delegateContract(delegateHolder, contract_, rights, true);
         registry.delegateERC721(delegateHolder, contract_, tokenId, rights, true);
-        registry.delegateERC20(delegateHolder, contract_, delegateAmount, rights, true);
+        registry.delegateERC20(delegateHolder, contract_, rights, delegateAmount);
         vm.stopPrank();
         vm.expectRevert(DelegateTokenErrors.ERC1155FlashAmountUnavailable.selector);
         harness.revertERC1155FlashAmountUnavailable(
@@ -1601,8 +1522,8 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         registry.delegateAll(delegateHolder, rights, true);
         registry.delegateContract(delegateHolder, contract_, rights, true);
         registry.delegateERC721(delegateHolder, contract_, tokenId, rights, true);
-        registry.delegateERC20(delegateHolder, contract_, delegateAmount, rights, true);
-        registry.delegateERC1155(delegateHolder, contract_, tokenId, delegateAmount, rights, true);
+        registry.delegateERC20(delegateHolder, contract_, rights, delegateAmount);
+        registry.delegateERC1155(delegateHolder, contract_, tokenId, rights, delegateAmount);
         vm.stopPrank();
         vm.expectRevert(DelegateTokenErrors.ERC1155FlashAmountUnavailable.selector);
         harness.revertERC1155FlashAmountUnavailable(
@@ -1886,31 +1807,52 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         uint256 transferAmount
     ) public {
         vm.assume(from != to);
-        bytes32 registryHash = registry.delegateERC20(from, underlyingContract, fromStartingAmount, underlyingRights, true);
-        _assertDelegation({
-            hash: registryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC20,
-            to: from,
-            from: address(this),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: 0,
-            amount: fromStartingAmount
-        });
-        _assertDelegationsCount(from, 1, address(this), 1);
-        bytes32 newRegistryHash = registry.delegateERC20(to, underlyingContract, toStartingAmount, underlyingRights, true);
-        _assertDelegation({
-            hash: newRegistryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC20,
-            to: to,
-            from: address(this),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: 0,
-            amount: toStartingAmount
-        });
-        _assertDelegationsCount(to, 1, address(this), 2);
-        _assertDelegationsCount(from, 1, address(this), 2);
+        bytes32 registryHash = registry.delegateERC20(from, underlyingContract, underlyingRights, fromStartingAmount);
+        if (fromStartingAmount != 0) {
+            _assertDelegation({
+                hash: registryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC20,
+                to: from,
+                from: address(this),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: 0,
+                amount: fromStartingAmount
+            });
+            _assertDelegationsCount(from, 1, address(this), 1);
+        } else {
+            _assertEmptyDelegation(registryHash);
+            _assertDelegationsCount(from, 0, address(this), 0);
+        }
+        bytes32 newRegistryHash = registry.delegateERC20(to, underlyingContract, underlyingRights, toStartingAmount);
+        if (toStartingAmount != 0) {
+            _assertDelegation({
+                hash: newRegistryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC20,
+                to: to,
+                from: address(this),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: 0,
+                amount: toStartingAmount
+            });
+            if (fromStartingAmount != 0) {
+                _assertDelegationsCount(to, 1, address(this), 2);
+                _assertDelegationsCount(from, 1, address(this), 2);
+            } else {
+                _assertDelegationsCount(to, 1, address(this), 1);
+                _assertDelegationsCount(from, 0, address(this), 1);
+            }
+        } else {
+            _assertEmptyDelegation(newRegistryHash);
+            if (fromStartingAmount != 0) {
+                _assertDelegationsCount(to, 0, address(this), 1);
+                _assertDelegationsCount(from, 1, address(this), 1);
+            } else {
+                _assertDelegationsCount(to, 0, address(this), 0);
+                _assertDelegationsCount(from, 0, address(this), 0);
+            }
+        }
         Helpers.transferERC20({
             delegateRegistry: address(registry),
             registryHash: registryHash,
@@ -1927,28 +1869,62 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
             expectedFromAmount = fromStartingAmount - transferAmount;
             expectedToAmount = toStartingAmount + transferAmount;
         }
-        _assertDelegation({
-            hash: registryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC20,
-            to: from,
-            from: address(this),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: 0,
-            amount: expectedFromAmount
-        });
-        _assertDelegation({
-            hash: newRegistryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC20,
-            to: to,
-            from: address(this),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: 0,
-            amount: expectedToAmount
-        });
-        _assertDelegationsCount(to, 1, address(this), 2);
-        _assertDelegationsCount(from, 1, address(this), 2);
+        if (expectedFromAmount != 0) {
+            _assertDelegation({
+                hash: registryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC20,
+                to: from,
+                from: address(this),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: 0,
+                amount: expectedFromAmount
+            });
+            if (expectedToAmount != 0) {
+                _assertDelegationsCount(to, 1, address(this), 2);
+                _assertDelegationsCount(from, 1, address(this), 2);
+            } else {
+                _assertDelegationsCount(to, 0, address(this), 1);
+                _assertDelegationsCount(from, 1, address(this), 1);
+            }
+        } else {
+            _assertEmptyDelegation(registryHash);
+            if (expectedToAmount != 0) {
+                _assertDelegationsCount(to, 1, address(this), 1);
+                _assertDelegationsCount(from, 0, address(this), 1);
+            } else {
+                _assertDelegationsCount(to, 0, address(this), 0);
+                _assertDelegationsCount(from, 0, address(this), 0);
+            }
+        }
+        if (expectedToAmount != 0) {
+            _assertDelegation({
+                hash: newRegistryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC20,
+                to: to,
+                from: address(this),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: 0,
+                amount: expectedToAmount
+            });
+            if (expectedFromAmount != 0) {
+                _assertDelegationsCount(to, 1, address(this), 2);
+                _assertDelegationsCount(from, 1, address(this), 2);
+            } else {
+                _assertDelegationsCount(to, 1, address(this), 1);
+                _assertDelegationsCount(from, 0, address(this), 1);
+            }
+        } else {
+            _assertEmptyDelegation(newRegistryHash);
+            if (expectedFromAmount != 0) {
+                _assertDelegationsCount(to, 0, address(this), 1);
+                _assertDelegationsCount(from, 1, address(this), 1);
+            } else {
+                _assertDelegationsCount(to, 0, address(this), 0);
+                _assertDelegationsCount(from, 0, address(this), 0);
+            }
+        }
     }
 
     function testRevertTransferERC20Delegation(
@@ -1962,31 +1938,52 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
     ) public {
         vm.assume(from != to);
         vm.startPrank(address(harness));
-        bytes32 registryHash = registry.delegateERC20(from, underlyingContract, fromStartingAmount, underlyingRights, true);
-        _assertDelegation({
-            hash: registryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC20,
-            to: from,
-            from: address(harness),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: 0,
-            amount: fromStartingAmount
-        });
-        _assertDelegationsCount(from, 1, address(harness), 1);
-        bytes32 newRegistryHash = registry.delegateERC20(to, underlyingContract, toStartingAmount, underlyingRights, true);
-        _assertDelegation({
-            hash: newRegistryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC20,
-            to: to,
-            from: address(harness),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: 0,
-            amount: toStartingAmount
-        });
-        _assertDelegationsCount(to, 1, address(harness), 2);
-        _assertDelegationsCount(from, 1, address(harness), 2);
+        bytes32 registryHash = registry.delegateERC20(from, underlyingContract, underlyingRights, fromStartingAmount);
+        if (fromStartingAmount != 0) {
+            _assertDelegation({
+                hash: registryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC20,
+                to: from,
+                from: address(harness),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: 0,
+                amount: fromStartingAmount
+            });
+            _assertDelegationsCount(from, 1, address(harness), 1);
+        } else {
+            _assertEmptyDelegation(registryHash);
+            _assertDelegationsCount(from, 0, address(harness), 0);
+        }
+        bytes32 newRegistryHash = registry.delegateERC20(to, underlyingContract, underlyingRights, toStartingAmount);
+        if (toStartingAmount != 0) {
+            _assertDelegation({
+                hash: newRegistryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC20,
+                to: to,
+                from: address(harness),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: 0,
+                amount: toStartingAmount
+            });
+            if (fromStartingAmount != 0) {
+                _assertDelegationsCount(to, 1, address(harness), 2);
+                _assertDelegationsCount(from, 1, address(harness), 2);
+            } else {
+                _assertDelegationsCount(to, 1, address(harness), 1);
+                _assertDelegationsCount(from, 0, address(harness), 1);
+            }
+        } else {
+            _assertEmptyDelegation(newRegistryHash);
+            if (fromStartingAmount != 0) {
+                _assertDelegationsCount(to, 0, address(harness), 1);
+                _assertDelegationsCount(from, 1, address(harness), 1);
+            } else {
+                _assertDelegationsCount(to, 0, address(harness), 0);
+                _assertDelegationsCount(from, 0, address(harness), 0);
+            }
+        }
         vm.expectRevert(DelegateTokenErrors.HashMismatch.selector);
         harness.transferERC20({
             delegateRegistry: address(registry),
@@ -2046,18 +2043,23 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
     }
 
     function testTransferERC20DelegationSymmetric(address from, bytes32 underlyingRights, address underlyingContract, uint256 startingAmount, uint256 transferAmount) public {
-        bytes32 registryHash = registry.delegateERC20(from, underlyingContract, startingAmount, underlyingRights, true);
-        _assertDelegation({
-            hash: registryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC20,
-            to: from,
-            from: address(this),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: 0,
-            amount: startingAmount
-        });
-        _assertDelegationsCount(from, 1, address(this), 1);
+        bytes32 registryHash = registry.delegateERC20(from, underlyingContract, underlyingRights, startingAmount);
+        if (startingAmount != 0) {
+            _assertDelegation({
+                hash: registryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC20,
+                to: from,
+                from: address(this),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: 0,
+                amount: startingAmount
+            });
+            _assertDelegationsCount(from, 1, address(this), 1);
+        } else {
+            _assertEmptyDelegation(registryHash);
+            _assertDelegationsCount(from, 0, address(this), 0);
+        }
         Helpers.transferERC20({
             delegateRegistry: address(registry),
             registryHash: registryHash,
@@ -2068,35 +2070,45 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
             underlyingContract: underlyingContract,
             underlyingAmount: transferAmount
         });
-        _assertDelegation({
-            hash: registryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC20,
-            to: from,
-            from: address(this),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: 0,
-            amount: startingAmount
-        });
-        _assertDelegationsCount(from, 1, address(this), 1);
+        if (startingAmount != 0) {
+            _assertDelegation({
+                hash: registryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC20,
+                to: from,
+                from: address(this),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: 0,
+                amount: startingAmount
+            });
+            _assertDelegationsCount(from, 1, address(this), 1);
+        } else {
+            _assertEmptyDelegation(registryHash);
+            _assertDelegationsCount(from, 0, address(this), 0);
+        }
     }
 
     function testRevertTransferERC20DelegationSymmetric(address from, bytes32 underlyingRights, address underlyingContract, uint256 startingAmount, uint256 transferAmount)
         public
     {
         vm.startPrank(address(harness));
-        bytes32 registryHash = registry.delegateERC20(from, underlyingContract, startingAmount, underlyingRights, true);
-        _assertDelegation({
-            hash: registryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC20,
-            to: from,
-            from: address(harness),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: 0,
-            amount: startingAmount
-        });
-        _assertDelegationsCount(from, 1, address(harness), 1);
+        bytes32 registryHash = registry.delegateERC20(from, underlyingContract, underlyingRights, startingAmount);
+        if (startingAmount != 0) {
+            _assertDelegation({
+                hash: registryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC20,
+                to: from,
+                from: address(harness),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: 0,
+                amount: startingAmount
+            });
+            _assertDelegationsCount(from, 1, address(harness), 1);
+        } else {
+            _assertEmptyDelegation(registryHash);
+            _assertDelegationsCount(from, 0, address(harness), 0);
+        }
         vm.expectRevert(DelegateTokenErrors.HashMismatch.selector);
         harness.transferERC20({
             delegateRegistry: address(registry),
@@ -2144,31 +2156,52 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         uint256 transferAmount
     ) public {
         vm.assume(from != to);
-        bytes32 registryHash = registry.delegateERC1155(from, underlyingContract, underlyingTokenId, fromStartingAmount, underlyingRights, true);
-        _assertDelegation({
-            hash: registryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC1155,
-            to: from,
-            from: address(this),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: underlyingTokenId,
-            amount: fromStartingAmount
-        });
-        _assertDelegationsCount(from, 1, address(this), 1);
-        bytes32 newRegistryHash = registry.delegateERC1155(to, underlyingContract, underlyingTokenId, toStartingAmount, underlyingRights, true);
-        _assertDelegation({
-            hash: newRegistryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC1155,
-            to: to,
-            from: address(this),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: underlyingTokenId,
-            amount: toStartingAmount
-        });
-        _assertDelegationsCount(to, 1, address(this), 2);
-        _assertDelegationsCount(from, 1, address(this), 2);
+        bytes32 registryHash = registry.delegateERC1155(from, underlyingContract, underlyingTokenId, underlyingRights, fromStartingAmount);
+        if (fromStartingAmount != 0) {
+            _assertDelegation({
+                hash: registryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC1155,
+                to: from,
+                from: address(this),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: underlyingTokenId,
+                amount: fromStartingAmount
+            });
+            _assertDelegationsCount(from, 1, address(this), 1);
+        } else {
+            _assertEmptyDelegation(registryHash);
+            _assertDelegationsCount(from, 0, address(this), 0);
+        }
+        bytes32 newRegistryHash = registry.delegateERC1155(to, underlyingContract, underlyingTokenId, underlyingRights, toStartingAmount);
+        if (toStartingAmount != 0) {
+            _assertDelegation({
+                hash: newRegistryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC1155,
+                to: to,
+                from: address(this),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: underlyingTokenId,
+                amount: toStartingAmount
+            });
+            if (fromStartingAmount != 0) {
+                _assertDelegationsCount(to, 1, address(this), 2);
+                _assertDelegationsCount(from, 1, address(this), 2);
+            } else {
+                _assertDelegationsCount(to, 1, address(this), 1);
+                _assertDelegationsCount(from, 0, address(this), 1);
+            }
+        } else {
+            _assertEmptyDelegation(newRegistryHash);
+            if (fromStartingAmount != 0) {
+                _assertDelegationsCount(to, 0, address(this), 1);
+                _assertDelegationsCount(from, 1, address(this), 1);
+            } else {
+                _assertDelegationsCount(to, 0, address(this), 0);
+                _assertDelegationsCount(from, 0, address(this), 0);
+            }
+        }
         Helpers.transferERC1155({
             delegateRegistry: address(registry),
             registryHash: registryHash,
@@ -2186,28 +2219,62 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
             expectedFromAmount = fromStartingAmount - transferAmount;
             expectedToAmount = toStartingAmount + transferAmount;
         }
-        _assertDelegation({
-            hash: registryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC1155,
-            to: from,
-            from: address(this),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: underlyingTokenId,
-            amount: expectedFromAmount
-        });
-        _assertDelegation({
-            hash: newRegistryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC1155,
-            to: to,
-            from: address(this),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: underlyingTokenId,
-            amount: expectedToAmount
-        });
-        _assertDelegationsCount(to, 1, address(this), 2);
-        _assertDelegationsCount(from, 1, address(this), 2);
+        if (expectedFromAmount != 0) {
+            _assertDelegation({
+                hash: registryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC1155,
+                to: from,
+                from: address(this),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: underlyingTokenId,
+                amount: expectedFromAmount
+            });
+            if (expectedToAmount != 0) {
+                _assertDelegationsCount(to, 1, address(this), 2);
+                _assertDelegationsCount(from, 1, address(this), 2);
+            } else {
+                _assertDelegationsCount(to, 0, address(this), 1);
+                _assertDelegationsCount(from, 1, address(this), 1);
+            }
+        } else {
+            _assertEmptyDelegation(registryHash);
+            if (expectedToAmount != 0) {
+                _assertDelegationsCount(to, 1, address(this), 1);
+                _assertDelegationsCount(from, 0, address(this), 1);
+            } else {
+                _assertDelegationsCount(to, 0, address(this), 0);
+                _assertDelegationsCount(from, 0, address(this), 0);
+            }
+        }
+        if (expectedToAmount != 0) {
+            _assertDelegation({
+                hash: newRegistryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC1155,
+                to: to,
+                from: address(this),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: underlyingTokenId,
+                amount: expectedToAmount
+            });
+            if (expectedFromAmount != 0) {
+                _assertDelegationsCount(to, 1, address(this), 2);
+                _assertDelegationsCount(from, 1, address(this), 2);
+            } else {
+                _assertDelegationsCount(to, 1, address(this), 1);
+                _assertDelegationsCount(from, 0, address(this), 1);
+            }
+        } else {
+            _assertEmptyDelegation(newRegistryHash);
+            if (expectedFromAmount != 0) {
+                _assertDelegationsCount(to, 0, address(this), 1);
+                _assertDelegationsCount(from, 1, address(this), 1);
+            } else {
+                _assertDelegationsCount(to, 0, address(this), 0);
+                _assertDelegationsCount(from, 0, address(this), 0);
+            }
+        }
     }
 
     function testRevertTransferERC1155Delegation(
@@ -2222,31 +2289,52 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
     ) public {
         vm.assume(from != to);
         vm.startPrank(address(harness));
-        bytes32 registryHash = registry.delegateERC1155(from, underlyingContract, underlyingTokenId, fromStartingAmount, underlyingRights, true);
-        _assertDelegation({
-            hash: registryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC1155,
-            to: from,
-            from: address(harness),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: underlyingTokenId,
-            amount: fromStartingAmount
-        });
-        _assertDelegationsCount(from, 1, address(harness), 1);
-        bytes32 newRegistryHash = registry.delegateERC1155(to, underlyingContract, underlyingTokenId, toStartingAmount, underlyingRights, true);
-        _assertDelegation({
-            hash: newRegistryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC1155,
-            to: to,
-            from: address(harness),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: underlyingTokenId,
-            amount: toStartingAmount
-        });
-        _assertDelegationsCount(to, 1, address(harness), 2);
-        _assertDelegationsCount(from, 1, address(harness), 2);
+        bytes32 registryHash = registry.delegateERC1155(from, underlyingContract, underlyingTokenId, underlyingRights, fromStartingAmount);
+        if (fromStartingAmount != 0) {
+            _assertDelegation({
+                hash: registryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC1155,
+                to: from,
+                from: address(harness),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: underlyingTokenId,
+                amount: fromStartingAmount
+            });
+            _assertDelegationsCount(from, 1, address(harness), 1);
+        } else {
+            _assertEmptyDelegation(registryHash);
+            _assertDelegationsCount(from, 0, address(harness), 0);
+        }
+        bytes32 newRegistryHash = registry.delegateERC1155(to, underlyingContract, underlyingTokenId, underlyingRights, toStartingAmount);
+        if (toStartingAmount != 0) {
+            _assertDelegation({
+                hash: newRegistryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC1155,
+                to: to,
+                from: address(harness),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: underlyingTokenId,
+                amount: toStartingAmount
+            });
+            if (fromStartingAmount != 0) {
+                _assertDelegationsCount(to, 1, address(harness), 2);
+                _assertDelegationsCount(from, 1, address(harness), 2);
+            } else {
+                _assertDelegationsCount(to, 1, address(harness), 1);
+                _assertDelegationsCount(from, 0, address(harness), 1);
+            }
+        } else {
+            _assertEmptyDelegation(newRegistryHash);
+            if (fromStartingAmount != 0) {
+                _assertDelegationsCount(to, 0, address(harness), 1);
+                _assertDelegationsCount(from, 1, address(harness), 1);
+            } else {
+                _assertDelegationsCount(to, 0, address(harness), 0);
+                _assertDelegationsCount(from, 0, address(harness), 0);
+            }
+        }
         vm.expectRevert(DelegateTokenErrors.HashMismatch.selector);
         harness.transferERC1155({
             delegateRegistry: address(registry),
@@ -2318,18 +2406,23 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         uint256 startingAmount,
         uint256 transferAmount
     ) public {
-        bytes32 registryHash = registry.delegateERC1155(from, underlyingContract, underlyingTokenId, startingAmount, underlyingRights, true);
-        _assertDelegation({
-            hash: registryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC1155,
-            to: from,
-            from: address(this),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: underlyingTokenId,
-            amount: startingAmount
-        });
-        _assertDelegationsCount(from, 1, address(this), 1);
+        bytes32 registryHash = registry.delegateERC1155(from, underlyingContract, underlyingTokenId, underlyingRights, startingAmount);
+        if (startingAmount != 0) {
+            _assertDelegation({
+                hash: registryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC1155,
+                to: from,
+                from: address(this),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: underlyingTokenId,
+                amount: startingAmount
+            });
+            _assertDelegationsCount(from, 1, address(this), 1);
+        } else {
+            _assertEmptyDelegation(registryHash);
+            _assertDelegationsCount(from, 0, address(this), 0);
+        }
         Helpers.transferERC1155({
             delegateRegistry: address(registry),
             registryHash: registryHash,
@@ -2341,17 +2434,22 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
             underlyingAmount: transferAmount,
             underlyingTokenId: underlyingTokenId
         });
-        _assertDelegation({
-            hash: registryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC1155,
-            to: from,
-            from: address(this),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: underlyingTokenId,
-            amount: startingAmount
-        });
-        _assertDelegationsCount(from, 1, address(this), 1);
+        if (startingAmount != 0) {
+            _assertDelegation({
+                hash: registryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC1155,
+                to: from,
+                from: address(this),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: underlyingTokenId,
+                amount: startingAmount
+            });
+            _assertDelegationsCount(from, 1, address(this), 1);
+        } else {
+            _assertEmptyDelegation(registryHash);
+            _assertDelegationsCount(from, 0, address(this), 0);
+        }
     }
 
     function testRevertTransferERC1155DelegationSymmetric(
@@ -2363,18 +2461,23 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         uint256 underlyingTokenId
     ) public {
         vm.startPrank(address(harness));
-        bytes32 registryHash = registry.delegateERC1155(from, underlyingContract, underlyingTokenId, startingAmount, underlyingRights, true);
-        _assertDelegation({
-            hash: registryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC1155,
-            to: from,
-            from: address(harness),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: underlyingTokenId,
-            amount: startingAmount
-        });
-        _assertDelegationsCount(from, 1, address(harness), 1);
+        bytes32 registryHash = registry.delegateERC1155(from, underlyingContract, underlyingTokenId, underlyingRights, startingAmount);
+        if (startingAmount != 0) {
+            _assertDelegation({
+                hash: registryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC1155,
+                to: from,
+                from: address(harness),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: underlyingTokenId,
+                amount: startingAmount
+            });
+            _assertDelegationsCount(from, 1, address(harness), 1);
+        } else {
+            _assertEmptyDelegation(registryHash);
+            _assertDelegationsCount(from, 0, address(harness), 0);
+        }
         vm.expectRevert(DelegateTokenErrors.HashMismatch.selector);
         harness.transferERC1155({
             delegateRegistry: address(registry),
@@ -2490,18 +2593,23 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
 
     function testDelegateERC20(address delegateTokenHolder, bytes32 underlyingRights, address underlyingContract, uint256 startingAmount, uint256 addAmount) public {
         vm.startPrank(address(harness));
-        bytes32 newRegistryHash = registry.delegateERC20(delegateTokenHolder, underlyingContract, startingAmount, underlyingRights, true);
-        _assertDelegation({
-            hash: newRegistryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC20,
-            to: delegateTokenHolder,
-            from: address(harness),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: 0,
-            amount: startingAmount
-        });
-        _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
+        bytes32 newRegistryHash = registry.delegateERC20(delegateTokenHolder, underlyingContract, underlyingRights, startingAmount);
+        if (startingAmount != 0) {
+            _assertDelegation({
+                hash: newRegistryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC20,
+                to: delegateTokenHolder,
+                from: address(harness),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: 0,
+                amount: startingAmount
+            });
+            _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
+        } else {
+            _assertEmptyDelegation(newRegistryHash);
+            _assertDelegationsCount(delegateTokenHolder, 0, address(harness), 0);
+        }
         harness.incrementERC20(
             address(registry),
             newRegistryHash,
@@ -2520,34 +2628,44 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         unchecked {
             expectedAmount = startingAmount + addAmount;
         }
-        _assertDelegation({
-            hash: newRegistryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC20,
-            to: delegateTokenHolder,
-            from: address(harness),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: 0,
-            amount: expectedAmount
-        });
-        _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
+        if (expectedAmount != 0) {
+            _assertDelegation({
+                hash: newRegistryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC20,
+                to: delegateTokenHolder,
+                from: address(harness),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: 0,
+                amount: expectedAmount
+            });
+            _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
+        } else {
+            _assertEmptyDelegation(newRegistryHash);
+            _assertDelegationsCount(delegateTokenHolder, 0, address(harness), 0);
+        }
         vm.stopPrank();
     }
 
     function testRevertDelegateERC20(address delegateTokenHolder, bytes32 underlyingRights, address underlyingContract, uint256 startingAmount, uint256 addAmount) public {
         vm.startPrank(address(harness));
-        bytes32 newRegistryHash = registry.delegateERC20(delegateTokenHolder, underlyingContract, startingAmount, underlyingRights, true);
-        _assertDelegation({
-            hash: newRegistryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC20,
-            to: delegateTokenHolder,
-            from: address(harness),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: 0,
-            amount: startingAmount
-        });
-        _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
+        bytes32 newRegistryHash = registry.delegateERC20(delegateTokenHolder, underlyingContract, underlyingRights, startingAmount);
+        if (startingAmount != 0) {
+            _assertDelegation({
+                hash: newRegistryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC20,
+                to: delegateTokenHolder,
+                from: address(harness),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: 0,
+                amount: startingAmount
+            });
+            _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
+        } else {
+            _assertEmptyDelegation(newRegistryHash);
+            _assertDelegationsCount(delegateTokenHolder, 0, address(harness), 0);
+        }
         vm.expectRevert(DelegateTokenErrors.HashMismatch.selector);
         harness.incrementERC20(
             address(registry),
@@ -2575,18 +2693,23 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         uint256 addAmount
     ) public {
         vm.startPrank(address(harness));
-        bytes32 newRegistryHash = registry.delegateERC1155(delegateTokenHolder, underlyingContract, underlyingTokenId, startingAmount, underlyingRights, true);
-        _assertDelegation({
-            hash: newRegistryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC1155,
-            to: delegateTokenHolder,
-            from: address(harness),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: underlyingTokenId,
-            amount: startingAmount
-        });
-        _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
+        bytes32 newRegistryHash = registry.delegateERC1155(delegateTokenHolder, underlyingContract, underlyingTokenId, underlyingRights, startingAmount);
+        if (startingAmount != 0) {
+            _assertDelegation({
+                hash: newRegistryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC1155,
+                to: delegateTokenHolder,
+                from: address(harness),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: underlyingTokenId,
+                amount: startingAmount
+            });
+            _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
+        } else {
+            _assertEmptyDelegation(newRegistryHash);
+            _assertDelegationsCount(delegateTokenHolder, 0, address(harness), 0);
+        }
         harness.incrementERC1155(
             address(registry),
             newRegistryHash,
@@ -2605,17 +2728,22 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         unchecked {
             expectedAmount = startingAmount + addAmount;
         }
-        _assertDelegation({
-            hash: newRegistryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC1155,
-            to: delegateTokenHolder,
-            from: address(harness),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: underlyingTokenId,
-            amount: expectedAmount
-        });
-        _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
+        if (expectedAmount != 0) {
+            _assertDelegation({
+                hash: newRegistryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC1155,
+                to: delegateTokenHolder,
+                from: address(harness),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: underlyingTokenId,
+                amount: expectedAmount
+            });
+            _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
+        } else {
+            _assertEmptyDelegation(newRegistryHash);
+            _assertDelegationsCount(delegateTokenHolder, 0, address(harness), 0);
+        }
         vm.stopPrank();
     }
 
@@ -2628,18 +2756,23 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         uint256 addAmount
     ) public {
         vm.startPrank(address(harness));
-        bytes32 newRegistryHash = registry.delegateERC1155(delegateTokenHolder, underlyingContract, underlyingTokenId, startingAmount, underlyingRights, true);
-        _assertDelegation({
-            hash: newRegistryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC1155,
-            to: delegateTokenHolder,
-            from: address(harness),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: underlyingTokenId,
-            amount: startingAmount
-        });
-        _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
+        bytes32 newRegistryHash = registry.delegateERC1155(delegateTokenHolder, underlyingContract, underlyingTokenId, underlyingRights, startingAmount);
+        if (startingAmount != 0) {
+            _assertDelegation({
+                hash: newRegistryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC1155,
+                to: delegateTokenHolder,
+                from: address(harness),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: underlyingTokenId,
+                amount: startingAmount
+            });
+            _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
+        } else {
+            _assertEmptyDelegation(newRegistryHash);
+            _assertDelegationsCount(delegateTokenHolder, 0, address(harness), 0);
+        }
         vm.expectRevert(DelegateTokenErrors.HashMismatch.selector);
         harness.incrementERC1155(
             address(registry),
@@ -2708,51 +2841,66 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
 
     function testRevokeERC20(address delegateTokenHolder, bytes32 underlyingRights, address underlyingContract, uint256 startingAmount, uint256 removeAmount) public {
         vm.startPrank(address(harness));
-        bytes32 newRegistryHash = registry.delegateERC20(delegateTokenHolder, underlyingContract, startingAmount, underlyingRights, true);
-        _assertDelegation({
-            hash: newRegistryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC20,
-            to: delegateTokenHolder,
-            from: address(harness),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: 0,
-            amount: startingAmount
-        });
-        _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
+        bytes32 newRegistryHash = registry.delegateERC20(delegateTokenHolder, underlyingContract, underlyingRights, startingAmount);
+        if (startingAmount != 0) {
+            _assertDelegation({
+                hash: newRegistryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC20,
+                to: delegateTokenHolder,
+                from: address(harness),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: 0,
+                amount: startingAmount
+            });
+            _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
+        } else {
+            _assertEmptyDelegation(newRegistryHash);
+            _assertDelegationsCount(delegateTokenHolder, 0, address(harness), 0);
+        }
         harness.decrementERC20(address(registry), newRegistryHash, delegateTokenHolder, underlyingContract, removeAmount, underlyingRights);
         uint256 expectedAmount;
         unchecked {
             expectedAmount = startingAmount - removeAmount;
         }
-        _assertDelegation({
-            hash: newRegistryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC20,
-            to: delegateTokenHolder,
-            from: address(harness),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: 0,
-            amount: expectedAmount
-        });
-        _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
+        if (expectedAmount != 0) {
+            _assertDelegation({
+                hash: newRegistryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC20,
+                to: delegateTokenHolder,
+                from: address(harness),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: 0,
+                amount: expectedAmount
+            });
+            _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
+        } else {
+            _assertEmptyDelegation(newRegistryHash);
+            _assertDelegationsCount(delegateTokenHolder, 0, address(harness), 0);
+        }
         vm.stopPrank();
     }
 
     function testRevokeRevertERC20(address delegateTokenHolder, bytes32 underlyingRights, address underlyingContract, uint256 startingAmount, uint256 removeAmount) public {
         vm.startPrank(address(harness));
-        bytes32 newRegistryHash = registry.delegateERC20(delegateTokenHolder, underlyingContract, startingAmount, underlyingRights, true);
-        _assertDelegation({
-            hash: newRegistryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC20,
-            to: delegateTokenHolder,
-            from: address(harness),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: 0,
-            amount: startingAmount
-        });
-        _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
+        bytes32 newRegistryHash = registry.delegateERC20(delegateTokenHolder, underlyingContract, underlyingRights, startingAmount);
+        if (startingAmount != 0) {
+            _assertDelegation({
+                hash: newRegistryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC20,
+                to: delegateTokenHolder,
+                from: address(harness),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: 0,
+                amount: startingAmount
+            });
+            _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
+        } else {
+            _assertEmptyDelegation(newRegistryHash);
+            _assertDelegationsCount(delegateTokenHolder, 0, address(harness), 0);
+        }
         vm.expectRevert(DelegateTokenErrors.HashMismatch.selector);
         harness.decrementERC20(address(registry), keccak256(abi.encode(newRegistryHash)), delegateTokenHolder, underlyingContract, removeAmount, underlyingRights);
         vm.stopPrank();
@@ -2767,34 +2915,44 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         uint256 removeAmount
     ) public {
         vm.startPrank(address(harness));
-        bytes32 newRegistryHash = registry.delegateERC1155(delegateTokenHolder, underlyingContract, underlyingTokenId, startingAmount, underlyingRights, true);
-        _assertDelegation({
-            hash: newRegistryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC1155,
-            to: delegateTokenHolder,
-            from: address(harness),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: underlyingTokenId,
-            amount: startingAmount
-        });
-        _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
+        bytes32 newRegistryHash = registry.delegateERC1155(delegateTokenHolder, underlyingContract, underlyingTokenId, underlyingRights, startingAmount);
+        if (startingAmount != 0) {
+            _assertDelegation({
+                hash: newRegistryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC1155,
+                to: delegateTokenHolder,
+                from: address(harness),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: underlyingTokenId,
+                amount: startingAmount
+            });
+            _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
+        } else {
+            _assertEmptyDelegation(newRegistryHash);
+            _assertDelegationsCount(delegateTokenHolder, 0, address(harness), 0);
+        }
         harness.decrementERC1155(address(registry), newRegistryHash, delegateTokenHolder, underlyingContract, underlyingTokenId, removeAmount, underlyingRights);
         uint256 expectedAmount;
         unchecked {
             expectedAmount = startingAmount - removeAmount;
         }
-        _assertDelegation({
-            hash: newRegistryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC1155,
-            to: delegateTokenHolder,
-            from: address(harness),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: underlyingTokenId,
-            amount: expectedAmount
-        });
-        _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
+        if (expectedAmount != 0) {
+            _assertDelegation({
+                hash: newRegistryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC1155,
+                to: delegateTokenHolder,
+                from: address(harness),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: underlyingTokenId,
+                amount: expectedAmount
+            });
+            _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
+        } else {
+            _assertEmptyDelegation(newRegistryHash);
+            _assertDelegationsCount(delegateTokenHolder, 0, address(harness), 0);
+        }
         vm.stopPrank();
     }
 
@@ -2807,18 +2965,23 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         uint256 removeAmount
     ) public {
         vm.startPrank(address(harness));
-        bytes32 newRegistryHash = registry.delegateERC1155(delegateTokenHolder, underlyingContract, underlyingTokenId, startingAmount, underlyingRights, true);
-        _assertDelegation({
-            hash: newRegistryHash,
-            tokenType: IDelegateRegistry.DelegationType.ERC1155,
-            to: delegateTokenHolder,
-            from: address(harness),
-            rights: underlyingRights,
-            contract_: underlyingContract,
-            tokenId: underlyingTokenId,
-            amount: startingAmount
-        });
-        _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
+        bytes32 newRegistryHash = registry.delegateERC1155(delegateTokenHolder, underlyingContract, underlyingTokenId, underlyingRights, startingAmount);
+        if (startingAmount != 0) {
+            _assertDelegation({
+                hash: newRegistryHash,
+                tokenType: IDelegateRegistry.DelegationType.ERC1155,
+                to: delegateTokenHolder,
+                from: address(harness),
+                rights: underlyingRights,
+                contract_: underlyingContract,
+                tokenId: underlyingTokenId,
+                amount: startingAmount
+            });
+            _assertDelegationsCount(delegateTokenHolder, 1, address(harness), 1);
+        } else {
+            _assertEmptyDelegation(newRegistryHash);
+            _assertDelegationsCount(delegateTokenHolder, 0, address(harness), 0);
+        }
         vm.expectRevert(DelegateTokenErrors.HashMismatch.selector);
         harness.decrementERC1155(
             address(registry), keccak256(abi.encode(newRegistryHash)), delegateTokenHolder, underlyingContract, underlyingTokenId, removeAmount, underlyingRights
@@ -2846,6 +3009,19 @@ contract DelegateTokenRegistryHelpersTest is Test, BaseLiquidDelegateTest {
         assertEq(contract_, delegation.contract_);
         assertEq(tokenId, delegation.tokenId);
         assertEq(amount, delegation.amount);
+    }
+
+    function _assertEmptyDelegation(bytes32 hash) internal {
+        bytes32[] memory hashes = new bytes32[](1);
+        hashes[0] = hash;
+        IDelegateRegistry.Delegation memory delegation = registry.getDelegationsFromHashes(hashes)[0];
+        assertEq(uint256(IDelegateRegistry.DelegationType.NONE), uint256(delegation.type_));
+        assertEq(address(0), delegation.to);
+        assertEq(address(0), delegation.from);
+        assertEq("", delegation.rights);
+        assertEq(address(0), delegation.contract_);
+        assertEq(0, delegation.tokenId);
+        assertEq(0, delegation.amount);
     }
 
     function _assertDelegationsCount(address incoming, uint256 incomingAmount, address outgoing, uint256 outgoingAmount) internal {
