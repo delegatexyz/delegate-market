@@ -44,7 +44,7 @@ contract MarketMetadata is Ownable2Step, ERC2981 {
         string memory firstPartOfMetadataString = string.concat(
             '{"name":"Delegate Token #"',
             idstr,
-            '","description":"LiquidDelegate lets you escrow your token for a chosen timeperiod and receive a liquid NFT representing the associated delegation rights. This collection represents the tokenized delegation rights.","attributes":[{"trait_type":"Collection Address","value":"',
+            '","description":"DelegateMarket lets you escrow your token for a chosen timeperiod and receive a token representing the associated delegation rights. This collection represents the tokenized delegation rights.","attributes":[{"trait_type":"Collection Address","value":"',
             Strings.toHexString(tokenContract),
             '"},{"trait_type":"Token ID","value":"',
             idstr,
@@ -89,7 +89,7 @@ contract MarketMetadata is Ownable2Step, ERC2981 {
         string memory firstPartOfMetadataString = string.concat(
             '{"name":"',
             string.concat(dt.name(), " #", idstr),
-            '","description":"LiquidDelegate lets you escrow your token for a chosen timeperiod and receive a liquid NFT representing the associated delegation rights. This collection represents the principal i.e. the future right to claim the underlying token once the associated delegate token expires.","attributes":[{"trait_type":"Collection Address","value":"',
+            '","description":"DelegateMarket lets you escrow your token for a chosen timeperiod and receive a token representing its delegation rights. This collection represents the principal i.e. the future right to claim the underlying token once the associated delegate token expires.","attributes":[{"trait_type":"Collection Address","value":"',
             Strings.toHexString(delegateInfo.tokenContract),
             '"},{"trait_type":"Token ID","value":"',
             idstr,

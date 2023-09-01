@@ -6,13 +6,7 @@ import {Test} from "forge-std/Test.sol";
 import {DelegateTokenErrors} from "src/libraries/DelegateTokenLib.sol";
 
 import {
-    PrincipalToken,
-    DelegateToken,
-    MarketMetadata,
-    DelegateTokenStructs,
-    BaseLiquidDelegateTest,
-    ComputeAddress,
-    IDelegateRegistry
+    PrincipalToken, DelegateToken, MarketMetadata, DelegateTokenStructs, BaseLiquidDelegateTest, ComputeAddress, IDelegateRegistry
 } from "test/base/BaseLiquidDelegateTest.t.sol";
 
 contract DelegateTokenTest is Test, BaseLiquidDelegateTest {

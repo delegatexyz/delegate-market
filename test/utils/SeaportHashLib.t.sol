@@ -4,8 +4,7 @@ pragma solidity ^0.8.21;
 import {OrderParameters, ConsiderationItem, OfferItem} from "seaport/contracts/lib/ConsiderationStructs.sol";
 
 library SeaportHashLib {
-    bytes32 internal constant OFFER_ITEM_TYPE_HASH =
-        keccak256("OfferItem(uint8 itemType,address token,uint256 identifierOrCriteria,uint256 startAmount,uint256 endAmount)");
+    bytes32 internal constant OFFER_ITEM_TYPE_HASH = keccak256("OfferItem(uint8 itemType,address token,uint256 identifierOrCriteria,uint256 startAmount,uint256 endAmount)");
     bytes32 internal constant CONSIDERATION_ITEM_TYPE_HASH =
         keccak256("ConsiderationItem(uint8 itemType,address token,uint256 identifierOrCriteria,uint256 startAmount,uint256 endAmount,address recipient)");
     bytes32 internal constant ORDER_TYPE_HASH = keccak256(
@@ -17,8 +16,7 @@ library SeaportHashLib {
     }
 
     function hash(OfferItem memory offerItem) internal pure returns (bytes32) {
-        return
-            keccak256(abi.encode(OFFER_ITEM_TYPE_HASH, offerItem.itemType, offerItem.token, offerItem.identifierOrCriteria, offerItem.startAmount, offerItem.endAmount));
+        return keccak256(abi.encode(OFFER_ITEM_TYPE_HASH, offerItem.itemType, offerItem.token, offerItem.identifierOrCriteria, offerItem.startAmount, offerItem.endAmount));
     }
 
     function hash(ConsiderationItem memory considerationItem) internal pure returns (bytes32) {

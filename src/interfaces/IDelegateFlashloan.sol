@@ -7,10 +7,10 @@ interface IDelegateFlashloan {
     error InvalidFlashloan();
 
     /**
-     * @dev Receive a delegate flashloan.
-     * @param initiator caller of the flashloan
-     * @param flashInfo struct
-     * @return The function selector for onFlashloan
+     * @dev Receive a delegate flashloan
+     * @param initiator Caller of the flashloan
+     * @param flashInfo Info about the flashloan
+     * @return selector The function selector for onFlashloan
      */
     function onFlashloan(address initiator, Structs.FlashInfo calldata flashInfo) external payable returns (bytes32);
 }

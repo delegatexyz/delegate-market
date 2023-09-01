@@ -164,8 +164,7 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
         StorageHelpers.revertNotMinted(registryHash, delegateTokenId);
         (address delegateTokenHolder, address underlyingContract) = RegistryHelpers.loadTokenHolderAndContract(delegateRegistry, registryHash);
         if (from != delegateTokenHolder) revert Errors.FromNotDelegateTokenHolder();
-        // We can use from here instead of delegateTokenHolder since we've just verified that from ==
-        // delegateTokenHolder
+        // We can use `from` here instead of delegateTokenHolder since we've just verified that from == delegateTokenHolder
         StorageHelpers.revertNotApprovedOrOperator(accountOperator, delegateTokenInfo, from, delegateTokenId);
         StorageHelpers.incrementBalance(balances, to);
         StorageHelpers.decrementBalance(balances, from);
@@ -241,8 +240,7 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
         bytes32 registryHash = StorageHelpers.readRegistryHash(delegateTokenInfo, delegateTokenId);
         StorageHelpers.revertNotMinted(registryHash, delegateTokenId);
         address delegateTokenHolder = RegistryHelpers.loadTokenHolder(delegateRegistry, registryHash);
-        return
-            spender == delegateTokenHolder || accountOperator[delegateTokenHolder][spender] || StorageHelpers.readApproved(delegateTokenInfo, delegateTokenId) == spender;
+        return spender == delegateTokenHolder || accountOperator[delegateTokenHolder][spender] || StorageHelpers.readApproved(delegateTokenInfo, delegateTokenId) == spender;
     }
 
     /// @inheritdoc IDelegateToken
@@ -316,8 +314,7 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
             RegistryHelpers.incrementERC20(delegateRegistry, newRegistryHash, delegateInfo);
         } else if (delegateInfo.tokenType == IDelegateRegistry.DelegationType.ERC1155) {
             StorageHelpers.writeUnderlyingAmount(delegateTokenInfo, delegateTokenId, delegateInfo.amount);
-            newRegistryHash =
-                RegistryHashes.erc1155Hash(address(this), delegateInfo.rights, delegateInfo.delegateHolder, delegateInfo.tokenId, delegateInfo.tokenContract);
+            newRegistryHash = RegistryHashes.erc1155Hash(address(this), delegateInfo.rights, delegateInfo.delegateHolder, delegateInfo.tokenId, delegateInfo.tokenContract);
             StorageHelpers.writeRegistryHash(delegateTokenInfo, delegateTokenId, newRegistryHash);
             RegistryHelpers.incrementERC1155(delegateRegistry, newRegistryHash, delegateInfo);
         }
@@ -361,7 +358,7 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
         (address delegateTokenHolder, address underlyingContract) = RegistryHelpers.loadTokenHolderAndContract(delegateRegistry, registryHash);
         StorageHelpers.revertInvalidWithdrawalConditions(delegateTokenInfo, accountOperator, delegateTokenId, delegateTokenHolder);
         StorageHelpers.decrementBalance(balances, delegateTokenHolder);
-        delete delegateTokenInfo[delegateTokenId][StorageHelpers.PACKED_INFO_POSITION]; // Deletes both expiry AND approved
+        delete delegateTokenInfo[delegateTokenId][StorageHelpers.PACKED_INFO_POSITION]; // Deletes both expiry and approved
         emit Transfer(delegateTokenHolder, address(0), delegateTokenId);
         IDelegateRegistry.DelegationType delegationType = RegistryHashes.decodeType(registryHash);
         bytes32 underlyingRights = RegistryHelpers.loadRights(delegateRegistry, registryHash);

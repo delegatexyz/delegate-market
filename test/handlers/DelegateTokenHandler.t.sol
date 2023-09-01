@@ -85,9 +85,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         uint256 amount = 0;
         uint96 salt = 3;
         uint256 delegateId = delegateToken.create(
-            IDelegateTokenStructs.DelegateInfo(
-                currentActor, IDelegateRegistry.DelegationType.ERC721, currentActor, amount, address(token), id, "", block.timestamp + 1 seconds
-            ),
+            IDelegateTokenStructs.DelegateInfo(currentActor, IDelegateRegistry.DelegationType.ERC721, currentActor, amount, address(token), id, "", block.timestamp + 1 seconds),
             salt
         );
         allDelegateTokens.add(delegateId);
@@ -115,8 +113,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
             uint256 amount = 0;
             uint96 salt = 3;
             delegateId = delegateToken.create(
-                IDelegateTokenStructs.DelegateInfo(to, IDelegateRegistry.DelegationType.ERC721, currentActor, amount, address(token), id, "", block.timestamp + 1 seconds),
-                salt
+                IDelegateTokenStructs.DelegateInfo(to, IDelegateRegistry.DelegationType.ERC721, currentActor, amount, address(token), id, "", block.timestamp + 1 seconds), salt
             );
 
             allDelegateTokens.add(delegateId);
@@ -198,9 +195,8 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         IDelegateTokenStructs.DelegateInfo memory delegateInfo = delegateToken.getDelegateInfo(prId);
 
-        CreateOffererEnums.ExpiryType expiryType = CreateOffererEnums.ExpiryType(
-            bound(rawExpiryType, uint256(type(CreateOffererEnums.ExpiryType).min), uint256(type(CreateOffererEnums.ExpiryType).max)).toUint8()
-        );
+        CreateOffererEnums.ExpiryType expiryType =
+            CreateOffererEnums.ExpiryType(bound(rawExpiryType, uint256(type(CreateOffererEnums.ExpiryType).min), uint256(type(CreateOffererEnums.ExpiryType).max)).toUint8());
 
         uint256 minTime = (delegateInfo.expiry > block.timestamp ? delegateInfo.expiry : block.timestamp) + 1;
         uint256 maxTime = expiryType == CreateOffererEnums.ExpiryType.relative ? type(uint40).max - block.timestamp : type(uint40).max;

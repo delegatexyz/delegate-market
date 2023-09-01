@@ -41,7 +41,7 @@ library DelegateTokenTransferHelpers {
         IERC721(underlyingContract).transferFrom(msg.sender, address(this), underlyingTokenId);
     }
 
-    /// @dev should revert for a typical 721 / 1155 and pass for a typical 20
+    /// @dev Should revert for a typical 721 / 1155 and pass for a typical 20
     function checkERC20BeforePull(uint256 underlyingAmount, address underlyingContract, uint256 underlyingTokenId) internal view {
         if (underlyingTokenId != 0) {
             revert Errors.WrongTokenIdForType(IDelegateRegistry.DelegationType.ERC20, underlyingTokenId);
