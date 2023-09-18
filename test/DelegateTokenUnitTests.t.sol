@@ -35,13 +35,11 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
     TrueIsApprovedOrOwner trueIsApprovedOrOwner;
 
     function setUp() public {
-        DelegateTokenStructs.DelegateTokenParameters memory delegateTokenParameters = DelegateTokenStructs.DelegateTokenParameters({
-            delegateRegistry: address(registry),
-            principalToken: ComputeAddress.addressFrom(address(this), vm.getNonce(address(this)) + 1),
-            marketMetadata: address(marketMetadata)
-        });
-        delegateTokenParameters.principalToken = ComputeAddress.addressFrom(address(this), vm.getNonce(address(this)) + 1);
-        dtHarness = new DTHarness(delegateTokenParameters);
+        dtHarness = new DTHarness(
+            address(registry),
+            ComputeAddress.addressFrom(address(this), vm.getNonce(address(this)) + 1),
+            address(marketMetadata)
+        );
         ptShadow = new PrincipalToken(address(dtHarness));
         falseIsApprovedOrOwner = new FalseIsApprovedOrOwner();
         trueIsApprovedOrOwner = new TrueIsApprovedOrOwner();
@@ -68,25 +66,13 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
         vm.assume(delegateRegistry != address(0) && principalToken != address(0) && marketMetadata_ != address(0));
         // Check zero reverts
         vm.expectRevert(DelegateTokenErrors.DelegateRegistryZero.selector);
-        new DelegateToken(DelegateTokenStructs.DelegateTokenParameters({
-            delegateRegistry: address(0), 
-            principalToken: principalToken, 
-            marketMetadata: marketMetadata_
-            }));
+        new DelegateToken(address(0), principalToken, marketMetadata_);
         vm.expectRevert(DelegateTokenErrors.PrincipalTokenZero.selector);
-        new DelegateToken(DelegateTokenStructs.DelegateTokenParameters({
-            delegateRegistry: delegateRegistry, 
-            principalToken: address(0), 
-            marketMetadata: marketMetadata_
-            }));
+        new DelegateToken(delegateRegistry, address(0), marketMetadata_);
         vm.expectRevert(DelegateTokenErrors.MarketMetadataZero.selector);
-        new DelegateToken(DelegateTokenStructs.DelegateTokenParameters({
-            delegateRegistry: delegateRegistry, 
-            principalToken: principalToken, 
-            marketMetadata: address(0)
-            }));
+        new DelegateToken(delegateRegistry, principalToken, address(0));
         // Check successful constructor
-        dt = new DelegateToken(DelegateTokenStructs.DelegateTokenParameters({delegateRegistry: delegateRegistry, principalToken: principalToken, marketMetadata: marketMetadata_}));
+        dt = new DelegateToken(delegateRegistry, principalToken, marketMetadata_);
         assertEq(delegateRegistry, dt.delegateRegistry());
         assertEq(principalToken, dt.principalToken());
         assertEq(marketMetadata_, dt.marketMetadata());

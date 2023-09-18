@@ -10,12 +10,6 @@ library DelegateTokenStructs {
         uint256 flag;
     }
 
-    struct DelegateTokenParameters {
-        address delegateRegistry;
-        address principalToken;
-        address marketMetadata;
-    }
-
     /// @notice Struct for creating delegate tokens and returning their information
     struct DelegateInfo {
         address principalHolder;

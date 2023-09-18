@@ -23,6 +23,7 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
     /// @inheritdoc IDelegateToken
     address public immutable override principalToken;
 
+    /// @inheritdoc IDelegateToken
     address public immutable marketMetadata;
 
     /*//////////////////////////////////////////////////////////////
@@ -49,13 +50,13 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
     /                      Constructor                             /
     //////////////////////////////////////////////////////////////*/
 
-    constructor(Structs.DelegateTokenParameters memory parameters) {
-        if (parameters.delegateRegistry == address(0)) revert Errors.DelegateRegistryZero();
-        if (parameters.principalToken == address(0)) revert Errors.PrincipalTokenZero();
-        if (parameters.marketMetadata == address(0)) revert Errors.MarketMetadataZero();
-        delegateRegistry = parameters.delegateRegistry;
-        principalToken = parameters.principalToken;
-        marketMetadata = parameters.marketMetadata;
+    constructor(address _delegateRegistry, address _principalToken, address _marketMetadata) {
+        if (_delegateRegistry == address(0)) revert Errors.DelegateRegistryZero();
+        if (_principalToken == address(0)) revert Errors.PrincipalTokenZero();
+        if (_marketMetadata == address(0)) revert Errors.MarketMetadataZero();
+        delegateRegistry = _delegateRegistry;
+        principalToken = _principalToken;
+        marketMetadata = _marketMetadata;
     }
 
     /*//////////////////////////////////////////////////////////////

@@ -12,7 +12,7 @@ contract DTHarness is DelegateToken {
         }
     }
 
-    constructor(Structs.DelegateTokenParameters memory parameters) DelegateToken(parameters) {
+    constructor(address _delegateRegistry, address _principalToken, address _marketMetadata) DelegateToken(_delegateRegistry, _principalToken, _marketMetadata) {
         // Initialize info struct with test info
         uint256[3] memory testInfo = [uint256(1), uint256(2), uint256(3)];
         delegateTokenInfo[0] = testInfo;
