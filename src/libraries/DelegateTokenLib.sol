@@ -19,7 +19,7 @@ library DelegateTokenStructs {
         address tokenContract;
         uint256 tokenId;
         bytes32 rights;
-        uint256 expiry;
+        uint256 expiry; // Expires when block.timestamp >= expiry
     }
 
     struct FlashInfo {
@@ -97,7 +97,7 @@ library DelegateTokenHelpers {
     /// @dev won't revert if expiry is too large (i.e. > type(uint96).max)
     function revertOldExpiry(uint256 expiry) internal view {
         //slither-disable-next-line timestamp
-        if (expiry > block.timestamp) return;
+        if (block.timestamp < expiry) return;
         revert DelegateTokenErrors.ExpiryInPast();
     }
 

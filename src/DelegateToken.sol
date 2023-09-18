@@ -293,7 +293,7 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
 
     /// @inheritdoc IDelegateToken
     function create(Structs.DelegateInfo calldata delegateInfo, uint256 salt) external nonReentrant returns (uint256 delegateTokenId) {
-        TransferHelpers.checkAndPullByType(erc1155PullAuthorization, delegateInfo);
+        TransferHelpers.pullAssetsAndCheckType(erc1155PullAuthorization, delegateInfo);
         Helpers.revertOldExpiry(delegateInfo.expiry);
         if (delegateInfo.delegateHolder == address(0)) revert Errors.ToIsZero();
         delegateTokenId = Helpers.delegateIdNoRevert(msg.sender, salt);
@@ -337,9 +337,10 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
     /// @inheritdoc IDelegateToken
     function rescind(uint256 delegateTokenId) external {
         //slither-disable-next-line timestamp
-        if (StorageHelpers.readExpiry(delegateTokenInfo, delegateTokenId) < block.timestamp) {
+        if (StorageHelpers.readExpiry(delegateTokenInfo, delegateTokenId) <= block.timestamp) {
+            // Allow anyone to forcefully rescind the DT once expired
+            // Approve gets reset in following transferFrom so no stale approvals here
             StorageHelpers.writeApproved(delegateTokenInfo, delegateTokenId, msg.sender);
-            // approve gets reset in transferFrom or this write gets undone if this function call reverts
         }
         transferFrom(
             RegistryHelpers.loadTokenHolder(delegateRegistry, StorageHelpers.readRegistryHash(delegateTokenInfo, delegateTokenId)),

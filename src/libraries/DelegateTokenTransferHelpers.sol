@@ -12,7 +12,8 @@ library DelegateTokenTransferHelpers {
     uint256 internal constant ERC1155_NOT_PULLED = 5;
     uint256 internal constant ERC1155_PULLED = 6;
 
-    function checkAndPullByType(Structs.Uint256 storage erc1155Pulled, Structs.DelegateInfo calldata delegateInfo) internal {
+    /// @dev Pulls assets into escrow, and reverts if delegation type is not ERC20/721/1155
+    function pullAssetsAndCheckType(Structs.Uint256 storage erc1155Pulled, Structs.DelegateInfo calldata delegateInfo) internal {
         if (delegateInfo.tokenType == IDelegateRegistry.DelegationType.ERC721) {
             checkERC721BeforePull(delegateInfo.amount, delegateInfo.tokenContract, delegateInfo.tokenId);
             pullERC721AfterCheck(delegateInfo.tokenContract, delegateInfo.tokenId);
