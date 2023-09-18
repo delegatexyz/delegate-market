@@ -64,12 +64,10 @@ interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver, 
     //////////////////////////////////////////////////////////////*/
 
     /**
-     * @notice Create rights token pair pulling underlying token from `msg.sender`.
+     * @notice Create rights token pair pulling underlying token from `msg.sender`
      * @param delegateInfo struct containing the details of the delegate token to be created
-     * @param salt A randomly chosen value, never repeated, to generate unique delegateIds for a particular
-     * `msg.sender`.
-     * @return delegateTokenId New rights ID that is also the token ID of both the newly created principal and
-     * delegate tokens.
+     * @param salt A randomly chosen value, never repeated, to generate unique delegateIds for a particular `msg.sender`
+     * @return delegateTokenId New rights ID that is also the token ID of both the newly created principal and delegate tokens.
      */
     function create(Structs.DelegateInfo calldata delegateInfo, uint256 salt) external returns (uint256 delegateTokenId);
 
@@ -97,7 +95,7 @@ interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver, 
     function withdraw(uint256 delegateTokenId) external;
 
     /**
-     * @notice Allows delegate token owner or approved operator to borrow their underlying tokens for the duration of a single atomic transaction.
+     * @notice Allows delegate token owner or approved operator to borrow their underlying tokens for the duration of a single atomic transaction
      * @param info IDelegateFlashloan FlashInfo struct
      */
     function flashloan(Structs.FlashInfo calldata info) external payable;

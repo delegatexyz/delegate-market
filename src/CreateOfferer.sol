@@ -62,7 +62,7 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
     }
 
     /**
-     * @notice Implementation of seaport contract offerer generateOrder
+     * @notice Implementation of seaport contract offerer ratifyOrder
      * @param offer The delegateToken created during transfer
      * @param consideration The underlying used for create during transfer
      * @param context The upper bits of context should be encoded with the CreateOffererStruct

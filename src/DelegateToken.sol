@@ -67,17 +67,13 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
             || interfaceId == 0x01ffc9a7 // ERC165 Interface ID for ERC165
             || interfaceId == 0x80ac58cd // ERC165 Interface ID for ERC721
             || interfaceId == 0x5b5e139f // ERC165 Interface ID for ERC721Metadata
-            || interfaceId == 0x4e2312e0; // ERC165 Interface ID for ERC1155 Token receiver
+            || interfaceId == 0x150b7a02 // ERC165 Interface ID for ERC721TokenReceiver
+            || interfaceId == 0x4e2312e0; // ERC165 Interface ID for ERC1155TokenReceiver
     }
 
     /*//////////////////////////////////////////////////////////////
-    /                    Token Receiver methods                    /
+    /                  ERCTokenReceiver methods                    /
     //////////////////////////////////////////////////////////////*/
-
-    /// @inheritdoc IERC1155Receiver
-    function onERC1155BatchReceived(address, address, uint256[] calldata, uint256[] calldata, bytes calldata) external pure returns (bytes4) {
-        revert Errors.BatchERC1155TransferUnsupported();
-    }
 
     /// @inheritdoc IERC721Receiver
     function onERC721Received(address operator, address, uint256, bytes calldata) external view returns (bytes4) {
@@ -89,6 +85,11 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
     function onERC1155Received(address operator, address, uint256, uint256, bytes calldata) external returns (bytes4) {
         TransferHelpers.revertInvalidERC1155PullCheck(erc1155PullAuthorization, operator);
         return IERC1155Receiver.onERC1155Received.selector;
+    }
+
+    /// @inheritdoc IERC1155Receiver
+    function onERC1155BatchReceived(address, address, uint256[] calldata, uint256[] calldata, bytes calldata) external pure returns (bytes4) {
+        revert Errors.BatchERC1155TransferUnsupported();
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -376,12 +377,12 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
         } else if (delegationType == IDelegateRegistry.DelegationType.ERC1155) {
             uint256 erc1155UnderlyingAmount = StorageHelpers.readUnderlyingAmount(delegateTokenInfo, delegateTokenId);
             StorageHelpers.writeUnderlyingAmount(delegateTokenInfo, delegateTokenId, 0); // Deletes amount
-            uint256 erc11551UnderlyingTokenId = RegistryHelpers.loadTokenId(delegateRegistry, registryHash);
+            uint256 erc1155UnderlyingTokenId = RegistryHelpers.loadTokenId(delegateRegistry, registryHash);
             RegistryHelpers.decrementERC1155(
-                delegateRegistry, registryHash, delegateTokenHolder, underlyingContract, erc11551UnderlyingTokenId, erc1155UnderlyingAmount, underlyingRights
+                delegateRegistry, registryHash, delegateTokenHolder, underlyingContract, erc1155UnderlyingTokenId, erc1155UnderlyingAmount, underlyingRights
             );
             StorageHelpers.burnPrincipal(principalToken, principalBurnAuthorization, delegateTokenId);
-            IERC1155(underlyingContract).safeTransferFrom(address(this), msg.sender, erc11551UnderlyingTokenId, erc1155UnderlyingAmount, "");
+            IERC1155(underlyingContract).safeTransferFrom(address(this), msg.sender, erc1155UnderlyingTokenId, erc1155UnderlyingAmount, "");
         }
     }
 
