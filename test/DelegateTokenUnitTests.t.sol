@@ -8,6 +8,7 @@ import {DTHarness} from "./utils/DTHarness.t.sol";
 import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
 import {ERC721Holder} from "openzeppelin/token/ERC721/utils/ERC721Holder.sol";
 import {IERC721Metadata} from "openzeppelin/token/ERC721/extensions/IERC721Metadata.sol";
+import {IERC721Receiver} from "openzeppelin/token/ERC721/IERC721Receiver.sol";
 import {IERC2981} from "openzeppelin/interfaces/IERC2981.sol";
 import {IERC165} from "openzeppelin/utils/introspection/IERC165.sol";
 import {IERC1155Receiver} from "openzeppelin/token/ERC1155/IERC1155Receiver.sol";
@@ -62,28 +63,12 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
         assertEq(dtHarness.exposedSlotUint256(3), 0); // approvals mappings
     }
 
-    function testDTConstructor(address delegateRegistry, address principalToken, address marketMetadata_) public {
-        vm.assume(delegateRegistry != address(0) && principalToken != address(0) && marketMetadata_ != address(0));
-        // Check zero reverts
-        vm.expectRevert(DelegateTokenErrors.DelegateRegistryZero.selector);
-        new DelegateToken(address(0), principalToken, marketMetadata_);
-        vm.expectRevert(DelegateTokenErrors.PrincipalTokenZero.selector);
-        new DelegateToken(delegateRegistry, address(0), marketMetadata_);
-        vm.expectRevert(DelegateTokenErrors.MarketMetadataZero.selector);
-        new DelegateToken(delegateRegistry, principalToken, address(0));
-        // Check successful constructor
-        dt = new DelegateToken(delegateRegistry, principalToken, marketMetadata_);
-        assertEq(delegateRegistry, dt.delegateRegistry());
-        assertEq(principalToken, dt.principalToken());
-        assertEq(marketMetadata_, dt.marketMetadata());
-    }
-
     function testSupportsInterface(bytes32 interfaceSeed) public {
         vm.assume(uint256(interfaceSeed) <= 0xFFFFFFFF);
         bytes4 randomInterface;
         if (
             randomInterface == type(IERC2981).interfaceId || randomInterface == type(IERC165).interfaceId || randomInterface == type(IERC721).interfaceId
-                || randomInterface == type(IERC721Metadata).interfaceId || randomInterface == type(IERC1155Receiver).interfaceId
+                || randomInterface == type(IERC721Metadata).interfaceId || randomInterface == type(IERC721Receiver).interfaceId || randomInterface == type(IERC1155Receiver).interfaceId
         ) {
             assertTrue(dt.supportsInterface(randomInterface));
         } else {

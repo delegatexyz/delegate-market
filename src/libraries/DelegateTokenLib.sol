@@ -34,10 +34,7 @@ library DelegateTokenStructs {
 }
 
 library DelegateTokenErrors {
-    error DelegateRegistryZero();
-    error PrincipalTokenZero();
     error DelegateTokenHolderZero();
-    error MarketMetadataZero();
     error ToIsZero();
 
     error NotERC721Receiver();

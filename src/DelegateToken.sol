@@ -51,9 +51,6 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
     //////////////////////////////////////////////////////////////*/
 
     constructor(address _delegateRegistry, address _principalToken, address _marketMetadata) {
-        if (_delegateRegistry == address(0)) revert Errors.DelegateRegistryZero();
-        if (_principalToken == address(0)) revert Errors.PrincipalTokenZero();
-        if (_marketMetadata == address(0)) revert Errors.MarketMetadataZero();
         delegateRegistry = _delegateRegistry;
         principalToken = _principalToken;
         marketMetadata = _marketMetadata;
@@ -260,7 +257,7 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
     }
 
     /*//////////////////////////////////////////////////////////////
-    /            LIQUID DELEGATE TOKEN METHODS                     /
+    /                   DELEGATE TOKEN METHODS                     /
     //////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc IDelegateToken
