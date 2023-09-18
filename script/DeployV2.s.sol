@@ -42,7 +42,7 @@ contract DeployV2 is Script {
 
         address marketMetadata = address(new MarketMetadata(deployer, baseURI));
 
-        PrincipalToken principalToken = new PrincipalToken(dtPrediction, marketMetadata);
+        PrincipalToken principalToken = new PrincipalToken(dtPrediction);
         DelegateTokenStructs.DelegateTokenParameters memory delegateTokenParameters =
             DelegateTokenStructs.DelegateTokenParameters({delegateRegistry: address(registry), principalToken: ptPrediction, marketMetadata: marketMetadata});
         DelegateToken delegateToken = new DelegateToken(delegateTokenParameters);

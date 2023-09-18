@@ -37,7 +37,7 @@ contract BaseLiquidDelegateTest is Test, ERC1155Holder {
             marketMetadata: address(marketMetadata)
         });
         dt = new DelegateToken(delegateTokenParameters);
-        principal = new PrincipalToken(address(dt), address(marketMetadata));
+        principal = new PrincipalToken(address(dt));
         mockERC721 = new MockERC721(0);
         mockERC20 = new MockERC20();
         mockERC1155 = new MockERC1155();

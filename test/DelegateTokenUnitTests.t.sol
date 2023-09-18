@@ -42,10 +42,7 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
         });
         delegateTokenParameters.principalToken = ComputeAddress.addressFrom(address(this), vm.getNonce(address(this)) + 1);
         dtHarness = new DTHarness(delegateTokenParameters);
-        ptShadow = new PrincipalToken(
-            address(dtHarness),
-            address(marketMetadata)
-        );
+        ptShadow = new PrincipalToken(address(dtHarness));
         falseIsApprovedOrOwner = new FalseIsApprovedOrOwner();
         trueIsApprovedOrOwner = new TrueIsApprovedOrOwner();
     }

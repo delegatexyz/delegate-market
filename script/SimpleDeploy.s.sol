@@ -26,7 +26,7 @@ contract SimpleDeploy is Script {
         address ptPrediction = ComputeAddress.addressFrom(msg.sender, nonce);
         address dtPrediction = ComputeAddress.addressFrom(msg.sender, nonce + 1);
 
-        address principalToken = address(new PrincipalToken(dtPrediction, marketMetadata));
+        address principalToken = address(new PrincipalToken(dtPrediction));
         DelegateTokenStructs.DelegateTokenParameters memory delegateTokenParameters =
             DelegateTokenStructs.DelegateTokenParameters({delegateRegistry: delegateRegistry, principalToken: ptPrediction, marketMetadata: marketMetadata});
         address delegateToken = address(new DelegateToken(delegateTokenParameters));

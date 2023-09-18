@@ -10,18 +10,14 @@ import {MarketMetadata} from "src/MarketMetadata.sol";
 /// @notice The holder of the PT is eligible to reclaim the escrowed NFT when the DT expires or is burned.
 contract PrincipalToken is ERC721("PrincipalToken", "PT") {
     address public immutable delegateToken;
-    address public immutable marketMetadata;
 
     error DelegateTokenZero();
-    error MarketMetadataZero();
     error CallerNotDelegateToken();
     error NotApproved(address spender, uint256 id);
 
-    constructor(address setDelegateToken, address setMarketMetadata) {
-        if (setDelegateToken == address(0)) revert DelegateTokenZero();
-        delegateToken = setDelegateToken;
-        if (setMarketMetadata == address(0)) revert MarketMetadataZero();
-        marketMetadata = setMarketMetadata;
+    constructor(address _delegateToken) {
+        if (_delegateToken == address(0)) revert DelegateTokenZero();
+        delegateToken = _delegateToken;
     }
 
     function _checkDelegateTokenCaller() internal view {
@@ -53,6 +49,6 @@ contract PrincipalToken is ERC721("PrincipalToken", "PT") {
 
     function tokenURI(uint256 id) public view override returns (string memory) {
         _requireMinted(id);
-        return MarketMetadata(marketMetadata).principalTokenURI(delegateToken, id);
+        return MarketMetadata(IDelegateToken(delegateToken).marketMetadata()).principalTokenURI(delegateToken, id);
     }
 }

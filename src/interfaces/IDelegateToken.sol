@@ -33,6 +33,9 @@ interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver, 
     /// @notice The principal token deployed in tandem with this delegate token
     function principalToken() external view returns (address);
 
+    /// @notice The onchain metadata contract for both DT and PT
+    function marketMetadata() external view returns (address);
+
     /// @notice Image metadata location, but attributes are stored onchain
     function baseURI() external view returns (string memory);
 
