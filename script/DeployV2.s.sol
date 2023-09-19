@@ -44,9 +44,7 @@ contract DeployV2 is Script {
 
         PrincipalToken principalToken = new PrincipalToken(dtPrediction);
         DelegateToken delegateToken = new DelegateToken(address(registry), ptPrediction, marketMetadata);
-        OffererStructs.Parameters memory createOffererParameters =
-            OffererStructs.Parameters({seaport: seaport15, delegateToken: address(delegateToken), principalToken: address(principalToken)});
-        createOfferer = new CreateOfferer(createOffererParameters);
+        createOfferer = new CreateOfferer(seaport15, address(delegateToken));
 
         console2.log("ptAddress:", address(principalToken));
         console2.log("dtAddress:", address(delegateToken));

@@ -26,11 +26,9 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
     Structs.TransientState internal transientState;
     Structs.Nonce internal nonce;
 
-    constructor(Structs.Parameters memory parameters) Modifiers(parameters.seaport, Enums.Stage.generate) {
-        if (parameters.delegateToken == address(0)) revert Errors.DelegateTokenIsZero();
-        delegateToken = parameters.delegateToken;
-        if (parameters.principalToken == address(0)) revert Errors.PrincipalTokenIsZero();
-        principalToken = parameters.principalToken;
+    constructor(address _seaport, address _delegateToken) Modifiers(_seaport, Enums.Stage.generate) {
+        delegateToken = _delegateToken;
+        principalToken = IDelegateToken(_delegateToken).principalToken();
         Structs.Order memory defaultInfo =
             Structs.Order({rights: 0, expiryLength: 1, signerSalt: 1, tokenContract: address(42), expiryType: Enums.ExpiryType.absolute, targetToken: Enums.TargetToken.principal});
         transientState = Structs.TransientState({

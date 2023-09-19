@@ -339,7 +339,7 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
         //slither-disable-next-line timestamp
         if (StorageHelpers.readExpiry(delegateTokenInfo, delegateTokenId) <= block.timestamp) {
             // Allow anyone to forcefully rescind the DT once expired
-            // Approve gets reset in following transferFrom so no stale approvals here
+            // Approval gets reset in following transferFrom so no stale approvals here
             StorageHelpers.writeApproved(delegateTokenInfo, delegateTokenId, msg.sender);
         }
         transferFrom(

@@ -8,8 +8,6 @@ import {RegistryHashes} from "delegate-registry/src/libraries/RegistryHashes.sol
 import {IDelegateRegistry, DelegateTokenHelpers} from "src/libraries/DelegateTokenLib.sol";
 
 library CreateOffererErrors {
-    error DelegateTokenIsZero();
-    error PrincipalTokenIsZero();
     error InvalidTokenType(IDelegateRegistry.DelegationType invalidType);
     error NoBatchWrapping();
     error InvalidExpiryType(CreateOffererEnums.ExpiryType invalidType);

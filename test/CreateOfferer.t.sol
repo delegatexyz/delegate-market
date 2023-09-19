@@ -6,7 +6,6 @@ import {BaseSeaportTest} from "./base/BaseSeaportTest.t.sol";
 import {BaseLiquidDelegateTest} from "./base/BaseLiquidDelegateTest.t.sol";
 import {SeaportHelpers, User} from "./utils/SeaportHelpers.t.sol";
 import {IDelegateToken, Structs as IDelegateTokenStructs} from "src/interfaces/IDelegateToken.sol";
-import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
 import {AdvancedOrder, OrderParameters, Fulfillment, CriteriaResolver, OfferItem, ConsiderationItem, FulfillmentComponent} from "seaport/contracts/lib/ConsiderationStructs.sol";
 import {ItemType, OrderType} from "seaport/contracts/lib/ConsiderationEnums.sol";
 import {SpentItem} from "seaport/contracts/interfaces/ContractOffererInterface.sol";
@@ -25,9 +24,7 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
     User seller;
 
     function setUp() public {
-        OffererStructs.Parameters memory createOffererParameters =
-            OffererStructs.Parameters({seaport: address(seaport), delegateToken: address(dt), principalToken: address(principal)});
-        createOfferer = new CreateOfferer(createOffererParameters);
+        createOfferer = new CreateOfferer(address(seaport), address(dt));
         weth = new WETH();
         // Setup buyer and seller
         seller = makeUser("seller");

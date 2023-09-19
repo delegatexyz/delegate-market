@@ -35,9 +35,7 @@ contract CreateOffererUnitTests is Test, BaseSeaportTest, BaseLiquidDelegateTest
     ERC20AllowanceInvariant erc20AllowanceInvariant;
 
     function setUp() public {
-        OffererStructs.Parameters memory createOffererParameters =
-            OffererStructs.Parameters({seaport: address(seaport), delegateToken: address(dt), principalToken: address(principal)});
-        createOfferer = new CreateOfferer(createOffererParameters);
+        createOfferer = new CreateOfferer(address(seaport), address(dt));
         erc20ApproveFalseReturn = new ERC20ApproveFalseReturn();
         erc20AllowanceInvariant = new ERC20AllowanceInvariant();
     }
