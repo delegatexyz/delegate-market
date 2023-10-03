@@ -5,7 +5,7 @@
 [submodule "lib/openzeppelin-contracts"]
 	path = lib/openzeppelin-contracts
 	url = https://github.com/openzeppelin/openzeppelin-contracts
-	branch = v5.0.0-rc2 # Master branch is not safe to use
+	branch = v5.0.0-rc.2 # Master branch is not safe to use
 [submodule "lib/seaport"]
 	path = lib/seaport
 	url = https://github.com/projectopensea/seaport
