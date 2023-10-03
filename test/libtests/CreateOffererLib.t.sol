@@ -213,23 +213,6 @@ contract CreateOffererHelpersTest is Test, CreateOffererTestHelpers {
         harness = new HelpersCalldataHarness();
     }
 
-    function testProcessNonce(uint256 initialNonce) public {
-        nonce.value = initialNonce;
-        Helpers.processNonce(nonce, initialNonce);
-        uint256 expectedNonce = initialNonce;
-        unchecked {
-            expectedNonce++;
-        }
-        assertEq(nonce.value, expectedNonce);
-    }
-
-    function testProcessNonceRevert(uint256 initialNonce, uint256 contractNonce) public {
-        nonce.value = initialNonce;
-        vm.assume(initialNonce != contractNonce);
-        vm.expectRevert(abi.encodeWithSelector(Errors.InvalidContractNonce.selector, initialNonce, contractNonce));
-        Helpers.processNonce(nonce, contractNonce);
-    }
-
     function testUpdateTransientStateERC721(uint256 seed, address fulfiller, address token, uint256 tokenId, bytes32 rights, uint256 expiryLength) public {
         Structs.TransientState memory transientStateBefore = harness.transientState();
         SpentItem memory minimumReceived =

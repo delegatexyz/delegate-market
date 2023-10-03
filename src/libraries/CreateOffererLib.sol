@@ -23,6 +23,7 @@ library CreateOffererErrors {
     error ERC20ApproveFailed(address tokenAddress);
     error ERC20AllowanceInvariant(address tokenAddress);
     error InvalidContractNonce(uint256 actual, uint256 seaportExpected);
+    error InvalidContractOrder(bytes32 orderHash);
     error DelegateInfoInvariant();
     error InvalidContextLength();
     error TargetTokenInvalid(CreateOffererEnums.TargetToken invalidTargetToken);
@@ -172,20 +173,6 @@ abstract contract CreateOffererModifiers {
 
 /// @notice Contains helper function used by CreateOfferer
 library CreateOffererHelpers {
-    /**
-     * @notice Validates and updates a Nonce struct
-     * @param nonce The storage pointer to the Nonce struct to be validated and updated
-     * @param contractNonce Used to valid against the expected nonce in storage
-     * @dev Should revert if contractNonce is not the same as the storage nonce
-     * @dev Should increment storage nonce if validation succeeds
-     */
-    function processNonce(CreateOffererStructs.Nonce storage nonce, uint256 contractNonce) internal {
-        if (nonce.value != contractNonce) revert CreateOffererErrors.InvalidContractNonce(nonce.value, contractNonce);
-        unchecked {
-            ++nonce.value;
-        } // Infeasible this will overflow if starting point is zero
-    }
-
     /**
      * @notice Updates a TransientState struct in storage with order data
      * @param transientState The storage pointer to the TransientState struct to be updated

@@ -24,7 +24,8 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
     address public immutable delegateToken;
     address public immutable principalToken;
     Structs.TransientState internal transientState;
-    Structs.Nonce internal nonce;
+
+    event SeaportCompatibleContractDeployed();
 
     constructor(address _seaport, address _delegateToken) Modifiers(_seaport, Enums.Stage.generate) {
         delegateToken = _delegateToken;
@@ -37,6 +38,7 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
             erc1155Order: Structs.ERC1155Order({tokenId: 1, amount: 1, info: defaultInfo}),
             receivers: Structs.Receivers({fulfiller: address(1), targetTokenReceiver: address(1)})
         });
+        emit SeaportCompatibleContractDeployed();
     }
 
     /**
@@ -72,13 +74,12 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
         onlySeaport(msg.sender)
         returns (bytes4)
     {
-        Helpers.processNonce(nonce, contractNonce);
         Helpers.verifyCreate(delegateToken, offer[0].identifier, transientState.receivers, consideration[0], context);
         return this.ratifyOrder.selector;
     }
 
     /**
-     * @notice Implementation of the ERC721 transferFrom interface to force create delegate tokens
+     * @notice Implementation of the ERC721 transferFrom interface to force-create delegate tokens
      * @param from Must be this contract address
      * @param targetTokenReceiver Is the receiver of the intended targetToken, the delegate / principal token
      * @param createOrderHashAsTokenId The hash that secures the intended targetToken receiver being the beneficiary of a specific delegate / principal token
