@@ -114,16 +114,6 @@ library DelegateTokenStorageHelpers {
         revert Errors.CallerNotPrincipalToken();
     }
 
-    function revertAlreadyExisted(mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo, uint256 delegateTokenId) internal view {
-        if (delegateTokenInfo[delegateTokenId][REGISTRY_HASH_POSITION] == ID_AVAILABLE) return;
-        revert Errors.AlreadyExisted(delegateTokenId);
-    }
-
-    function revertNotOperator(mapping(address account => mapping(address operator => bool enabled)) storage accountOperator, address account) internal view {
-        if (msg.sender == account || accountOperator[account][msg.sender]) return;
-        revert Errors.NotOperator(msg.sender, account);
-    }
-
     function readApproved(mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo, uint256 delegateTokenId) internal view returns (address) {
         return address(uint160(delegateTokenInfo[delegateTokenId][PACKED_INFO_POSITION] >> 96));
     }
@@ -138,6 +128,16 @@ library DelegateTokenStorageHelpers {
 
     function readUnderlyingAmount(mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo, uint256 delegateTokenId) internal view returns (uint256) {
         return delegateTokenInfo[delegateTokenId][UNDERLYING_AMOUNT_POSITION];
+    }
+
+    function revertNotOwner(address account) internal view {
+        if (msg.sender == account) return;
+        revert Errors.NotOwner(msg.sender, account);
+    }
+
+    function revertNotOperator(mapping(address account => mapping(address operator => bool enabled)) storage accountOperator, address account) internal view {
+        if (msg.sender == account || accountOperator[account][msg.sender]) return;
+        revert Errors.NotOperator(msg.sender, account);
     }
 
     function revertNotApprovedOrOperator(
@@ -165,6 +165,11 @@ library DelegateTokenStorageHelpers {
             }
             revert Errors.WithdrawNotAvailable(delegateTokenId, readExpiry(delegateTokenInfo, delegateTokenId), block.timestamp);
         }
+    }
+
+    function revertAlreadyExisted(mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo, uint256 delegateTokenId) internal view {
+        if (delegateTokenInfo[delegateTokenId][REGISTRY_HASH_POSITION] == ID_AVAILABLE) return;
+        revert Errors.AlreadyExisted(delegateTokenId);
     }
 
     function revertNotMinted(mapping(uint256 delegateTokenId => uint256[3] info) storage delegateTokenInfo, uint256 delegateTokenId) internal view {

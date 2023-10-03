@@ -204,13 +204,15 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
 
     function testApprove(address searchDelegateTokenHolder, address delegateTokenHolder, address spender, bytes32 rights, uint256 delegateTokenId, uint256 randomData) public {
         vm.assume(searchDelegateTokenHolder != delegateTokenHolder);
+        vm.assume(spender != delegateTokenHolder);
+        vm.assume(spender != searchDelegateTokenHolder);
         // Create delegation
         vm.prank(address(dt));
         bytes32 registryHash = registry.delegateAll(delegateTokenHolder, rights, true);
         // Store registryHash at expected location, mapping is at slot 1
         vm.store(address(dt), keccak256(abi.encode(delegateTokenId, 1)), registryHash);
         // Expect revert if caller is not delegateTokenHolder
-        vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.NotOperator.selector, searchDelegateTokenHolder, delegateTokenHolder));
+        vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.NotOwner.selector, searchDelegateTokenHolder, delegateTokenHolder));
         vm.prank(searchDelegateTokenHolder);
         dt.approve(spender, delegateTokenId);
         // Store dirty bits at approve location
@@ -224,9 +226,10 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
         uint256 approveSlot = uint256(vm.load(address(dt), bytes32(uint256(keccak256(abi.encode(delegateTokenId, 1))) + 1)));
         assertEq(approveSlot << 160, randomData << 160);
         assertEq(approveSlot >> 96, uint160(spender));
-        // Check that no revert happens if searchDelegateTokenHolder is authorized operator
+        // Check that revert happens even if searchDelegateTokenHolder is authorized operator, only owner can approve
         vm.prank(delegateTokenHolder);
         dt.setApprovalForAll(searchDelegateTokenHolder, true);
+        vm.expectRevert(abi.encodeWithSelector(DelegateTokenErrors.NotOwner.selector, searchDelegateTokenHolder, delegateTokenHolder));
         vm.prank(searchDelegateTokenHolder);
         dt.approve(spender, delegateTokenId);
     }

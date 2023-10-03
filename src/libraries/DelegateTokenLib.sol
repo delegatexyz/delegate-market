@@ -45,6 +45,7 @@ library DelegateTokenErrors {
     error InsufficientAllowanceOrInvalidToken();
     error CallerNotOwnerOrInvalidToken();
 
+    error NotOwner(address caller, address account);
     error NotOperator(address caller, address account);
     error NotApproved(address caller, uint256 delegateTokenId);
 

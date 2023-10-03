@@ -134,7 +134,7 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
         bytes32 registryHash = StorageHelpers.readRegistryHash(delegateTokenInfo, delegateTokenId);
         StorageHelpers.revertNotMinted(registryHash, delegateTokenId);
         address delegateTokenHolder = RegistryHelpers.loadTokenHolder(delegateRegistry, registryHash);
-        StorageHelpers.revertNotOperator(accountOperator, delegateTokenHolder);
+        StorageHelpers.revertNotOwner(delegateTokenHolder);
         StorageHelpers.writeApproved(delegateTokenInfo, delegateTokenId, spender);
         emit Approval(delegateTokenHolder, spender, delegateTokenId);
     }
