@@ -99,6 +99,7 @@ interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver, 
 
     /**
      * @notice Allows delegate token owner or approved operator to borrow their underlying tokens for the duration of a single atomic transaction
+     * @dev At the conclusion of the flashloan transaction, the asset must be held and approved in `msg.sender` address, not `info.receiver`
      * @param info IDelegateFlashloan FlashInfo struct
      */
     function flashloan(Structs.FlashInfo calldata info) external payable;
