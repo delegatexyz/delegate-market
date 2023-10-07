@@ -262,7 +262,7 @@ library CreateOffererHelpers {
         returns (uint256 createOrderHash, uint256 delegateTokenId)
     {
         createOrderHash = CreateOffererHelpers.calculateOrderHash(targetTokenReceiver, conduit, orderInfo, delegationType);
-        delegateTokenId = IDelegateToken(delegateToken).getDelegateId(address(this), createOrderHash); // This should revert if already existed
+        delegateTokenId = IDelegateToken(delegateToken).getDelegateTokenId(address(this), createOrderHash); // This should revert if already existed
     }
 
     /**
@@ -296,7 +296,7 @@ library CreateOffererHelpers {
                         amount: (tokenType != IDelegateRegistry.DelegationType.ERC721) ? consideration.amount : 0
                     })
                 )
-            ) != keccak256(abi.encode(IDelegateToken(delegateToken).getDelegateInfo(DelegateTokenHelpers.delegateIdNoRevert(address(this), identifier))))
+            ) != keccak256(abi.encode(IDelegateToken(delegateToken).getDelegateTokenInfo(DelegateTokenHelpers.delegateIdNoRevert(address(this), identifier))))
         ) revert CreateOffererErrors.DelegateInfoInvariant();
         //slither-disable-end timestamp
     }

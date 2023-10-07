@@ -72,7 +72,7 @@ contract MarketMetadata is Ownable2Step, ERC2981 {
     function principalTokenURI(address delegateToken, uint256 id) external view returns (string memory) {
         IDelegateToken dt = IDelegateToken(delegateToken);
 
-        DelegateTokenStructs.DelegateInfo memory delegateInfo = dt.getDelegateInfo(id);
+        DelegateTokenStructs.DelegateInfo memory delegateInfo = dt.getDelegateTokenInfo(id);
 
         string memory idstr = Strings.toString(delegateInfo.tokenId);
         string memory imageUrl = string.concat(delegateTokenBaseURI, "principal/", idstr);

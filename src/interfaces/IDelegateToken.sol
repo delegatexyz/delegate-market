@@ -48,7 +48,7 @@ interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver, 
      * @param delegateTokenId The id of the delegateToken to query info for
      * @return delegateInfo The DelegateInfo struct
      */
-    function getDelegateInfo(uint256 delegateTokenId) external view returns (Structs.DelegateInfo memory delegateInfo);
+    function getDelegateTokenInfo(uint256 delegateTokenId) external view returns (Structs.DelegateInfo memory delegateInfo);
 
     /**
      * @notice Deterministic function for generating a delegateId. Because msg.sender and freely chosen salt are fixed, no griefing
@@ -56,7 +56,7 @@ interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver, 
      * @param salt Allows the creation of a new unique id
      * @return delegateId
      */
-    function getDelegateId(address creator, uint256 salt) external view returns (uint256 delegateId);
+    function getDelegateTokenId(address creator, uint256 salt) external view returns (uint256 delegateId);
 
     /// @notice Returns contract-level metadata URI for OpenSea
     /// (reference)[https://docs.opensea.io/docs/contract-level-metadata]

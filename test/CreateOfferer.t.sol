@@ -105,7 +105,7 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
         assertTrue(mockERC721.ownerOf(erc721Order.tokenId) == address(dt));
         assertEq(seller.addr.balance, expectedETH);
         assertEq(buyer.addr.balance, 0);
-        IDelegateTokenStructs.DelegateInfo memory delegateInfo = dt.getDelegateInfo(delegateId);
+        IDelegateTokenStructs.DelegateInfo memory delegateInfo = dt.getDelegateTokenInfo(delegateId);
         assertEq(dt.ownerOf(delegateId), buyer.addr);
         assertEq(principal.ownerOf(delegateId), seller.addr);
         assertEq(delegateInfo.expiry, block.timestamp + erc721Order.info.expiryLength);
@@ -182,7 +182,7 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
         assertTrue(mockERC721.ownerOf(erc721Order.tokenId) == address(dt));
         assertEq(weth.balanceOf(seller.addr), expectedETH);
         assertEq(buyer.addr.balance, 0);
-        IDelegateTokenStructs.DelegateInfo memory delegateInfo = dt.getDelegateInfo(delegateId);
+        IDelegateTokenStructs.DelegateInfo memory delegateInfo = dt.getDelegateTokenInfo(delegateId);
         assertEq(dt.ownerOf(delegateId), buyer.addr);
         assertEq(principal.ownerOf(delegateId), seller.addr);
         assertEq(delegateInfo.expiry, block.timestamp + erc721Order.info.expiryLength);
@@ -261,7 +261,7 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
         assertEq(seller.addr.balance, expectedETH);
         assertEq(buyer.addr.balance, 0);
         assertEq(mockERC20.balanceOf(seller.addr), 0);
-        IDelegateTokenStructs.DelegateInfo memory delegateInfo = dt.getDelegateInfo(delegateId);
+        IDelegateTokenStructs.DelegateInfo memory delegateInfo = dt.getDelegateTokenInfo(delegateId);
         assertEq(dt.ownerOf(delegateId), buyer.addr);
         assertEq(principal.ownerOf(delegateId), seller.addr);
         assertEq(delegateInfo.expiry, block.timestamp + erc20Order.info.expiryLength);
@@ -340,7 +340,7 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
         assertEq(weth.balanceOf(seller.addr), expectedETH);
         assertEq(buyer.addr.balance, 0);
         assertEq(mockERC20.balanceOf(seller.addr), 0);
-        IDelegateTokenStructs.DelegateInfo memory delegateInfo = dt.getDelegateInfo(delegateId);
+        IDelegateTokenStructs.DelegateInfo memory delegateInfo = dt.getDelegateTokenInfo(delegateId);
         assertEq(dt.ownerOf(delegateId), buyer.addr);
         assertEq(principal.ownerOf(delegateId), seller.addr);
         assertEq(delegateInfo.expiry, block.timestamp + erc20Order.info.expiryLength);
@@ -425,7 +425,7 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
         assertEq(seller.addr.balance, expectedETH);
         assertEq(buyer.addr.balance, 0);
         assertEq(mockERC1155.balanceOf(seller.addr, erc1155Order.tokenId), 0);
-        IDelegateTokenStructs.DelegateInfo memory delegateInfo = dt.getDelegateInfo(delegateId);
+        IDelegateTokenStructs.DelegateInfo memory delegateInfo = dt.getDelegateTokenInfo(delegateId);
         assertEq(dt.ownerOf(delegateId), buyer.addr);
         assertEq(principal.ownerOf(delegateId), seller.addr);
         assertEq(delegateInfo.expiry, block.timestamp + erc1155Order.info.expiryLength);
@@ -510,7 +510,7 @@ contract CreateOffererTest is Test, BaseSeaportTest, BaseLiquidDelegateTest, Sea
         assertEq(weth.balanceOf(seller.addr), expectedETH);
         assertEq(buyer.addr.balance, 0);
         assertEq(mockERC1155.balanceOf(seller.addr, erc1155Order.tokenId), 0);
-        IDelegateTokenStructs.DelegateInfo memory delegateInfo = dt.getDelegateInfo(delegateId);
+        IDelegateTokenStructs.DelegateInfo memory delegateInfo = dt.getDelegateTokenInfo(delegateId);
         assertEq(dt.ownerOf(delegateId), buyer.addr);
         assertEq(principal.ownerOf(delegateId), seller.addr);
         assertEq(delegateInfo.expiry, block.timestamp + erc1155Order.info.expiryLength);

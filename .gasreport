@@ -61,8 +61,8 @@
 | delegateRegistry                                | 294             | 294    | 294    | 294    | 2       |
 | flashloan                                       | 45886           | 45886  | 45886  | 45886  | 1       |
 | getApproved                                     | 842             | 2094   | 2600   | 2842   | 3       |
-| getDelegateId                                   | 800             | 2668   | 2812   | 2812   | 14      |
-| getDelegateInfo                                 | 2786            | 6538   | 6375   | 8537   | 25      |
+| getDelegateTokenId                                   | 800             | 2668   | 2812   | 2812   | 14      |
+| getDelegateTokenInfo                                 | 2786            | 6538   | 6375   | 8537   | 25      |
 | isApprovedForAll                                | 728             | 728    | 728    | 728    | 1       |
 | mintAuthorizedCallback                          | 424             | 424    | 424    | 424    | 23      |
 | name                                            | 547             | 547    | 547    | 547    | 1       |

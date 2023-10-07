@@ -261,7 +261,7 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
     //////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc IDelegateToken
-    function getDelegateInfo(uint256 delegateTokenId) external view returns (Structs.DelegateInfo memory delegateInfo) {
+    function getDelegateTokenInfo(uint256 delegateTokenId) external view returns (Structs.DelegateInfo memory delegateInfo) {
         bytes32 registryHash = StorageHelpers.readRegistryHash(delegateTokenInfo, delegateTokenId);
         StorageHelpers.revertNotMinted(registryHash, delegateTokenId);
         delegateInfo.tokenType = RegistryHashes.decodeType(registryHash);
@@ -276,7 +276,7 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
     }
 
     /// @inheritdoc IDelegateToken
-    function getDelegateId(address caller, uint256 salt) external view returns (uint256 delegateTokenId) {
+    function getDelegateTokenId(address caller, uint256 salt) external view returns (uint256 delegateTokenId) {
         delegateTokenId = Helpers.delegateIdNoRevert(caller, salt);
         StorageHelpers.revertAlreadyExisted(delegateTokenInfo, delegateTokenId);
     }

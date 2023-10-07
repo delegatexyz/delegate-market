@@ -151,7 +151,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
 
         address dtOwner = _getDTOwner(prId);
 
-        IDelegateTokenStructs.DelegateInfo memory delegateInfo = delegateToken.getDelegateInfo(prId);
+        IDelegateTokenStructs.DelegateInfo memory delegateInfo = delegateToken.getDelegateTokenInfo(prId);
         vm.warp(delegateInfo.expiry);
         vm.startPrank(currentActor);
         delegateToken.withdraw(prId);
@@ -180,7 +180,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
             ownedDTTokens[dtOwner].remove(prId);
         }
 
-        IDelegateTokenStructs.DelegateInfo memory delegateInfo = delegateToken.getDelegateInfo(prId);
+        IDelegateTokenStructs.DelegateInfo memory delegateInfo = delegateToken.getDelegateTokenInfo(prId);
         vm.prank(currentActor);
         delegateToken.withdraw(prId);
 
@@ -193,7 +193,7 @@ contract DelegateTokenHandler is CommonBase, StdCheats, StdUtils {
         uint256 prId = existingPrincipalTokens.get(prSeed);
         if (prId == 0) return;
 
-        IDelegateTokenStructs.DelegateInfo memory delegateInfo = delegateToken.getDelegateInfo(prId);
+        IDelegateTokenStructs.DelegateInfo memory delegateInfo = delegateToken.getDelegateTokenInfo(prId);
 
         CreateOffererEnums.ExpiryType expiryType =
             CreateOffererEnums.ExpiryType(bound(rawExpiryType, uint256(type(CreateOffererEnums.ExpiryType).min), uint256(type(CreateOffererEnums.ExpiryType).max)).toUint8());
