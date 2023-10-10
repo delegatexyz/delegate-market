@@ -4,24 +4,23 @@ pragma solidity ^0.8.21;
 import {Script} from "forge-std/Script.sol";
 import {console2} from "forge-std/console2.sol";
 import {DelegateRegistry} from "delegate-registry/src/DelegateRegistry.sol";
-import {DelegateToken, Structs as DelegateTokenStructs} from "src/DelegateToken.sol";
+import {DelegateToken} from "src/DelegateToken.sol";
 import {PrincipalToken} from "src/PrincipalToken.sol";
 import {MarketMetadata} from "src/MarketMetadata.sol";
-import {CreateOfferer, Structs as OffererStructs} from "src/CreateOfferer.sol";
+import {CreateOfferer} from "src/CreateOfferer.sol";
 import {Strings} from "openzeppelin/utils/Strings.sol";
-import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
 import {ComputeAddress} from "script/ComputeAddress.s.sol";
 
-contract DeployV2 is Script {
+contract Deploy is Script {
     using Strings for uint256;
     using Strings for address;
 
     address payable constant ZERO = payable(address(0x0));
-    DelegateRegistry registry = DelegateRegistry(0x00000000000076A84feF008CDAbe6409d2FE638B);
+    DelegateRegistry registry = DelegateRegistry(0x00000000000000447e69651d841bD8D104Bed493);
     address seaport15 = 0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC;
     address deployer = 0xe5ee2B9d5320f2D1492e16567F36b578372B3d9F;
 
-    string baseURI = "https://metadata.delegate.cash/liquid/";
+    string baseURI = "https://metadata.delegate.xyz/liquid/";
 
     CreateOfferer createOfferer;
 
@@ -59,13 +58,6 @@ contract DeployV2 is Script {
         // require(msg.sender == owner, "wrong owner addy");
 
         vm.startBroadcast();
-
-        // string memory baseURI = string.concat("https://metadata.delegate.cash/liquid/", block.chainid.toString(),
-        // "/", address(rights).toHexString(), "/");
-        // rights.setBaseURI(baseURI);
-        // uint256 creationFee = 0.01 ether;
-        // uint256 creationFee = 0 ether;
-        // rights.setCreationFee(creationFee);
 
         vm.stopBroadcast();
     }

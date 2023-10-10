@@ -8,11 +8,11 @@ test-fast:
 	forge test --no-match-path test/DelegateToken.invariants.t.sol
 
 test-fork:
-	forge test -vvv --rpc-url ${GOERLI_RPC} --fork-block-number ${GOERLI_FORK_BLOCK} --match-path test/WrapOfferer.t.sol
+	forge test -vvv --rpc-url ${GOERLI_RPC} --fork-block-number ${GOERLI_FORK_BLOCK} --match-path test/CreateOfferer.t.sol
 
 deploy-simulate:
 	# For live deployment, add --broadcast --verify --delay 30 --etherscan-api-key ${ETHERSCAN_API_KEY}
-	forge script -vvv script/DeployV2.s.sol --sig "deploy()" --rpc-url ${GOERLI_RPC} --private-key ${PK} --broadcast --verify --delay 30 --etherscan-api-key ${ETHERSCAN_API_KEY}
+	forge script -vvv script/Deploy.s.sol --sig "deploy()" --rpc-url ${GOERLI_RPC} --private-key ${PK} --broadcast --verify --delay 30 --etherscan-api-key ${ETHERSCAN_API_KEY}
 
 verify:
 	# To generate constructor argument, call $(cast abi-encode "constructor(address)" "0x70Ee311907291129a959b5Bf6AE1d4a3Ed869CDE")
