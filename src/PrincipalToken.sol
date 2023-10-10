@@ -4,11 +4,12 @@ pragma solidity ^0.8.21;
 import {IDelegateToken} from "src/interfaces/IDelegateToken.sol";
 
 import {ERC721} from "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
+import {IERC2981} from "openzeppelin-contracts/contracts/interfaces/IERC2981.sol";
 import {MarketMetadata} from "src/MarketMetadata.sol";
 
 /// @notice A simple NFT that doesn't store any user data, being tightly linked to the stateful Delegate Token.
 /// @notice The holder of the PT is eligible to reclaim the escrowed NFT when the DT expires or is burned.
-contract PrincipalToken is ERC721("PrincipalToken", "PT") {
+contract PrincipalToken is ERC721("PrincipalToken", "PT"), IERC2981 {
     address public immutable delegateToken;
 
     error DelegateTokenZero();
@@ -45,6 +46,11 @@ contract PrincipalToken is ERC721("PrincipalToken", "PT") {
 
     function isApprovedOrOwner(address account, uint256 id) external view returns (bool) {
         return _isApprovedOrOwner(account, id);
+    }
+
+    /// @inheritdoc IERC2981
+    function royaltyInfo(uint256 tokenId, uint256 salePrice) external view returns (address receiver, uint256 royaltyAmount) {
+        (receiver, royaltyAmount) = MarketMetadata(IDelegateToken(delegateToken).marketMetadata()).royaltyInfo(tokenId, salePrice);
     }
 
     function contractURI() external view returns (string memory) {

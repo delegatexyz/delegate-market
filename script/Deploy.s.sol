@@ -28,6 +28,8 @@ contract Deploy is Script {
         console2.log("msg.sender:", msg.sender);
         require(msg.sender == deployer, "wrong deployer addy");
 
+        MarketMetadata marketMetadata = new MarketMetadata(deployer, baseURI);
+
         uint256 nonce = vm.getNonce(msg.sender);
         console2.log("nonce:", nonce);
         address _origin = msg.sender;
@@ -39,7 +41,6 @@ contract Deploy is Script {
 
         vm.startBroadcast();
 
-        MarketMetadata marketMetadata = new MarketMetadata(deployer, baseURI);
         PrincipalToken principalToken = new PrincipalToken(dtPrediction);
         DelegateToken delegateToken = new DelegateToken(address(registry), ptPrediction, address(marketMetadata));
         createOfferer = new CreateOfferer(seaport15, address(delegateToken));

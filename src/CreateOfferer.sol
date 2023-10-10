@@ -66,9 +66,8 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
      * @param offer The delegateToken created during transfer
      * @param consideration The underlying used for create during transfer
      * @param context The upper bits of context should be encoded with the CreateOffererStruct
-     * @param contractNonce Should match with the nonce tracked by this contract
      */
-    function ratifyOrder(SpentItem[] calldata offer, ReceivedItem[] calldata consideration, bytes calldata context, bytes32[] calldata, uint256 contractNonce)
+    function ratifyOrder(SpentItem[] calldata offer, ReceivedItem[] calldata consideration, bytes calldata context, bytes32[] calldata, uint256)
         external
         checkStage(Enums.Stage.ratify, Enums.Stage.generate)
         onlySeaport(msg.sender)
