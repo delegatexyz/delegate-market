@@ -11,6 +11,9 @@ import {Base64} from "openzeppelin/utils/Base64.sol";
 import {Strings} from "openzeppelin/utils/Strings.sol";
 
 contract MarketMetadata is Ownable2Step, ERC2981 {
+    using Strings for address;
+    using Strings for uint256;
+
     string public baseURI;
 
     constructor(address initialOwner, string memory initialBaseURI) {
@@ -39,36 +42,26 @@ contract MarketMetadata is Ownable2Step, ERC2981 {
     }
 
     function delegateTokenURI(address tokenContract, uint256 delegateTokenId, uint256 expiry, address principalOwner) external view returns (string memory) {
-        string memory idstr = Strings.toString(delegateTokenId);
+        string memory idstr = delegateTokenId.toString();
 
-        string memory pownerstr = principalOwner == address(0) ? "N/A" : Strings.toHexString(principalOwner);
+        string memory pownerstr = principalOwner == address(0) ? "N/A" : principalOwner.toHexString();
         //slither-disable-next-line timestamp
         string memory status = principalOwner == address(0) || expiry <= block.timestamp ? "Expired" : "Active";
 
         string memory imageUrl = string.concat(baseURI, "delegate/", idstr);
 
-
         string memory firstPartOfMetadataString = string.concat(
             '{"name":"Delegate Token #"',
             idstr,
             '","description":"DelegateMarket lets you escrow your token for a chosen timeperiod and receive a token representing the associated delegation rights. This collection represents the tokenized delegation rights.","attributes":[{"trait_type":"Collection Address","value":"',
-            Strings.toHexString(tokenContract),
+            tokenContract.toHexString(),
             '"},{"trait_type":"Token ID","value":"',
             idstr,
             '"},{"trait_type":"Expires At","display_type":"date","value":',
-            Strings.toString(expiry)
+            expiry.toString()
         );
         string memory secondPartOfMetadataString = string.concat(
-            '},{"trait_type":"Principal Owner Address","value":"',
-            pownerstr,
-            '"},{"trait_type":"Delegate Status","value":"',
-            status,
-            '"}]',
-            ',"image":"',
-            imageUrl,
-            "rights/",
-            idstr,
-            '"}'
+            '},{"trait_type":"Principal Owner Address","value":"', pownerstr, '"},{"trait_type":"Delegate Status","value":"', status, '"}]', ',"image":"', imageUrl, '"}'
         );
         // Build via two substrings to avoid stack-too-deep
         string memory metadataString = string.concat(firstPartOfMetadataString, secondPartOfMetadataString);
@@ -81,7 +74,7 @@ contract MarketMetadata is Ownable2Step, ERC2981 {
 
         DelegateTokenStructs.DelegateInfo memory delegateInfo = dt.getDelegateTokenInfo(id);
 
-        string memory idstr = Strings.toString(delegateInfo.tokenId);
+        string memory idstr = delegateInfo.tokenId.toString();
         string memory imageUrl = string.concat(baseURI, "principal/", idstr);
 
         address rightsOwner = address(0);
@@ -89,7 +82,7 @@ contract MarketMetadata is Ownable2Step, ERC2981 {
             rightsOwner = retrievedOwner;
         } catch {}
 
-        string memory rightsOwnerStr = rightsOwner == address(0) ? "N/A" : Strings.toHexString(rightsOwner);
+        string memory rightsOwnerStr = rightsOwner == address(0) ? "N/A" : rightsOwner.toHexString();
         //slither-disable-next-line timestamp
         string memory status = rightsOwner == address(0) || delegateInfo.expiry <= block.timestamp ? "Unlocked" : "Locked";
 
@@ -97,11 +90,11 @@ contract MarketMetadata is Ownable2Step, ERC2981 {
             '{"name":"',
             string.concat(dt.name(), " #", idstr),
             '","description":"DelegateMarket lets you escrow your token for a chosen timeperiod and receive a token representing its delegation rights. This collection represents the principal i.e. the future right to claim the underlying token once the associated delegate token expires.","attributes":[{"trait_type":"Collection Address","value":"',
-            Strings.toHexString(delegateInfo.tokenContract),
+            delegateInfo.tokenContract.toHexString(),
             '"},{"trait_type":"Token ID","value":"',
             idstr,
             '"},{"trait_type":"Unlocks At","display_type":"date","value":',
-            Strings.toString(delegateInfo.expiry)
+            delegateInfo.expiry.toString()
         );
         string memory secondPartOfMetadataString = string.concat(
             '},{"trait_type":"Delegate Owner Address","value":"', rightsOwnerStr, '"},{"trait_type":"Principal Status","value":"', status, '"}],"image":"', imageUrl, '"}'
