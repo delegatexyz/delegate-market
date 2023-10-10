@@ -39,14 +39,16 @@ contract Deploy is Script {
 
         vm.startBroadcast();
 
-        address marketMetadata = address(new MarketMetadata(deployer, baseURI));
-
+        MarketMetadata marketMetadata = address(new MarketMetadata(deployer, baseURI));
         PrincipalToken principalToken = new PrincipalToken(dtPrediction);
-        DelegateToken delegateToken = new DelegateToken(address(registry), ptPrediction, marketMetadata);
+        DelegateToken delegateToken = new DelegateToken(address(registry), ptPrediction, address(marketMetadata));
         createOfferer = new CreateOfferer(seaport15, address(delegateToken));
 
-        console2.log("ptAddress:", address(principalToken));
-        console2.log("dtAddress:", address(delegateToken));
+        console2.log("Delegate Registry", delegateRegistry);
+        console2.log("Principal Token:", principalToken);
+        console2.log("Delegate Token:", delegateToken);
+        console2.log("Create Offerer:", createOfferer);
+        console2.log("Market Metadata:", marketMetadata);
 
         require(address(principalToken) == ptPrediction, "wrong sim");
         require(address(delegateToken) == dtPrediction, "wrong sim");
@@ -55,7 +57,7 @@ contract Deploy is Script {
     }
 
     function postDeployConfig() external {
-        // require(msg.sender == owner, "wrong owner addy");
+        require(msg.sender == owner, "wrong owner addy");
 
         vm.startBroadcast();
 
