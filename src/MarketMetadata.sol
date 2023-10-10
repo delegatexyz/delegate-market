@@ -11,15 +11,15 @@ import {Base64} from "openzeppelin/utils/Base64.sol";
 import {Strings} from "openzeppelin/utils/Strings.sol";
 
 contract MarketMetadata is Ownable2Step, ERC2981 {
-    string public delegateTokenBaseURI;
+    string public baseURI;
 
-    constructor(address initialOwner, string memory initialDelegateTokenBaseURI) {
-        delegateTokenBaseURI = initialDelegateTokenBaseURI;
+    constructor(address initialOwner, string memory initialBaseURI) {
+        baseURI = initialBaseURI;
         _transferOwnership(initialOwner);
     }
 
     function setDelegateTokenBaseURI(string calldata uri) external onlyOwner {
-        delegateTokenBaseURI = uri;
+        baseURI = uri;
     }
 
     function setDefaultRoyalty(address receiver, uint96 feeNumerator) external onlyOwner {
@@ -31,7 +31,11 @@ contract MarketMetadata is Ownable2Step, ERC2981 {
     }
 
     function delegateTokenContractURI() external view returns (string memory) {
-        return string.concat(delegateTokenBaseURI, "contract");
+        return string.concat(baseURI, "delegateContract");
+    }
+
+    function principalTokenContractURI() external view returns (string memory) {
+        return string.concat(baseURI, "principalContract");
     }
 
     function delegateTokenURI(address tokenContract, uint256 delegateTokenId, uint256 expiry, address principalOwner) external view returns (string memory) {
@@ -40,6 +44,9 @@ contract MarketMetadata is Ownable2Step, ERC2981 {
         string memory pownerstr = principalOwner == address(0) ? "N/A" : Strings.toHexString(principalOwner);
         //slither-disable-next-line timestamp
         string memory status = principalOwner == address(0) || expiry <= block.timestamp ? "Expired" : "Active";
+
+        string memory imageUrl = string.concat(baseURI, "delegate/", idstr);
+
 
         string memory firstPartOfMetadataString = string.concat(
             '{"name":"Delegate Token #"',
@@ -58,7 +65,7 @@ contract MarketMetadata is Ownable2Step, ERC2981 {
             status,
             '"}]',
             ',"image":"',
-            delegateTokenBaseURI,
+            imageUrl,
             "rights/",
             idstr,
             '"}'
@@ -75,7 +82,7 @@ contract MarketMetadata is Ownable2Step, ERC2981 {
         DelegateTokenStructs.DelegateInfo memory delegateInfo = dt.getDelegateTokenInfo(id);
 
         string memory idstr = Strings.toString(delegateInfo.tokenId);
-        string memory imageUrl = string.concat(delegateTokenBaseURI, "principal/", idstr);
+        string memory imageUrl = string.concat(baseURI, "principal/", idstr);
 
         address rightsOwner = address(0);
         try dt.ownerOf(id) returns (address retrievedOwner) {

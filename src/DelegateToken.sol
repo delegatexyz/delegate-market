@@ -244,7 +244,7 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
 
     /// @inheritdoc IDelegateToken
     function baseURI() external view returns (string memory) {
-        return MarketMetadata(marketMetadata).delegateTokenBaseURI();
+        return MarketMetadata(marketMetadata).baseURI();
     }
 
     /// @inheritdoc IDelegateToken

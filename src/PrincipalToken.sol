@@ -47,6 +47,10 @@ contract PrincipalToken is ERC721("PrincipalToken", "PT") {
         return _isApprovedOrOwner(account, id);
     }
 
+    function contractURI() external view returns (string memory) {
+        return MarketMetadata(IDelegateToken(delegateToken).marketMetadata()).principalTokenContractURI();
+    }
+
     function tokenURI(uint256 id) public view override returns (string memory) {
         _requireMinted(id);
         return MarketMetadata(IDelegateToken(delegateToken).marketMetadata()).principalTokenURI(delegateToken, id);

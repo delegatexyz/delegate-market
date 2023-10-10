@@ -20,7 +20,7 @@ contract Deploy is Script {
     address seaport15 = 0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC;
     address deployer = 0xe5ee2B9d5320f2D1492e16567F36b578372B3d9F;
 
-    string baseURI = "https://metadata.delegate.xyz/liquid/";
+    string baseURI = string.concat("https://metadata.delegate.xyz/", block.chainid.toString(), "/marketplace/v2/");
 
     CreateOfferer createOfferer;
 
@@ -39,16 +39,16 @@ contract Deploy is Script {
 
         vm.startBroadcast();
 
-        MarketMetadata marketMetadata = address(new MarketMetadata(deployer, baseURI));
+        MarketMetadata marketMetadata = new MarketMetadata(deployer, baseURI);
         PrincipalToken principalToken = new PrincipalToken(dtPrediction);
         DelegateToken delegateToken = new DelegateToken(address(registry), ptPrediction, address(marketMetadata));
         createOfferer = new CreateOfferer(seaport15, address(delegateToken));
 
-        console2.log("Delegate Registry", delegateRegistry);
-        console2.log("Principal Token:", principalToken);
-        console2.log("Delegate Token:", delegateToken);
-        console2.log("Create Offerer:", createOfferer);
-        console2.log("Market Metadata:", marketMetadata);
+        console2.log("Delegate Registry", address(registry));
+        console2.log("Principal Token:", address(principalToken));
+        console2.log("Delegate Token:", address(delegateToken));
+        console2.log("Create Offerer:", address(createOfferer));
+        console2.log("Market Metadata:", address(marketMetadata));
 
         require(address(principalToken) == ptPrediction, "wrong sim");
         require(address(delegateToken) == dtPrediction, "wrong sim");
@@ -57,7 +57,7 @@ contract Deploy is Script {
     }
 
     function postDeployConfig() external {
-        require(msg.sender == owner, "wrong owner addy");
+        require(msg.sender == deployer, "wrong owner addy");
 
         vm.startBroadcast();
 
