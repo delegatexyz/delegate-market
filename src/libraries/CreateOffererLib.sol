@@ -3,9 +3,9 @@ pragma solidity ^0.8.4;
 
 import {SpentItem, ReceivedItem} from "seaport/contracts/interfaces/ContractOffererInterface.sol";
 import {ItemType} from "seaport/contracts/lib/ConsiderationEnums.sol";
-import {IDelegateToken, Structs as IDelegateTokenStructs} from "src/interfaces/IDelegateToken.sol";
+import {IDelegateToken, Structs as IDelegateTokenStructs} from "../interfaces/IDelegateToken.sol";
 import {RegistryHashes} from "delegate-registry/src/libraries/RegistryHashes.sol";
-import {IDelegateRegistry, DelegateTokenHelpers} from "src/libraries/DelegateTokenLib.sol";
+import {IDelegateRegistry, DelegateTokenHelpers} from "./DelegateTokenLib.sol";
 
 library CreateOffererErrors {
     error InvalidTokenType(IDelegateRegistry.DelegationType invalidType);

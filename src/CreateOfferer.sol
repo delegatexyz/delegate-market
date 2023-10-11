@@ -15,7 +15,7 @@ import {
     CreateOffererErrors as Errors,
     CreateOffererHelpers as Helpers,
     CreateOffererModifiers as Modifiers
-} from "src/libraries/CreateOffererLib.sol";
+} from "./libraries/CreateOffererLib.sol";
 
 import {ERC1155Holder} from "openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
 

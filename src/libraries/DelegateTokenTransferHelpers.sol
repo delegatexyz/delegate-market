@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.4;
 
-import {IDelegateRegistry, DelegateTokenErrors as Errors, DelegateTokenStructs as Structs} from "src/libraries/DelegateTokenLib.sol";
+import {IDelegateRegistry, DelegateTokenErrors as Errors, DelegateTokenStructs as Structs} from "./DelegateTokenLib.sol";
 import {IERC1155} from "openzeppelin/token/ERC1155/IERC1155.sol";
 import {IERC721} from "openzeppelin/token/ERC721/IERC721.sol";
 import {IERC20} from "openzeppelin/token/ERC20/IERC20.sol";

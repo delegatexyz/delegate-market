@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 import {IDelegateRegistry} from "delegate-registry/src/IDelegateRegistry.sol";
-import {IDelegateFlashloan} from "src/interfaces/IDelegateFlashloan.sol";
+import {IDelegateFlashloan} from "../interfaces/IDelegateFlashloan.sol";
 import {IERC721Receiver} from "openzeppelin/token/ERC721/IERC721Receiver.sol";
 
 library DelegateTokenStructs {

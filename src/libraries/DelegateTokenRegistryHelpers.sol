@@ -3,7 +3,7 @@ pragma solidity ^0.8.4;
 
 import {RegistryStorage} from "delegate-registry/src/libraries/RegistryStorage.sol";
 import {RegistryHashes} from "delegate-registry/src/libraries/RegistryHashes.sol";
-import {IDelegateRegistry, DelegateTokenErrors as Errors, DelegateTokenStructs as Structs} from "src/libraries/DelegateTokenLib.sol";
+import {IDelegateRegistry, DelegateTokenErrors as Errors, DelegateTokenStructs as Structs} from "./DelegateTokenLib.sol";
 
 library DelegateTokenRegistryHelpers {
     /**
