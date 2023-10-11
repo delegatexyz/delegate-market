@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.21;
 
-import {IDelegateToken} from "src/interfaces/IDelegateToken.sol";
-import {DelegateTokenStructs} from "src/libraries/DelegateTokenLib.sol";
+import {IDelegateToken} from "./interfaces/IDelegateToken.sol";
+import {DelegateTokenStructs} from "./libraries/DelegateTokenLib.sol";
 
 import {Ownable2Step} from "openzeppelin/access/Ownable2Step.sol";
 import {ERC2981} from "openzeppelin/token/common/ERC2981.sol";

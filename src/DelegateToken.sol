@@ -2,15 +2,15 @@
 pragma solidity ^0.8.21;
 
 import {IDelegateToken, IERC721Metadata, IERC721Receiver, IERC1155Receiver} from "./interfaces/IDelegateToken.sol";
-import {MarketMetadata} from "src/MarketMetadata.sol";
-import {PrincipalToken} from "src/PrincipalToken.sol";
+import {MarketMetadata} from "./MarketMetadata.sol";
+import {PrincipalToken} from "./PrincipalToken.sol";
 
 import {ReentrancyGuard} from "openzeppelin/security/ReentrancyGuard.sol";
 
-import {IDelegateRegistry, DelegateTokenErrors as Errors, DelegateTokenStructs as Structs, DelegateTokenHelpers as Helpers} from "src/libraries/DelegateTokenLib.sol";
-import {DelegateTokenStorageHelpers as StorageHelpers} from "src/libraries/DelegateTokenStorageHelpers.sol";
-import {DelegateTokenRegistryHelpers as RegistryHelpers, RegistryHashes} from "src/libraries/DelegateTokenRegistryHelpers.sol";
-import {DelegateTokenTransferHelpers as TransferHelpers, SafeERC20, IERC721, IERC20, IERC1155} from "src/libraries/DelegateTokenTransferHelpers.sol";
+import {IDelegateRegistry, DelegateTokenErrors as Errors, DelegateTokenStructs as Structs, DelegateTokenHelpers as Helpers} from "./libraries/DelegateTokenLib.sol";
+import {DelegateTokenStorageHelpers as StorageHelpers} from "./libraries/DelegateTokenStorageHelpers.sol";
+import {DelegateTokenRegistryHelpers as RegistryHelpers, RegistryHashes} from "./libraries/DelegateTokenRegistryHelpers.sol";
+import {DelegateTokenTransferHelpers as TransferHelpers, SafeERC20, IERC721, IERC20, IERC1155} from "./libraries/DelegateTokenTransferHelpers.sol";
 
 contract DelegateToken is ReentrancyGuard, IDelegateToken {
     /*//////////////////////////////////////////////////////////////

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.21;
 
-import {IDelegateToken} from "src/interfaces/IDelegateToken.sol";
+import {IDelegateToken} from "./interfaces/IDelegateToken.sol";
 
 import {ERC721} from "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
 import {IERC2981} from "openzeppelin-contracts/contracts/interfaces/IERC2981.sol";
-import {MarketMetadata} from "src/MarketMetadata.sol";
+import {MarketMetadata} from "./MarketMetadata.sol";
 
 /// @notice A simple NFT that doesn't store any user data, being tightly linked to the stateful Delegate Token.
 /// @notice The holder of the PT is eligible to reclaim the escrowed NFT when the DT expires or is burned.

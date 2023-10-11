@@ -6,7 +6,7 @@ import {IERC721Receiver} from "openzeppelin/token/ERC721/IERC721Receiver.sol";
 import {IERC1155Receiver} from "openzeppelin/token/ERC1155/IERC1155Receiver.sol";
 import {IERC2981} from "openzeppelin/interfaces/IERC2981.sol";
 
-import {DelegateTokenStructs as Structs} from "src/libraries/DelegateTokenLib.sol";
+import {DelegateTokenStructs as Structs} from "../libraries/DelegateTokenLib.sol";
 
 interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver, IERC2981 {
     /*//////////////////////////////////////////////////////////////
