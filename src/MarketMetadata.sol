@@ -16,6 +16,11 @@ contract MarketMetadata is Ownable2Step, ERC2981 {
 
     string public baseURI;
 
+    string internal constant DT_DESCRIPTION =
+        "DelegateMarket lets you escrow your token for a chosen timeperiod and receive a token representing its delegate rights. These tokens represent tokenized delegate rights.";
+    string internal constant PT_DESCRIPTION =
+        "DelegateMarket lets you escrow your token for a chosen timeperiod and receive a token representing its delegate rights. These tokens represents the right to claim the escrowed spot asset once the delegate token expires.";
+
     constructor(address initialOwner, string memory initialBaseURI) {
         baseURI = initialBaseURI;
         _transferOwnership(initialOwner);
@@ -53,7 +58,9 @@ contract MarketMetadata is Ownable2Step, ERC2981 {
         string memory firstPartOfMetadataString = string.concat(
             '{"name":"Delegate Token #"',
             idstr,
-            '","description":"DelegateMarket lets you escrow your token for a chosen timeperiod and receive a token representing the associated delegation rights. This collection represents the tokenized delegation rights.","attributes":[{"trait_type":"Collection Address","value":"',
+            '","description":"',
+            DT_DESCRIPTION,
+            '","attributes":[{"trait_type":"Collection Address","value":"',
             tokenContract.toHexString(),
             '"},{"trait_type":"Token ID","value":"',
             idstr,
@@ -89,7 +96,9 @@ contract MarketMetadata is Ownable2Step, ERC2981 {
         string memory firstPartOfMetadataString = string.concat(
             '{"name":"',
             string.concat(dt.name(), " #", idstr),
-            '","description":"DelegateMarket lets you escrow your token for a chosen timeperiod and receive a token representing its delegation rights. This collection represents the principal i.e. the future right to claim the underlying token once the associated delegate token expires.","attributes":[{"trait_type":"Collection Address","value":"',
+            '","description":"',
+            PT_DESCRIPTION,
+            '","attributes":[{"trait_type":"Collection Address","value":"',
             delegateInfo.tokenContract.toHexString(),
             '"},{"trait_type":"Token ID","value":"',
             idstr,
