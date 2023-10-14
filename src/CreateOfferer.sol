@@ -27,6 +27,7 @@ contract CreateOfferer is Modifiers, ContractOffererInterface, ERC1155Holder {
 
     event SeaportCompatibleContractDeployed();
 
+    //slither-disable-next-line missing-zero-check
     constructor(address _seaport, address _delegateToken) Modifiers(_seaport, Enums.Stage.generate) {
         delegateToken = _delegateToken;
         principalToken = IDelegateToken(_delegateToken).principalToken();

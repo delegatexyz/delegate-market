@@ -50,6 +50,7 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
     /                      Constructor                             /
     //////////////////////////////////////////////////////////////*/
 
+    //slither-disable-next-line missing-zero-check
     constructor(address _delegateRegistry, address _principalToken, address _marketMetadata) {
         delegateRegistry = _delegateRegistry;
         principalToken = _principalToken;
