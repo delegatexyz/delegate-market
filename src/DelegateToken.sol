@@ -14,7 +14,7 @@ import {DelegateTokenTransferHelpers as TransferHelpers, SafeERC20, IERC721, IER
 
 contract DelegateToken is ReentrancyGuard, IDelegateToken {
     /*//////////////////////////////////////////////////////////////
-    /                           Immutables                         /
+    /                           IMMUTABLES                         /
     //////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc IDelegateToken
@@ -27,7 +27,7 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
     address public immutable marketMetadata;
 
     /*//////////////////////////////////////////////////////////////
-    /                            Storage                           /
+    /                            STORAGE                           /
     //////////////////////////////////////////////////////////////*/
 
     /// @dev delegateId, a hash of (msg.sender, salt), points a unique id to the StoragePosition
@@ -47,7 +47,7 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
     Structs.Uint256 internal erc1155PullAuthorization = Structs.Uint256(TransferHelpers.ERC1155_NOT_PULLED);
 
     /*//////////////////////////////////////////////////////////////
-    /                      Constructor                             /
+    /                      CONSTRUCTOR                             /
     //////////////////////////////////////////////////////////////*/
 
     //slither-disable-next-line missing-zero-check
@@ -58,7 +58,23 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
     }
 
     /*//////////////////////////////////////////////////////////////
-    /                    Supported Interfaces                      /
+    /                      MULTICALL                               /
+    //////////////////////////////////////////////////////////////*/
+
+    function multicall(bytes[] calldata data) external returns (bytes[] memory results) {
+        results = new bytes[](data.length);
+        bool success;
+        unchecked {
+            for (uint256 i = 0; i < data.length; ++i) {
+                //slither-disable-next-line calls-loop,delegatecall-loop
+                (success, results[i]) = address(this).delegatecall(data[i]);
+                if (!success) revert Errors.MulticallFailed();
+            }
+        }
+    }
+
+    /*//////////////////////////////////////////////////////////////
+    /                    INTERFACES                                /
     //////////////////////////////////////////////////////////////*/
 
     function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
@@ -71,7 +87,7 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
     }
 
     /*//////////////////////////////////////////////////////////////
-    /                  ERCTokenReceiver methods                    /
+    /                  ERCTOKENRECEIVER METHODS                    /
     //////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc IERC721Receiver
@@ -92,7 +108,7 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
     }
 
     /*//////////////////////////////////////////////////////////////
-    /                 ERC721 Method Implementations                /
+    /                 ERC721 METHODS                               /
     //////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc IERC721

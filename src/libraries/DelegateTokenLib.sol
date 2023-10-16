@@ -34,6 +34,8 @@ library DelegateTokenStructs {
 }
 
 library DelegateTokenErrors {
+    error MulticallFailed();
+
     error DelegateTokenHolderZero();
     error ToIsZero();
 
