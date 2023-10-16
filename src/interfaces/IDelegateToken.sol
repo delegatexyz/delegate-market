@@ -83,7 +83,7 @@ interface IDelegateToken is IERC721Metadata, IERC721Receiver, IERC1155Receiver, 
 
     /**
      * @notice Allows the delegate owner or any approved operator to return a delegate token to the principal rights holder early, allowing the principal rights holder to redeem
-     * the underlying token(s) early. Allows anyone to forcefully return the delegate token to the principal rights holder if the delegate token has expired
+     * the underlying token(s) early
      * @param delegateTokenId Which delegate right to rescind
      */
     function rescind(uint256 delegateTokenId) external;

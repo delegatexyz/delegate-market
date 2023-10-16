@@ -160,7 +160,7 @@ library DelegateTokenStorageHelpers {
     ) internal view {
         //slither-disable-next-line timestamp
         if (block.timestamp < readExpiry(delegateTokenInfo, delegateTokenId)) {
-            if (delegateTokenHolder == msg.sender || msg.sender == readApproved(delegateTokenInfo, delegateTokenId) || accountOperator[delegateTokenHolder][msg.sender]) {
+            if (msg.sender == delegateTokenHolder || accountOperator[delegateTokenHolder][msg.sender] || msg.sender == readApproved(delegateTokenInfo, delegateTokenId)) {
                 return;
             }
             revert Errors.WithdrawNotAvailable(delegateTokenId, readExpiry(delegateTokenInfo, delegateTokenId), block.timestamp);

@@ -330,12 +330,6 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
 
     /// @inheritdoc IDelegateToken
     function rescind(uint256 delegateTokenId) external {
-        //slither-disable-next-line timestamp
-        if (StorageHelpers.readExpiry(delegateTokenInfo, delegateTokenId) <= block.timestamp) {
-            // Allow anyone to forcefully rescind the DT once expired
-            // Approval gets reset in following transferFrom so no stale approvals here
-            StorageHelpers.writeApproved(delegateTokenInfo, delegateTokenId, msg.sender);
-        }
         transferFrom(
             RegistryHelpers.loadTokenHolder(delegateRegistry, StorageHelpers.readRegistryHash(delegateTokenInfo, delegateTokenId)),
             IERC721(principalToken).ownerOf(delegateTokenId),
