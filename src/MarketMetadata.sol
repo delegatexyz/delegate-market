@@ -66,10 +66,10 @@ contract MarketMetadata is Ownable2Step, ERC2981 {
         string memory attributes2 = string.concat(
             '"},{"trait_type":"Token Id","value":"',
             info.tokenId.toString(),
-            '"},{"trait_type":"Token Amount","value":"',
+            '"},{"trait_type":"Token Amount","display_type":"number","value":',
             info.amount.toString(),
-            '"},{"trait_type":"Rights","value":"',
-            _bytes32ToString(info.rights),
+            '},{"trait_type":"Rights","value":"',
+            string.concat("0x", _bytes32ToString(info.rights)),
             '"},{"trait_type":"Expiry","display_type":"date","value":',
             info.expiry.toString(),
             "}]"
@@ -98,10 +98,10 @@ contract MarketMetadata is Ownable2Step, ERC2981 {
         string memory attributes2 = string.concat(
             '"},{"trait_type":"Token Id","value":"',
             info.tokenId.toString(),
-            '"},{"trait_type":"Token Amount","value":"',
+            '"},{"trait_type":"Token Amount","display_type":"number","value":',
             info.amount.toString(),
-            '"},{"trait_type":"Rights","value":"',
-            _bytes32ToString(info.rights),
+            '},{"trait_type":"Rights","value":"',
+            string.concat("0x", _bytes32ToString(info.rights)),
             '"},{"trait_type":"Expiry","display_type":"date","value":',
             info.expiry.toString(),
             "}]"
