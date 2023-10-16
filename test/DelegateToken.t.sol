@@ -336,7 +336,7 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
             dt.create(DelegateTokenStructs.DelegateInfo(user, IDelegateRegistry.DelegationType.ERC721, user, 0, address(mockERC721), id, "", block.timestamp + 10 seconds), SALT);
         vm.stopPrank();
         vm.prank(dtOwner);
-        marketMetadata.setDelegateTokenBaseURI("https://test-uri.com/");
+        marketMetadata.setBaseURI("https://test-uri.com/");
 
         emit log_named_string("delegate tokenURI:", dt.tokenURI(delegateId));
         emit log_named_string("principal tokenURI:", principal.tokenURI(delegateId));

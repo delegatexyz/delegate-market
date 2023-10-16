@@ -59,6 +59,6 @@ contract PrincipalToken is ERC721("PrincipalToken", "PT"), IERC2981 {
 
     function tokenURI(uint256 id) public view override returns (string memory) {
         _requireMinted(id);
-        return MarketMetadata(IDelegateToken(delegateToken).marketMetadata()).principalTokenURI(delegateToken, id);
+        return MarketMetadata(IDelegateToken(delegateToken).marketMetadata()).principalTokenURI(address(this), delegateToken, id);
     }
 }
