@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.21;
 
-import {IDelegateToken} from "./interfaces/IDelegateToken.sol";
 import {DelegateTokenStructs} from "./libraries/DelegateTokenLib.sol";
 
 import {Ownable2Step} from "openzeppelin/access/Ownable2Step.sol";
-import {IERC721Metadata} from "openzeppelin-contracts/contracts/interfaces/IERC721Metadata.sol";
 import {ERC2981} from "openzeppelin/token/common/ERC2981.sol";
 
 import {Base64} from "openzeppelin/utils/Base64.sol";
@@ -47,29 +45,33 @@ contract MarketMetadata is Ownable2Step, ERC2981 {
         return string.concat(baseURI, "principalContract");
     }
 
-    function delegateTokenURI(address delegateToken, uint256 delegateTokenId, uint256 expiry, address principalOwner) external view returns (string memory) {
-        string memory idstr = delegateTokenId.toString();
-
-        string memory pownerstr = principalOwner == address(0) ? "N/A" : principalOwner.toHexString();
+    function delegateTokenURI(uint256 delegateTokenId, DelegateTokenStructs.DelegateInfo calldata info) external view returns (string memory) {
         //slither-disable-next-line timestamp
-        string memory status = principalOwner == address(0) || expiry <= block.timestamp ? "Expired" : "Active";
+        string memory status = info.principalHolder == address(0) || info.expiry <= block.timestamp ? "Expired" : "Active";
 
-        string memory imageUrl = string.concat(baseURI, "delegate/", idstr);
+        string memory imageUrl = string.concat(baseURI, "delegate/", delegateTokenId.toString());
 
         string memory firstPartOfMetadataString = string.concat(
-            '{"name":"',
-            string.concat(IERC721Metadata(delegateToken).name(), " #", idstr),
+            '{"name": "',
+            "DelegateToken",
             '","description":"',
             DT_DESCRIPTION,
             '","attributes":[{"trait_type":"Collection Address","value":"',
-            delegateToken.toHexString(),
+            info.tokenContract.toHexString(),
             '"},{"trait_type":"Token ID","value":"',
-            idstr,
+            info.tokenId.toString(),
             '"},{"trait_type":"Expires At","display_type":"date","value":',
-            expiry.toString()
+            info.expiry.toString()
         );
         string memory secondPartOfMetadataString = string.concat(
-            '},{"trait_type":"Principal Owner Address","value":"', pownerstr, '"},{"trait_type":"Delegate Status","value":"', status, '"}]', ',"image":"', imageUrl, '"}'
+            '},{"trait_type":"Principal Owner Address","value":"',
+            info.principalHolder.toHexString(),
+            '"},{"trait_type":"Delegate Status","value":"',
+            status,
+            '"}]',
+            ',"image":"',
+            imageUrl,
+            '"}'
         );
         // Build via two substrings to avoid stack-too-deep
         string memory metadataString = string.concat(firstPartOfMetadataString, secondPartOfMetadataString);
@@ -77,36 +79,32 @@ contract MarketMetadata is Ownable2Step, ERC2981 {
         return string.concat("data:application/json;base64,", Base64.encode(bytes(metadataString)));
     }
 
-    function principalTokenURI(address principalToken, address delegateToken, uint256 id) external view returns (string memory) {
-        IDelegateToken dt = IDelegateToken(delegateToken);
-        DelegateTokenStructs.DelegateInfo memory delegateInfo = dt.getDelegateTokenInfo(id);
+    function principalTokenURI(uint256 delegateTokenId, DelegateTokenStructs.DelegateInfo calldata info) external view returns (string memory) {
+        string memory imageUrl = string.concat(baseURI, "principal/", delegateTokenId.toString());
 
-        string memory idstr = delegateInfo.tokenId.toString();
-        string memory imageUrl = string.concat(baseURI, "principal/", idstr);
-
-        address rightsOwner = address(0);
-        try dt.ownerOf(id) returns (address retrievedOwner) {
-            rightsOwner = retrievedOwner;
-        } catch {}
-
-        string memory rightsOwnerStr = rightsOwner == address(0) ? "N/A" : rightsOwner.toHexString();
         //slither-disable-next-line timestamp
-        string memory status = rightsOwner == address(0) || delegateInfo.expiry <= block.timestamp ? "Unlocked" : "Locked";
+        string memory status = info.delegateHolder == address(0) || info.expiry <= block.timestamp ? "Unlocked" : "Locked";
 
         string memory firstPartOfMetadataString = string.concat(
             '{"name":"',
-            string.concat(IERC721Metadata(principalToken).name(), " #", idstr),
+            "PrincipalToken",
             '","description":"',
             PT_DESCRIPTION,
             '","attributes":[{"trait_type":"Collection Address","value":"',
-            delegateInfo.tokenContract.toHexString(),
+            info.tokenContract.toHexString(),
             '"},{"trait_type":"Token ID","value":"',
-            idstr,
+            info.tokenId.toString(),
             '"},{"trait_type":"Unlocks At","display_type":"date","value":',
-            delegateInfo.expiry.toString()
+            info.expiry.toString()
         );
         string memory secondPartOfMetadataString = string.concat(
-            '},{"trait_type":"Delegate Owner Address","value":"', rightsOwnerStr, '"},{"trait_type":"Principal Status","value":"', status, '"}],"image":"', imageUrl, '"}'
+            '},{"trait_type":"Delegate Owner Address","value":"',
+            info.delegateHolder.toHexString(),
+            '"},{"trait_type":"Principal Status","value":"',
+            status,
+            '"}],"image":"',
+            imageUrl,
+            '"}'
         );
         // Build in two parts to avoid stack-too-deep
         string memory metadataString = string.concat(firstPartOfMetadataString, secondPartOfMetadataString);

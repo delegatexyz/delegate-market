@@ -25,7 +25,7 @@ contract BaseLiquidDelegateTest is Test, ERC1155Holder {
     address internal dtDeployer = makeAddr("DT_CORE_DEPLOYER");
     address internal dtOwner = makeAddr("DT_OWNER");
 
-    string baseURI = "https://metadata.delegate.cash/liquid/";
+    string baseURI = "https://cdn.delegate.xyz/5/marketplace/v2/";
 
     constructor() {
         vm.startPrank(dtDeployer);

@@ -17,7 +17,7 @@ library DelegateTokenStructs {
         address delegateHolder;
         uint256 amount;
         address tokenContract;
-        uint256 tokenId;
+        uint256 tokenId; // The id of the underlying escrowed token, not the delegate token
         bytes32 rights;
         uint256 expiry; // Expires when block.timestamp >= expiry
     }

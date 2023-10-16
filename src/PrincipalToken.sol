@@ -10,7 +10,7 @@ import {MarketMetadata} from "./MarketMetadata.sol";
 /// @notice A simple NFT that doesn't store any user data, being tightly linked to the stateful Delegate Token.
 /// @notice The holder of the PT is eligible to reclaim the escrowed NFT when the DT expires or is burned.
 contract PrincipalToken is ERC721("PrincipalToken", "PT"), IERC2981 {
-    address public immutable delegateToken;
+    IDelegateToken public immutable delegateToken;
 
     error DelegateTokenZero();
     error CallerNotDelegateToken();
@@ -18,11 +18,11 @@ contract PrincipalToken is ERC721("PrincipalToken", "PT"), IERC2981 {
 
     constructor(address _delegateToken) {
         if (_delegateToken == address(0)) revert DelegateTokenZero();
-        delegateToken = _delegateToken;
+        delegateToken = IDelegateToken(_delegateToken);
     }
 
     function _checkDelegateTokenCaller() internal view {
-        if (msg.sender == delegateToken) return;
+        if (msg.sender == address(delegateToken)) return;
         revert CallerNotDelegateToken();
     }
 
@@ -30,7 +30,7 @@ contract PrincipalToken is ERC721("PrincipalToken", "PT"), IERC2981 {
     function mint(address to, uint256 id) external {
         _checkDelegateTokenCaller();
         _mint(to, id);
-        IDelegateToken(delegateToken).mintAuthorizedCallback();
+        delegateToken.mintAuthorizedCallback();
     }
 
     /// @notice Burns a PT if the DT contract authorizes and the spender isApprovedOrOwner and DT owner authorizes
@@ -38,7 +38,7 @@ contract PrincipalToken is ERC721("PrincipalToken", "PT"), IERC2981 {
         _checkDelegateTokenCaller();
         if (_isApprovedOrOwner(spender, id)) {
             _burn(id);
-            IDelegateToken(delegateToken).burnAuthorizedCallback();
+            delegateToken.burnAuthorizedCallback();
             return;
         }
         revert NotApproved(spender, id);
@@ -50,15 +50,15 @@ contract PrincipalToken is ERC721("PrincipalToken", "PT"), IERC2981 {
 
     /// @inheritdoc IERC2981
     function royaltyInfo(uint256 tokenId, uint256 salePrice) external view returns (address receiver, uint256 royaltyAmount) {
-        (receiver, royaltyAmount) = MarketMetadata(IDelegateToken(delegateToken).marketMetadata()).royaltyInfo(tokenId, salePrice);
+        (receiver, royaltyAmount) = MarketMetadata(delegateToken.marketMetadata()).royaltyInfo(tokenId, salePrice);
     }
 
     function contractURI() external view returns (string memory) {
-        return MarketMetadata(IDelegateToken(delegateToken).marketMetadata()).principalTokenContractURI();
+        return MarketMetadata(delegateToken.marketMetadata()).principalTokenContractURI();
     }
 
     function tokenURI(uint256 id) public view override returns (string memory) {
         _requireMinted(id);
-        return MarketMetadata(IDelegateToken(delegateToken).marketMetadata()).principalTokenURI(address(this), delegateToken, id);
+        return MarketMetadata(delegateToken.marketMetadata()).principalTokenURI(id, delegateToken.getDelegateTokenInfo(id));
     }
 }

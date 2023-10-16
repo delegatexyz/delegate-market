@@ -225,14 +225,7 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
 
     /// @inheritdoc IERC721Metadata
     function tokenURI(uint256 delegateTokenId) external view returns (string memory) {
-        bytes32 registryHash = StorageHelpers.readRegistryHash(delegateTokenInfo, delegateTokenId);
-        StorageHelpers.revertNotMinted(registryHash, delegateTokenId);
-        return MarketMetadata(marketMetadata).delegateTokenURI(
-            RegistryHelpers.loadContract(delegateRegistry, registryHash),
-            RegistryHelpers.loadTokenId(delegateRegistry, registryHash),
-            StorageHelpers.readExpiry(delegateTokenInfo, delegateTokenId),
-            IERC721(principalToken).ownerOf(delegateTokenId)
-        );
+        return MarketMetadata(marketMetadata).delegateTokenURI(delegateTokenId, getDelegateTokenInfo(delegateTokenId));
     }
 
     /// @inheritdoc IDelegateToken
@@ -262,7 +255,7 @@ contract DelegateToken is ReentrancyGuard, IDelegateToken {
     //////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc IDelegateToken
-    function getDelegateTokenInfo(uint256 delegateTokenId) external view returns (Structs.DelegateInfo memory delegateInfo) {
+    function getDelegateTokenInfo(uint256 delegateTokenId) public view returns (Structs.DelegateInfo memory delegateInfo) {
         bytes32 registryHash = StorageHelpers.readRegistryHash(delegateTokenInfo, delegateTokenId);
         StorageHelpers.revertNotMinted(registryHash, delegateTokenId);
         delegateInfo.tokenType = RegistryHashes.decodeType(registryHash);
