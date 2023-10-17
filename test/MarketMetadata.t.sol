@@ -31,7 +31,7 @@ contract MarketMetadataTest is Test, BaseLiquidDelegateTest {
             amount: 0,
             tokenContract: address(mockERC721),
             tokenId: tokenId,
-            rights: "",
+            rights: "governance",
             expiry: timestamp
         });
         uint256 delegateId = dt.create(info, salt);

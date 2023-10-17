@@ -69,7 +69,7 @@ contract MarketMetadata is Ownable2Step, ERC2981 {
             '"},{"trait_type":"Token Amount","display_type":"number","value":',
             info.amount.toString(),
             '},{"trait_type":"Rights","value":"',
-            string.concat("0x", _bytes32ToString(info.rights)),
+            fromSmallString(info.rights),
             '"},{"trait_type":"Expiry","display_type":"date","value":',
             info.expiry.toString(),
             "}]"
@@ -101,7 +101,7 @@ contract MarketMetadata is Ownable2Step, ERC2981 {
             '"},{"trait_type":"Token Amount","display_type":"number","value":',
             info.amount.toString(),
             '},{"trait_type":"Rights","value":"',
-            string.concat("0x", _bytes32ToString(info.rights)),
+            fromSmallString(info.rights),
             '"},{"trait_type":"Expiry","display_type":"date","value":',
             info.expiry.toString(),
             "}]"
@@ -126,6 +126,25 @@ contract MarketMetadata is Ownable2Step, ERC2981 {
             return "ERC1155";
         } else {
             revert DelegateTokenErrors.InvalidTokenType(tokenType);
+        }
+    }
+
+    /// @dev Returns a string from a small bytes32 string.
+    function fromSmallString(bytes32 smallString) internal pure returns (string memory result) {
+        if (smallString == bytes32(0)) return result;
+        /// @solidity memory-safe-assembly
+        assembly {
+            result := mload(0x40)
+            let n
+            for {} 1 {} {
+                n := add(n, 1)
+                if iszero(byte(n, smallString)) { break } // Scan for '\0'.
+            }
+            mstore(result, n)
+            let o := add(result, 0x20)
+            mstore(o, smallString)
+            mstore(add(o, n), 0)
+            mstore(0x40, add(result, 0x40))
         }
     }
 
