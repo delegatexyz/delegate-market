@@ -9,7 +9,7 @@ import {MarketMetadata} from "./MarketMetadata.sol";
 
 /// @notice A simple NFT that doesn't store any user data, being tightly linked to the stateful Delegate Token.
 /// @notice The holder of the PT is eligible to reclaim the escrowed NFT when the DT expires or is burned.
-contract PrincipalToken is ERC721("PrincipalToken", "PT"), IERC2981 {
+contract PrincipalToken is ERC721("Principal Token", "PT"), IERC2981 {
     IDelegateToken public immutable delegateToken;
 
     error DelegateTokenZero();
