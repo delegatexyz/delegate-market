@@ -20,7 +20,8 @@ contract Deploy is Script {
     address seaport15 = 0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC;
     address deployer = 0xBc22c4FbD596885a8C5cd490ba25515dADF1a91A;
 
-    string baseURI = string.concat("https://metadata.delegate.xyz/", block.chainid.toString(), "/marketplace/v2/");
+    // string baseURI = string.concat("https://metadata.delegate.xyz/", block.chainid.toString(), "/marketplace/v2/");
+    string baseURI = string.concat("https://cdn.delegate.xyz/marketplace/v2/", block.chainid.toString(), "/");
 
     function deploy() external {
         console2.log("msg.sender:", msg.sender);
@@ -59,6 +60,9 @@ contract Deploy is Script {
         require(msg.sender == deployer, "wrong owner addy");
 
         vm.startBroadcast();
+
+        MarketMetadata marketMetadata = MarketMetadata(0xBa93c25cD7db01b5d8f4b74aE4e3F5e048144834);
+        marketMetadata.setBaseURI(baseURI);
 
         vm.stopBroadcast();
     }

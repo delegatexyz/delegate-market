@@ -14,7 +14,7 @@ test-fork:
 deploy-simulate:
 	# For live deployment, add --broadcast --verify --delay 30 --etherscan-api-key ${ETHERSCAN_API_KEY}
 	# Can also try --resume in place of --broadcast
-	forge script -vvv script/Deploy.s.sol --sig "deploy()" --rpc-url ${MAINNET_RPC} --private-key ${PK}
+	forge script -vvv script/Deploy.s.sol --sig "postDeployConfig()" --rpc-url ${GOERLI_RPC} --private-key ${PK} --broadcast
 
 verify:
 	# To generate constructor argument, call $(cast abi-encode "constructor(address)" "0x70Ee311907291129a959b5Bf6AE1d4a3Ed869CDE")
