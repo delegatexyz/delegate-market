@@ -3,8 +3,9 @@ src = 'src'
 out = 'out'
 libs = ['lib']
 solc_version = "0.8.21"
-# EVM version must be Paris not Shanghai to prevent PUSH0 incompatibility with other EVM L1s
-evm_version = "paris"
+# EVM version can be Shanghai because we're deploying on Ethereum/Goerli only initially
+# and not relying on CREATE2 for determinstic addresses because of the interdependence with immutable constructor args
+evm_version = "shanghai"
 optimizer_runs = 9_999_999
 # don't think it's worth turning IR on due to potential for bugs
 viaIR = false

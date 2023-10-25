@@ -1,0 +1,609 @@
+No files changed, compilation skipped
+
+Running 6 tests for test/CreateOfferer.t.sol:CreateOffererTest
+[32m[PASS][0m test1155OfferFilledBySeller() (gas: 846906)
+[32m[PASS][0m test1155OrderFilledByBuyer() (gas: 801397)
+[32m[PASS][0m test20OfferFilledBySeller() (gas: 828600)
+[32m[PASS][0m test20OrderFilledByBuyer() (gas: 783203)
+[32m[PASS][0m test721OfferFilledBySeller() (gas: 808989)
+[32m[PASS][0m test721OrderFilledByBuyer() (gas: 763518)
+Test result: [32mok[0m. [32m6[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 28.22ms
+
+Running 7 tests for test/libtests/DelegateTokenLib.t.sol:DelegateTokenLibTest
+[32m[PASS][0m testDelegateId(address,uint256) (runs: 256, μ: 767, ~: 767)
+[32m[PASS][0m testDelegateIdCollisions(address,address,uint256,uint256) (runs: 256, μ: 3717, ~: 3717)
+[32m[PASS][0m testNoEOARevertOnInvalidERC721ReceiverCallback(address) (runs: 256, μ: 20073, ~: 20113)
+[32m[PASS][0m testNoRevertInvalidExpiry(uint256,uint256) (runs: 256, μ: 3935, ~: 3935)
+[32m[PASS][0m testNoRevertOnInvalidERC721ReceiverCallback() (gas: 14516)
+[32m[PASS][0m testPastRevertInvalidExpiry(uint256,uint256) (runs: 256, μ: 3882, ~: 3882)
+[32m[PASS][0m testRevertOnInvalidERC721ReceiverCallback() (gas: 20181)
+Test result: [32mok[0m. [32m7[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 174.75ms
+
+Running 8 tests for test/libtests/CreateOffererLib.t.sol:CreateOffererModifiersTest
+[32m[PASS][0m testModifiersConstructor(address,uint256) (runs: 256, μ: 491227, ~: 491190)
+[32m[PASS][0m testModifiersConstructorReverts() (gas: 36308)
+[32m[PASS][0m testMultipleStageTransitions(address,uint256,uint256,uint256,uint256) (runs: 256, μ: 507720, ~: 507720)
+[32m[PASS][0m testOnlySeaportForCaller(address,address) (runs: 256, μ: 491570, ~: 491570)
+[32m[PASS][0m testOnlySeaportForParameter(address,address) (runs: 256, μ: 491049, ~: 491053)
+[32m[PASS][0m testStageReentrancyProtection(address,uint256,uint256,uint256,uint256) (runs: 256, μ: 494047, ~: 494058)
+[32m[PASS][0m testSuccessfulStageTransition(address,uint256,uint256) (runs: 256, μ: 493796, ~: 493832)
+[32m[PASS][0m testWrongStageRevert(address,uint256,uint256) (runs: 256, μ: 493661, ~: 493663)
+Test result: [32mok[0m. [32m8[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 374.12ms
+
+Running 21 tests for test/libtests/CreateOffererLib.t.sol:CreateOffererHelpersTest
+[32m[PASS][0m testCalculateExpiryAbsolute(uint256) (runs: 256, μ: 488, ~: 488)
+[32m[PASS][0m testCalculateExpiryRelative(uint64,uint256) (runs: 256, μ: 3970, ~: 3970)
+[32m[PASS][0m testCalculateExpiryRelativeOverflow(uint64,uint256) (runs: 256, μ: 4563, ~: 4563)
+[32m[PASS][0m testCalculateExpiryRevertInvalidType() (gas: 3916)
+[32m[PASS][0m testCalculateOrderHash(address,address,bytes,uint256) (runs: 256, μ: 2423, ~: 2353)
+[32m[PASS][0m testCalculateOrderHashCollisionsConstantReceiver(address,address,address,bytes,bytes,uint256,uint256) (runs: 256, μ: 7603, ~: 7536)
+[32m[PASS][0m testCalculateOrderHashCollisionsDifferentReceiver(address,address,address,address,bytes,bytes,uint256,uint256) (runs: 256, μ: 6017, ~: 5975)
+[32m[PASS][0m testProcessSpentItems(uint256,uint256,address,uint256,uint256) (runs: 256, μ: 15747, ~: 15827)
+[32m[PASS][0m testProcessSpentItemsRevertArrayLengths(uint256,uint256) (runs: 256, μ: 14807, ~: 14041)
+[32m[PASS][0m testProcessSpentItemsRevertsMaximumSpentType(uint256,uint256,address,uint256,uint256) (runs: 256, μ: 32981, ~: 33029)
+[32m[PASS][0m testProcessSpentItemsRevertsMinimumReceivedAmount(uint256,uint256,address,uint256,uint256) (runs: 256, μ: 16028, ~: 16068)
+[32m[PASS][0m testProcessSpentItemsRevertsMinimumReceivedToken(uint256,uint256,address,uint256,uint256) (runs: 256, μ: 15970, ~: 16017)
+[32m[PASS][0m testProcessSpentItemsRevertsMinimumReceivedType(uint256,uint256,address,uint256,uint256) (runs: 256, μ: 45339, ~: 45386)
+[32m[PASS][0m testUpdateTransientStateERC1155(uint256,address,address,uint256,bytes32,uint256) (runs: 256, μ: 253272, ~: 254487)
+[32m[PASS][0m testUpdateTransientStateERC20(uint256,address,address,uint256,bytes32,uint256) (runs: 256, μ: 232239, ~: 234157)
+[32m[PASS][0m testUpdateTransientStateERC721(uint256,address,address,uint256,bytes32,uint256) (runs: 256, μ: 231909, ~: 234138)
+[32m[PASS][0m testUpdateTransientStateRevert(uint256,address,address,uint256,bytes32,uint256) (runs: 256, μ: 76442, ~: 76424)
+[32m[PASS][0m testValidateCreateOrderHash(address,bytes,uint256) (runs: 256, μ: 2370, ~: 2291)
+[32m[PASS][0m testValidateCreateOrderHashCollisionsConstantReceiver(address,address,bytes,bytes,uint256,uint256) (runs: 256, μ: 9063, ~: 9013)
+[32m[PASS][0m testValidateCreateOrderHashCollisionsDifferentReceiver(address,address,address,bytes,bytes,uint256,uint256) (runs: 256, μ: 7500, ~: 7406)
+[32m[PASS][0m testValidateCreateOrderHashRevertsMismatch(address,bytes,uint256) (runs: 256, μ: 5897, ~: 5829)
+Test result: [32mok[0m. [32m21[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 1.33s
+
+Running 15 tests for test/PrincipalTokenUnitTests.t.sol:DelegateTokenTest
+[32m[PASS][0m testBurnRevertApproved(address,address,uint256) (runs: 256, μ: 29049, ~: 29056)
+[32m[PASS][0m testBurnRevertNotDelegateToken(address,uint256,address) (runs: 256, μ: 11234, ~: 11234)
+[32m[PASS][0m testBurnRevertOperator(address,address,address,uint256) (runs: 256, μ: 47770, ~: 47753)
+[32m[PASS][0m testBurnRevertOwner(address,uint256) (runs: 256, μ: 27856, ~: 27863)
+[32m[PASS][0m testBurnRevertSpenderNotApproved(address,address,address,uint256) (runs: 256, μ: 14617, ~: 14617)
+[32m[PASS][0m testBurnRevertSpenderNotOperator(address,address,address,address,uint256) (runs: 256, μ: 40530, ~: 40530)
+[32m[PASS][0m testBurnRevertSpenderNotOwner(address,address,uint256) (runs: 256, μ: 15831, ~: 15831)
+[32m[PASS][0m testIsApprovedOrOwnerApproved(address,address,uint256) (runs: 256, μ: 10862, ~: 10862)
+[32m[PASS][0m testIsApprovedOrOwnerNotApproved(address,address,address,uint256) (runs: 256, μ: 11017, ~: 11017)
+[32m[PASS][0m testIsApprovedOrOwnerNotOperator(address,address,address,address,uint256) (runs: 256, μ: 36918, ~: 36918)
+[32m[PASS][0m testIsApprovedOrOwnerNotOwner(address,address,uint256) (runs: 256, μ: 12174, ~: 12174)
+[32m[PASS][0m testIsApprovedOrOwnerOperator(address,address,address,uint256) (runs: 256, μ: 34272, ~: 34272)
+[32m[PASS][0m testIsApprovedOrOwnerOwner(address,uint256) (runs: 256, μ: 7229, ~: 7229)
+[32m[PASS][0m testMintRevertAuthorizedCallback(address,uint256) (runs: 256, μ: 61221, ~: 61221)
+[32m[PASS][0m testMintRevertNotDelegateToken(address,uint256,address) (runs: 256, μ: 11202, ~: 11202)
+Test result: [32mok[0m. [32m15[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 608.48ms
+
+Running 1 test for test/ReentrancyTest.t.sol:ReentrancyTest
+[32m[PASS][0m testFlashReentrancy() (gas: 431256)
+Test result: [32mok[0m. [32m1[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 1.74ms
+
+Running 17 tests for test/libtests/CreateOffererLib.t.sol:CreateOffererDelegateTokenHelpers
+[32m[PASS][0m testCalculateOrderHashAndId(address,address,bytes,uint256) (runs: 256, μ: 11116, ~: 11002)
+[32m[PASS][0m testCalculateOrderHashAndIdCollisions(address,address,address,address,bytes,bytes,uint256,uint256) (runs: 256, μ: 17686, ~: 17655)
+[32m[PASS][0m testCalculateOrderHashAndIdReverts(address,address,bytes,uint256,uint256) (runs: 256, μ: 16071, ~: 16000)
+[32m[PASS][0m testCalculateOrderHashAndIdTypeCollisions(address,address,bytes) (runs: 256, μ: 18479, ~: 18314)
+[32m[PASS][0m testCreateAndValidateDelegateTokenId(uint256,bytes32,address,address) (runs: 256, μ: 409010, ~: 411075)
+[32m[PASS][0m testVerifyCreate(uint256,address,uint256,uint256,bytes32,address,address) (runs: 256, μ: 334662, ~: 328662)
+[32m[PASS][0m testVerifyCreatePassesUnusedData(uint256,address,uint256,uint256,bytes32,address,address) (runs: 256, μ: 335979, ~: 329505)
+[32m[PASS][0m testVerifyCreateRevertConsiderationAmount(uint256,address,uint256,uint256,bytes32,address,address) (runs: 256, μ: 335449, ~: 328792)
+[32m[PASS][0m testVerifyCreateRevertConsiderationIdentifier(uint256,address,uint256,uint256,bytes32,address,address) (runs: 256, μ: 335270, ~: 329229)
+[32m[PASS][0m testVerifyCreateRevertConsiderationToken(uint256,address,uint256,uint256,bytes32,address,address) (runs: 256, μ: 335954, ~: 329194)
+[32m[PASS][0m testVerifyCreateRevertDelegate(uint256,address,uint256,uint256,bytes32,address,address) (runs: 256, μ: 336498, ~: 330529)
+[32m[PASS][0m testVerifyCreateRevertExpiryLength(uint256,address,uint256,uint256,bytes32,address,address) (runs: 256, μ: 335821, ~: 329219)
+[32m[PASS][0m testVerifyCreateRevertExpiryType(uint256,address,uint256,uint256,bytes32,address,address) (runs: 256, μ: 347498, ~: 341907)
+[32m[PASS][0m testVerifyCreateRevertInvalidContext(uint256,address,uint256,uint256,bytes32,address,address) (runs: 256, μ: 325553, ~: 319010)
+[32m[PASS][0m testVerifyCreateRevertOfferIdentifier(uint256,address,uint256,uint256,bytes32,address,address) (runs: 256, μ: 329661, ~: 323798)
+[32m[PASS][0m testVerifyCreateRevertPrincipal(uint256,address,uint256,uint256,bytes32,address,address) (runs: 256, μ: 336971, ~: 330526)
+[32m[PASS][0m testVerifyCreateRevertRights(uint256,address,uint256,uint256,bytes32,address,address) (runs: 256, μ: 336004, ~: 329235)
+Test result: [32mok[0m. [32m17[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 1.88s
+
+Running 79 tests for test/libtests/DelegateTokenStorageHelpers.t.sol:DelegateTokenStorageHelpersTest
+[32m[PASS][0m testAvailableRevertNotMinted(uint256) (runs: 256, μ: 3780, ~: 3780)
+[32m[PASS][0m testCheckBurnAuthorizedNoRevert() (gas: 22602)
+[32m[PASS][0m testCheckBurnAuthorizedRevertCaller() (gas: 5307)
+[32m[PASS][0m testCheckBurnAuthorizedRevertFlag(uint256) (runs: 256, μ: 25020, ~: 25876)
+[32m[PASS][0m testCheckMintAuthorizedNoRevert() (gas: 22582)
+[32m[PASS][0m testCheckMintAuthorizedRevertCaller() (gas: 5287)
+[32m[PASS][0m testCheckMintAuthorizedRevertFlag(uint256) (runs: 256, μ: 25130, ~: 25830)
+[32m[PASS][0m testDecrementBalance(uint256,address) (runs: 256, μ: 22042, ~: 22664)
+[32m[PASS][0m testIncrementBalance(uint256,address) (runs: 256, μ: 21966, ~: 22666)
+[32m[PASS][0m testNoRevertAlreadyExisted(uint256) (runs: 256, μ: 2824, ~: 2824)
+[32m[PASS][0m testNoRevertInvalidWithdrawalConditionsApproved(uint256,address,uint256,address) (runs: 256, μ: 51596, ~: 51596)
+[32m[PASS][0m testNoRevertInvalidWithdrawalConditionsExpiry(uint256,address,uint256) (runs: 256, μ: 5636, ~: 5636)
+[32m[PASS][0m testNoRevertInvalidWithdrawalConditionsOperator(uint256,address,uint256,address) (runs: 256, μ: 49374, ~: 49374)
+[32m[PASS][0m testNoRevertInvalidWithdrawalConditionsOwner(uint256,uint256,address,address) (runs: 256, μ: 49103, ~: 49103)
+[32m[PASS][0m testNoRevertNotApprovedOrOperatorApproved(address,address,uint256) (runs: 256, μ: 50481, ~: 50481)
+[32m[PASS][0m testNoRevertNotApprovedOrOperatorOperator(address,uint256) (runs: 256, μ: 25924, ~: 25924)
+[32m[PASS][0m testNoRevertNotApprovedOrOperatorOwner(uint256) (runs: 256, μ: 438, ~: 438)
+[32m[PASS][0m testNoRevertNotMinted(bytes32,uint256) (runs: 256, μ: 3355, ~: 3355)
+[32m[PASS][0m testNoRevertNotOperatorOperator(address) (runs: 256, μ: 25856, ~: 25856)
+[32m[PASS][0m testNoRevertNotOperatorOwner() (gas: 314)
+[32m[PASS][0m testPrincipalAuthFlagsNonZeroAndUnique() (gas: 6222)
+[32m[PASS][0m testPrincipalBurnNoRevert(uint256) (runs: 256, μ: 28081, ~: 28081)
+[32m[PASS][0m testPrincipalBurnRevertAlreadyAuthorized(uint256,uint256) (runs: 256, μ: 27604, ~: 27915)
+[32m[PASS][0m testPrincipalIsCallerNoRevert() (gas: 312)
+[32m[PASS][0m testPrincipalIsCallerRevert() (gas: 5308)
+[32m[PASS][0m testPrincipalMintNoRevert(address,uint256) (runs: 256, μ: 28164, ~: 28164)
+[32m[PASS][0m testPrincipalMintRevertAlreadyAuthorized(uint256,address,uint256) (runs: 256, μ: 27352, ~: 28052)
+[32m[PASS][0m testPrincipalRecordBurnNoRevert(uint256) (runs: 256, μ: 33826, ~: 33826)
+[32m[PASS][0m testPrincipalRecordBurnRevertAlreadyAuthorized(uint256,uint256) (runs: 256, μ: 27502, ~: 28280)
+[32m[PASS][0m testPrincipalRecordMintNoRevert(address,uint256) (runs: 256, μ: 33867, ~: 33867)
+[32m[PASS][0m testPrincipalRecordMintRevertAlreadyAuthorized(uint256,address,uint256) (runs: 256, μ: 27420, ~: 28353)
+[32m[PASS][0m testReadApproved(uint256,address) (runs: 256, μ: 22604, ~: 22682)
+[32m[PASS][0m testReadAvailableRevertNotMinted(uint256) (runs: 256, μ: 5986, ~: 5986)
+[32m[PASS][0m testReadExpiry(uint256,uint256) (runs: 256, μ: 21513, ~: 22602)
+[32m[PASS][0m testReadNoRevertNotMinted(uint256,uint256) (runs: 256, μ: 25706, ~: 25706)
+[32m[PASS][0m testReadRegistryHash(uint256,bytes32) (runs: 256, μ: 22610, ~: 22610)
+[32m[PASS][0m testReadUnderlyingAmount(uint256,uint256) (runs: 256, μ: 21896, ~: 22596)
+[32m[PASS][0m testReadUsedRevertNotMinted(uint256) (runs: 256, μ: 26141, ~: 26141)
+[32m[PASS][0m testRecordAlreadyExisted(uint256,uint256) (runs: 256, μ: 25837, ~: 26498)
+[32m[PASS][0m testRecordAvailableRevertNotMinted(uint256) (runs: 256, μ: 4429, ~: 4429)
+[32m[PASS][0m testRecordCheckBurnAuthorizedNoRevert() (gas: 27366)
+[32m[PASS][0m testRecordCheckBurnAuthorizedRevertCaller() (gas: 5621)
+[32m[PASS][0m testRecordCheckBurnAuthorizedRevertFlag(uint256) (runs: 256, μ: 25713, ~: 26180)
+[32m[PASS][0m testRecordCheckMintAuthorizedNoRevert() (gas: 27366)
+[32m[PASS][0m testRecordCheckMintAuthorizedRevertCaller() (gas: 5664)
+[32m[PASS][0m testRecordCheckMintAuthorizedRevertFlag(uint256) (runs: 256, μ: 25497, ~: 26197)
+[32m[PASS][0m testRecordDecrementBalance(uint256,address) (runs: 256, μ: 27623, ~: 28207)
+[32m[PASS][0m testRecordIncrementBalance(uint256,address) (runs: 256, μ: 27974, ~: 28210)
+[32m[PASS][0m testRecordNoRevertNotMinted(bytes32,uint256) (runs: 256, μ: 5081, ~: 5081)
+[32m[PASS][0m testRecordNotApprovedOrOperator(address,address,address,uint256) (runs: 256, μ: 51499, ~: 51507)
+[32m[PASS][0m testRecordPrincipalIsCallerNoRevert() (gas: 4525)
+[32m[PASS][0m testRecordPrincipalIsCallerRevert() (gas: 5645)
+[32m[PASS][0m testRecordReadApproved(uint256,address) (runs: 256, μ: 27472, ~: 27706)
+[32m[PASS][0m testRecordReadAvailableRevertNotMinted(uint256) (runs: 256, μ: 6258, ~: 6258)
+[32m[PASS][0m testRecordReadExpiry(uint256,uint256) (runs: 256, μ: 26899, ~: 27599)
+[32m[PASS][0m testRecordReadNoRevertNotMinted(uint256,uint256) (runs: 256, μ: 28028, ~: 28028)
+[32m[PASS][0m testRecordReadRegistryHash(uint256,bytes32) (runs: 256, μ: 27592, ~: 27592)
+[32m[PASS][0m testRecordReadUnderlyingAmount(uint256,uint256) (runs: 256, μ: 26881, ~: 27581)
+[32m[PASS][0m testRecordReadUsedRevertNotMinted(uint256) (runs: 256, μ: 26468, ~: 26468)
+[32m[PASS][0m testRecordRevertNotOperator(address,address) (runs: 256, μ: 28977, ~: 28977)
+[32m[PASS][0m testRecordRevertWriteExpiry(uint256,uint256) (runs: 256, μ: 3929, ~: 3929)
+[32m[PASS][0m testRecordUsedRevertNotMinted(uint256) (runs: 256, μ: 4105, ~: 4105)
+[32m[PASS][0m testRecordWriteApproved(uint256,address) (runs: 256, μ: 27797, ~: 27953)
+[32m[PASS][0m testRecordWriteExpiry(uint256,uint256) (runs: 256, μ: 27311, ~: 28244)
+[32m[PASS][0m testRecordWriteRegistryHash(uint256,bytes32) (runs: 256, μ: 27614, ~: 27614)
+[32m[PASS][0m testRecordWriteUnderlyingAmount(uint256,uint256) (runs: 256, μ: 26927, ~: 27627)
+[32m[PASS][0m testRevertAlreadyExisted(uint256,uint256) (runs: 256, μ: 26439, ~: 26439)
+[32m[PASS][0m testRevertInvalidWithdrawalConditions(uint256,address,uint256,address,address) (runs: 256, μ: 52977, ~: 52977)
+[32m[PASS][0m testRevertNotApprovedOrOperatorApproved(address,address,address,uint256) (runs: 256, μ: 51378, ~: 51534)
+[32m[PASS][0m testRevertNotApprovedOrOperatorOperator(address,address,uint256) (runs: 256, μ: 31230, ~: 31230)
+[32m[PASS][0m testRevertNotApprovedOrOperatorOwner(address,uint256) (runs: 256, μ: 8793, ~: 8793)
+[32m[PASS][0m testRevertNotOperatorOperator(address,address) (runs: 256, μ: 28983, ~: 28983)
+[32m[PASS][0m testRevertNotOperatorOwner(address) (runs: 256, μ: 6591, ~: 6591)
+[32m[PASS][0m testRevertWriteExpiry(uint256,uint256) (runs: 256, μ: 3636, ~: 3636)
+[32m[PASS][0m testUsedRevertNotMinted(uint256) (runs: 256, μ: 3768, ~: 3768)
+[32m[PASS][0m testWriteApproved(uint256,uint256,address) (runs: 256, μ: 23464, ~: 23464)
+[32m[PASS][0m testWriteExpiry(uint256,uint256,uint256) (runs: 256, μ: 26336, ~: 26563)
+[32m[PASS][0m testWriteRegistryHash(uint256,uint256,bytes32) (runs: 256, μ: 23237, ~: 23237)
+[32m[PASS][0m testWriteUnderlyingAmount(uint256,uint256,uint256) (runs: 256, μ: 22969, ~: 23287)
+Test result: [32mok[0m. [32m79[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 2.00s
+
+Running 1 test for test/MarketMetadata.t.sol:MarketMetadataTest
+[32m[PASS][0m testMetadataResult() (gas: 681877)
+Test result: [32mok[0m. [32m1[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 2.54ms
+
+Running 32 tests for test/DelegateTokenUnitTests.t.sol:DelegateTokenTest
+[32m[PASS][0m testApprovalForAll(address,address,bool) (runs: 256, μ: 23060, ~: 16682)
+[32m[PASS][0m testApprove(address,address,address,bytes32,uint256,uint256) (runs: 256, μ: 212501, ~: 211802)
+[32m[PASS][0m testBalanceOfNoRevert(address,uint256) (runs: 256, μ: 7110, ~: 7110)
+[32m[PASS][0m testBalanceOfRevert() (gas: 8452)
+[32m[PASS][0m testCreateRevertToIsZero(address,bytes32,uint256,uint256) (runs: 256, μ: 96371, ~: 96375)
+[32m[PASS][0m testDTConstantsAndInitialStateVars() (gas: 61554)
+[32m[PASS][0m testExtendNoRevert(address,uint256,uint256,uint256,bytes32) (runs: 256, μ: 189495, ~: 187785)
+[32m[PASS][0m testExtendRevertExpiryTooLarge(address,uint256,uint256,uint256,bytes32) (runs: 256, μ: 182881, ~: 182959)
+[32m[PASS][0m testExtendRevertInvalidUpdate(address,uint256,uint256,uint256,bytes32) (runs: 256, μ: 173857, ~: 174091)
+[32m[PASS][0m testExtendRevertNotMinted(uint256,uint256) (runs: 256, μ: 13053, ~: 13053)
+[32m[PASS][0m testExtendRevertOldExpiry(address,uint256,uint256,uint256,bytes32) (runs: 256, μ: 173236, ~: 173314)
+[32m[PASS][0m testExtendRevertPrincipalApprovedOwnerFalse(address,uint256,uint256,uint256,bytes32) (runs: 256, μ: 183265, ~: 183499)
+[32m[PASS][0m testGetApproved(address,address,bytes32,uint256,uint256) (runs: 256, μ: 181887, ~: 182043)
+[32m[PASS][0m testIsApprovedForAll(address,address,uint256) (runs: 256, μ: 7533, ~: 7524)
+[32m[PASS][0m testIsApprovedOrOwnerRevertNotMinted(address,uint256) (runs: 256, μ: 11423, ~: 11423)
+[32m[PASS][0m testIsApprovedOrOwnerSpenderIsAccountOperator(address,address,bytes32,uint256) (runs: 256, μ: 172995, ~: 173073)
+[32m[PASS][0m testIsApprovedOrOwnerSpenderIsApproved(address,address,bytes32,uint256) (runs: 256, μ: 175105, ~: 175261)
+[32m[PASS][0m testIsApprovedOrOwnerSpenderIsDelegateTokenHolder(address,bytes32,uint256) (runs: 256, μ: 171546, ~: 171624)
+[32m[PASS][0m testIsNotApprovedOrOwner(address,address,address,bytes32,uint256) (runs: 256, μ: 176112, ~: 176268)
+[32m[PASS][0m testNoRevertInvalidERC721TransferOperator(address,uint256,bytes) (runs: 256, μ: 6803, ~: 6802)
+[32m[PASS][0m testOnERC1155BatchReceived(address,address,uint256[],uint256[],bytes) (runs: 256, μ: 51548, ~: 50805)
+[32m[PASS][0m testOnERC721Received(address,uint256,bytes) (runs: 256, μ: 6878, ~: 6877)
+[32m[PASS][0m testOwnerOf(address,uint256,bytes32) (runs: 256, μ: 183294, ~: 183371)
+[32m[PASS][0m testRevertBatchERC1155TransferUnsupported(address,address,uint256[],uint256[],bytes) (runs: 256, μ: 12494, ~: 12514)
+[32m[PASS][0m testRevertInvalidERC721TransferOperator(address,address,uint256,bytes) (runs: 256, μ: 10134, ~: 10132)
+[32m[PASS][0m testRevertOnERC721Received(address,address,uint256,bytes) (runs: 256, μ: 10112, ~: 10110)
+[32m[PASS][0m testSafeTransferFromReverts(address,address,bytes32,uint256) (runs: 256, μ: 550288, ~: 550318)
+[32m[PASS][0m testSafeTransferFromWithDataReverts(address,address,bytes32,uint256,bytes) (runs: 256, μ: 550976, ~: 550995)
+[32m[PASS][0m testSupportedInterfaces() (gas: 10180)
+[32m[PASS][0m testSupportsInterface(bytes32) (runs: 256, μ: 8837, ~: 8837)
+[32m[PASS][0m testSymbol() (gas: 6989)
+[32m[PASS][0m testTransferFromReverts(address,address,uint256,address,bytes32,uint256,bytes) (runs: 256, μ: 413119, ~: 413189)
+Test result: [32mok[0m. [32m32[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 3.13s
+
+Running 14 tests for test/DelegateToken.t.sol:DelegateTokenTest
+[32m[PASS][0m testCannotMintWithExisting() (gas: 397375)
+[32m[PASS][0m testFuzzingCannotCreateWithNonexistentContract(address,uint256,address,uint256,bool,bytes32,uint256) (runs: 256, μ: 46688, ~: 46674)
+[32m[PASS][0m testFuzzingCannotCreateWithoutToken(address,uint256,uint256,bool,uint256) (runs: 256, μ: 66801, ~: 67197)
+[32m[PASS][0m testFuzzingCreate1155(address,address,address,address,uint256,uint256,bool,uint256) (runs: 256, μ: 446756, ~: 447780)
+[32m[PASS][0m testFuzzingCreate20(address,address,address,address,uint256,bool,uint256) (runs: 256, μ: 420840, ~: 420409)
+[32m[PASS][0m testFuzzingCreate721(address,address,address,address,uint256,bool,uint256) (runs: 256, μ: 415404, ~: 416415)
+[32m[PASS][0m testFuzzingMintRights(address,address,address,address,uint256,bool,uint256) (runs: 256, μ: 413905, ~: 415233)
+[32m[PASS][0m testFuzzingTransfer1155(address,address,uint256,uint256,bool,uint256) (runs: 256, μ: 592505, ~: 594477)
+[32m[PASS][0m testFuzzingTransfer20(address,address,uint256,bool,uint256) (runs: 256, μ: 543945, ~: 543800)
+[32m[PASS][0m testFuzzingTransfer721(address,address,uint256,bool,uint256) (runs: 256, μ: 557989, ~: 560852)
+[32m[PASS][0m testFuzzingWithdraw1155Immediately(address,uint256,uint256,bool,uint256) (runs: 256, μ: 416469, ~: 416988)
+[32m[PASS][0m testFuzzingWithdraw20Immediately(address,uint256,bool,uint256) (runs: 256, μ: 406933, ~: 407050)
+[32m[PASS][0m testFuzzingWithdraw721Immediately(address,uint256,bool,uint256) (runs: 256, μ: 387355, ~: 387935)
+[32m[PASS][0m testTokenURI() (gas: 711592)
+Test result: [32mok[0m. [32m14[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 1.49s
+
+Running 99 tests for test/libtests/DelegateTokenRegistryHelpers.t.sol:DelegateTokenRegistryHelpersTest
+[32m[PASS][0m testCalculateDecreasedAmountAll(address,address,bytes32,uint256) (runs: 256, μ: 175341, ~: 175341)
+[32m[PASS][0m testCalculateDecreasedAmountContract(address,address,address,bytes32,uint256) (runs: 256, μ: 176470, ~: 176470)
+[32m[PASS][0m testCalculateDecreasedAmountERC1155(address,address,address,uint256,uint256,bytes32,uint256) (runs: 256, μ: 193322, ~: 199513)
+[32m[PASS][0m testCalculateDecreasedAmountERC20(address,address,address,uint256,bytes32,uint256) (runs: 256, μ: 167626, ~: 176626)
+[32m[PASS][0m testCalculateDecreasedAmountERC721(address,address,address,uint256,bytes32,uint256) (runs: 256, μ: 198703, ~: 199403)
+[32m[PASS][0m testCalculateIncreasedAmountAll(address,address,bytes32,uint256) (runs: 256, μ: 175148, ~: 175304)
+[32m[PASS][0m testCalculateIncreasedAmountContract(address,address,address,bytes32,uint256) (runs: 256, μ: 176330, ~: 176408)
+[32m[PASS][0m testCalculateIncreasedAmountERC1155(address,address,address,uint256,uint256,bytes32,uint256) (runs: 256, μ: 192726, ~: 199525)
+[32m[PASS][0m testCalculateIncreasedAmountERC20(address,address,address,uint256,bytes32,uint256) (runs: 256, μ: 169449, ~: 176649)
+[32m[PASS][0m testCalculateIncreasedAmountERC721(address,address,address,uint256,bytes32,uint256) (runs: 256, μ: 198434, ~: 199367)
+[32m[PASS][0m testDelegateERC1155(address,bytes32,address,uint256,uint256,uint256) (runs: 256, μ: 252276, ~: 253118)
+[32m[PASS][0m testDelegateERC20(address,bytes32,address,uint256,uint256) (runs: 256, μ: 231696, ~: 232201)
+[32m[PASS][0m testDelegateERC721(address,bytes32,address,uint256) (runs: 256, μ: 223516, ~: 224683)
+[32m[PASS][0m testLoadAmountAll(address,address,bytes32) (runs: 256, μ: 175114, ~: 175270)
+[32m[PASS][0m testLoadAmountContract(address,address,address,bytes32) (runs: 256, μ: 176412, ~: 176412)
+[32m[PASS][0m testLoadAmountERC1155(address,address,address,uint256,uint256,bytes32) (runs: 256, μ: 190545, ~: 199481)
+[32m[PASS][0m testLoadAmountERC20(address,address,address,uint256,bytes32) (runs: 256, μ: 171755, ~: 176555)
+[32m[PASS][0m testLoadAmountERC721(address,address,address,uint256,bytes32) (runs: 256, μ: 198423, ~: 199279)
+[32m[PASS][0m testLoadContractAll(address,address,bytes32) (runs: 256, μ: 175087, ~: 175087)
+[32m[PASS][0m testLoadContractContract(address,address,address,bytes32) (runs: 256, μ: 169160, ~: 169238)
+[32m[PASS][0m testLoadContractERC1155(address,address,address,uint256,uint256,bytes32) (runs: 256, μ: 204464, ~: 213866)
+[32m[PASS][0m testLoadContractERC20(address,address,address,uint256,bytes32) (runs: 256, μ: 181871, ~: 191341)
+[32m[PASS][0m testLoadContractERC721(address,address,address,uint256,bytes32) (runs: 256, μ: 190736, ~: 191747)
+[32m[PASS][0m testLoadFromAll(address,address,bytes32) (runs: 256, μ: 173238, ~: 173316)
+[32m[PASS][0m testLoadFromContract(address,address,address,bytes32) (runs: 256, μ: 174431, ~: 174431)
+[32m[PASS][0m testLoadFromERC1155(address,address,address,uint256,uint256,bytes32) (runs: 256, μ: 199185, ~: 199885)
+[32m[PASS][0m testLoadFromERC20(address,address,address,uint256,bytes32) (runs: 256, μ: 177000, ~: 177000)
+[32m[PASS][0m testLoadFromERC721(address,address,address,uint256,bytes32) (runs: 256, μ: 196322, ~: 197333)
+[32m[PASS][0m testLoadRightsAll(address,address,bytes32) (runs: 256, μ: 167710, ~: 167788)
+[32m[PASS][0m testLoadRightsContract(address,address,address,bytes32) (runs: 256, μ: 168318, ~: 168396)
+[32m[PASS][0m testLoadRightsERC1155(address,address,address,uint256,uint256,bytes32) (runs: 256, μ: 203052, ~: 212984)
+[32m[PASS][0m testLoadRightsERC20(address,address,address,uint256,bytes32) (runs: 256, μ: 181560, ~: 190431)
+[32m[PASS][0m testLoadRightsERC721(address,address,address,uint256,bytes32) (runs: 256, μ: 190130, ~: 190908)
+[32m[PASS][0m testLoadTokenHolderAll(address,address,bytes32) (runs: 256, μ: 167645, ~: 167801)
+[32m[PASS][0m testLoadTokenHolderAndContractAll(address,address,bytes32) (runs: 256, μ: 168588, ~: 168744)
+[32m[PASS][0m testLoadTokenHolderAndContractContract(address,address,address,bytes32) (runs: 256, μ: 169331, ~: 169331)
+[32m[PASS][0m testLoadTokenHolderAndContractERC1155(address,address,address,uint256,uint256,bytes32) (runs: 256, μ: 208233, ~: 213962)
+[32m[PASS][0m testLoadTokenHolderAndContractERC20(address,address,address,uint256,bytes32) (runs: 256, μ: 184015, ~: 191456)
+[32m[PASS][0m testLoadTokenHolderAndContractERC721(address,address,address,uint256,bytes32) (runs: 256, μ: 191462, ~: 191929)
+[32m[PASS][0m testLoadTokenHolderContract(address,address,address,bytes32) (runs: 256, μ: 168287, ~: 168365)
+[32m[PASS][0m testLoadTokenHolderERC1155(address,address,address,uint256,uint256,bytes32) (runs: 256, μ: 207794, ~: 212993)
+[32m[PASS][0m testLoadTokenHolderERC20(address,address,address,uint256,bytes32) (runs: 256, μ: 180840, ~: 190465)
+[32m[PASS][0m testLoadTokenHolderERC721(address,address,address,uint256,bytes32) (runs: 256, μ: 189906, ~: 190917)
+[32m[PASS][0m testLoadTokenIdAll(address,address,bytes32) (runs: 256, μ: 175316, ~: 175316)
+[32m[PASS][0m testLoadTokenIdContract(address,address,address,bytes32) (runs: 256, μ: 176391, ~: 176391)
+[32m[PASS][0m testLoadTokenIdERC1155(address,address,address,uint256,uint256,bytes32) (runs: 256, μ: 202444, ~: 212983)
+[32m[PASS][0m testLoadTokenIdERC20(address,address,address,uint256,bytes32) (runs: 256, μ: 183391, ~: 192441)
+[32m[PASS][0m testLoadTokenIdERC721(address,address,address,uint256,bytes32) (runs: 256, μ: 190086, ~: 190864)
+[32m[PASS][0m testNoRevertERC1155FlashAmountUnavailableAllRights(address,address,uint256,address,uint256,uint256,bytes) (runs: 256, μ: 197218, ~: 199302)
+[32m[PASS][0m testNoRevertERC1155FlashAmountUnavailableBothRights(address,address,uint256,address,uint256,uint256,uint256,bytes) (runs: 256, μ: 347814, ~: 357494)
+[32m[PASS][0m testNoRevertERC1155FlashAmountUnavailableFlashloanRights(address,address,uint256,address,uint256,uint256,bytes) (runs: 256, μ: 220296, ~: 221418)
+[32m[PASS][0m testNoRevertERC20FlashAmountUnavailableAllRights(address,address,uint256,address,uint256,uint256,bytes) (runs: 256, μ: 175575, ~: 176711)
+[32m[PASS][0m testNoRevertERC20FlashAmountUnavailableBothRights(address,address,uint256,address,uint256,uint256,uint256,bytes) (runs: 256, μ: 305062, ~: 312513)
+[32m[PASS][0m testNoRevertERC20FlashAmountUnavailableFlashloanRights(address,address,uint256,address,uint256,uint256,bytes) (runs: 256, μ: 198938, ~: 198890)
+[32m[PASS][0m testNoRevertERC721FlashUnavailableAllRights(address,address,uint256,address,uint256,bytes) (runs: 256, μ: 172967, ~: 173469)
+[32m[PASS][0m testNoRevertERC721FlashUnavailableFlashloanRights(address,address,uint256,address,uint256,bytes) (runs: 256, μ: 198114, ~: 199079)
+[32m[PASS][0m testNoRevertERC721FlashUnavailableFlashloanRightsAndAllRights(address,address,uint256,address,uint256,bytes) (runs: 256, μ: 310900, ~: 311171)
+[32m[PASS][0m testRevertDelegateERC1155(address,bytes32,address,uint256,uint256,uint256) (runs: 256, μ: 236735, ~: 239610)
+[32m[PASS][0m testRevertDelegateERC20(address,bytes32,address,uint256,uint256) (runs: 256, μ: 217638, ~: 218666)
+[32m[PASS][0m testRevertDelegateERC721(address,bytes32,address,uint256) (runs: 256, μ: 206326, ~: 207259)
+[32m[PASS][0m testRevertERC1155FlashAmountUnavailableAllRights(address,address,uint256,address,uint256,uint256,bytes) (runs: 256, μ: 182248, ~: 199653)
+[32m[PASS][0m testRevertERC1155FlashAmountUnavailableBadContract(address,address,address,uint256,address,uint256,uint256,bytes32,bytes) (runs: 256, μ: 520505, ~: 521624)
+[32m[PASS][0m testRevertERC1155FlashAmountUnavailableBadDelegateHolder(address,address,address,uint256,address,uint256,uint256,bytes32,bytes) (runs: 256, μ: 520244, ~: 521601)
+[32m[PASS][0m testRevertERC1155FlashAmountUnavailableBadFrom(address,address,address,uint256,address,uint256,uint256,bytes32,bytes) (runs: 256, μ: 730471, ~: 731520)
+[32m[PASS][0m testRevertERC1155FlashAmountUnavailableBadTokenId(address,address,uint256,uint256,address,uint256,uint256,bytes32,bytes) (runs: 256, μ: 520036, ~: 521617)
+[32m[PASS][0m testRevertERC1155FlashAmountUnavailableBadType(address,address,uint256,address,uint256,uint256,bytes32,bytes) (runs: 256, μ: 567940, ~: 568834)
+[32m[PASS][0m testRevertERC1155FlashAmountUnavailableBothRights(address,address,uint256,address,uint256,uint256,uint256,bytes) (runs: 256, μ: 339967, ~: 357900)
+[32m[PASS][0m testRevertERC1155FlashAmountUnavailableFlashloanRights(address,address,uint256,address,uint256,uint256,bytes) (runs: 256, μ: 208584, ~: 221814)
+[32m[PASS][0m testRevertERC20FlashAmountUnavailableAllRights(address,address,uint256,address,uint256,uint256,bytes) (runs: 256, μ: 164143, ~: 177075)
+[32m[PASS][0m testRevertERC20FlashAmountUnavailableBadContract(address,address,address,uint256,address,uint256,uint256,bytes32,bytes) (runs: 256, μ: 454185, ~: 454139)
+[32m[PASS][0m testRevertERC20FlashAmountUnavailableBadDelegateHolder(address,address,address,uint256,address,uint256,uint256,bytes32,bytes) (runs: 256, μ: 454103, ~: 454058)
+[32m[PASS][0m testRevertERC20FlashAmountUnavailableBadFrom(address,address,address,uint256,address,uint256,uint256,bytes32,bytes) (runs: 256, μ: 730145, ~: 731424)
+[32m[PASS][0m testRevertERC20FlashAmountUnavailableBadType(address,address,uint256,address,uint256,uint256,bytes32,bytes) (runs: 256, μ: 589585, ~: 591257)
+[32m[PASS][0m testRevertERC20FlashAmountUnavailableBothRights(address,address,uint256,address,uint256,uint256,uint256,bytes) (runs: 256, μ: 295112, ~: 312812)
+[32m[PASS][0m testRevertERC20FlashAmountUnavailableFlashloanRights(address,address,uint256,address,uint256,uint256,bytes) (runs: 256, μ: 186412, ~: 199212)
+[32m[PASS][0m testRevertERC721FlashUnavailableBadContract(address,address,address,uint256,address,uint256,bytes) (runs: 256, μ: 190406, ~: 182182)
+[32m[PASS][0m testRevertERC721FlashUnavailableBadDelegateHolder(address,address,address,uint256,address,uint256,bytes) (runs: 256, μ: 190166, ~: 180004)
+[32m[PASS][0m testRevertERC721FlashUnavailableBadRights(address,address,uint256,address,uint256,bytes32,bytes) (runs: 256, μ: 200989, ~: 201880)
+[32m[PASS][0m testRevertERC721FlashUnavailableBadTokenId(address,address,uint256,uint256,address,uint256,bytes) (runs: 256, μ: 189390, ~: 179926)
+[32m[PASS][0m testRevertERC721FlashUnavailableBadType(address,address,uint256,address,uint256,bytes32,bytes) (runs: 256, μ: 574401, ~: 590475)
+[32m[PASS][0m testRevertERC721FlashUnavailableNotFrom(address,address,address,uint256,address,uint256,bytes32,bytes) (runs: 256, μ: 717462, ~: 731135)
+[32m[PASS][0m testRevertTransferERC1155Delegation(address,address,bytes32,address,uint256,uint256,uint256,uint256) (runs: 256, μ: 507285, ~: 492155)
+[32m[PASS][0m testRevertTransferERC1155DelegationSymmetric(address,bytes32,address,uint256,uint256,uint256) (runs: 256, μ: 275691, ~: 263132)
+[32m[PASS][0m testRevertTransferERC20Delegation(address,address,bytes32,address,uint256,uint256,uint256) (runs: 256, μ: 463004, ~: 448779)
+[32m[PASS][0m testRevertTransferERC20DelegationSymmetric(address,bytes32,address,uint256,uint256) (runs: 256, μ: 248976, ~: 241038)
+[32m[PASS][0m testRevertTransferERC721Delegation(address,address,bytes32,address,uint256) (runs: 256, μ: 426732, ~: 428132)
+[32m[PASS][0m testRevertTransferERC721DelegationSymmetric(address,bytes32,address,uint256) (runs: 256, μ: 246837, ~: 247770)
+[32m[PASS][0m testRevokeERC1155(address,bytes32,address,uint256,uint256,uint256) (runs: 256, μ: 251008, ~: 252557)
+[32m[PASS][0m testRevokeERC20(address,bytes32,address,uint256,uint256) (runs: 256, μ: 230326, ~: 231586)
+[32m[PASS][0m testRevokeERC721(address,bytes32,address,uint256) (runs: 256, μ: 224812, ~: 225668)
+[32m[PASS][0m testRevokeRevertERC1155(address,bytes32,address,uint256,uint256,uint256) (runs: 256, μ: 236493, ~: 239048)
+[32m[PASS][0m testRevokeRevertERC20(address,bytes32,address,uint256,uint256) (runs: 256, μ: 217582, ~: 218034)
+[32m[PASS][0m testRevokeRevertERC721(address,bytes32,address,uint256) (runs: 256, μ: 215406, ~: 216028)
+[32m[PASS][0m testTransferERC1155Delegation(address,address,bytes32,address,uint256,uint256,uint256,uint256) (runs: 256, μ: 512012, ~: 516902)
+[32m[PASS][0m testTransferERC1155DelegationSymmetric(address,bytes32,address,uint256,uint256,uint256) (runs: 256, μ: 248103, ~: 250836)
+[32m[PASS][0m testTransferERC20Delegation(address,address,bytes32,address,uint256,uint256,uint256) (runs: 256, μ: 472538, ~: 475121)
+[32m[PASS][0m testTransferERC20DelegationSymmetric(address,bytes32,address,uint256,uint256) (runs: 256, μ: 228227, ~: 229617)
+[32m[PASS][0m testTransferERC721Delegation(address,address,bytes32,address,uint256) (runs: 256, μ: 428168, ~: 429412)
+[32m[PASS][0m testTransferERC721DelegationSymmetric(address,bytes32,address,uint256) (runs: 256, μ: 242518, ~: 243451)
+Test result: [32mok[0m. [32m99[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 3.42s
+
+Running 6 tests for test/CreateOffererUnitTests.t.sol:CreateOffererUnitTests
+[32m[PASS][0m testGenerateOrderRevertIncorrectContextLength(address,uint256,uint256,uint256) (runs: 256, μ: 24609, ~: 23508)
+[32m[PASS][0m testGetSeaportMetadata() (gas: 7775)
+[32m[PASS][0m testPreviewOrderRevertIncorrectContextLength(address,uint256,uint256,uint256) (runs: 256, μ: 18198, ~: 17446)
+[32m[PASS][0m testTransferFromRevertERC20AllowanceInvariant(address,address) (runs: 256, μ: 449147, ~: 449169)
+[32m[PASS][0m testTransferFromRevertFailedERC20ApproveCall(address,address) (runs: 256, μ: 42746, ~: 42787)
+[32m[PASS][0m testTransferFromRevertFrom(address,address,uint256) (runs: 256, μ: 8579, ~: 8579)
+Test result: [32mok[0m. [32m6[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 3.89s
+| lib/delegate-registry/src/DelegateRegistry.sol:DelegateRegistry contract |                 |        |        |        |         |
+|--------------------------------------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                                                          | Deployment Size |        |        |        |         |
+| 1985096                                                                  | 9944            |        |        |        |         |
+| Function Name                                                            | min             | avg    | median | max    | # calls |
+| checkDelegateForERC1155                                                  | 5919            | 6319   | 5919   | 7919   | 5       |
+| checkDelegateForERC20                                                    | 5870            | 6270   | 5870   | 7870   | 5       |
+| checkDelegateForERC721                                                   | 5961            | 6532   | 5961   | 7961   | 7       |
+| delegateAll                                                              | 3191            | 129808 | 157946 | 157946 | 33      |
+| delegateContract                                                         | 3657            | 106614 | 114654 | 158454 | 20      |
+| delegateERC1155                                                          | 3228            | 120687 | 159174 | 202974 | 74      |
+| delegateERC20                                                            | 2958            | 109497 | 146482 | 180495 | 74      |
+| delegateERC721                                                           | 3799            | 109497 | 155041 | 180941 | 81      |
+| getDelegationsFromHashes                                                 | 2039            | 3386   | 2758   | 4758   | 47      |
+| getIncomingDelegations                                                   | 1761            | 3323   | 3506   | 3506   | 57      |
+| getOutgoingDelegations                                                   | 1760            | 4055   | 3505   | 5876   | 57      |
+| readSlot                                                                 | 444             | 1035   | 444    | 2444   | 338     |
+
+
+| lib/openzeppelin-contracts/contracts/token/ERC721/utils/ERC721Holder.sol:ERC721Holder contract |                 |     |        |     |         |
+|------------------------------------------------------------------------------------------------|-----------------|-----|--------|-----|---------|
+| Deployment Cost                                                                                | Deployment Size |     |        |     |         |
+| 107151                                                                                         | 564             |     |        |     |         |
+| Function Name                                                                                  | min             | avg | median | max | # calls |
+| onERC721Received                                                                               | 763             | 763 | 763    | 763 | 4       |
+
+
+| lib/seaport/contracts/conduit/Conduit.sol:Conduit contract |                 |        |        |        |         |
+|------------------------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                                            | Deployment Size |        |        |        |         |
+| 638893                                                     | 3235            |        |        |        |         |
+| Function Name                                              | min             | avg    | median | max    | # calls |
+| execute                                                    | 328665          | 355616 | 351843 | 385766 | 6       |
+| updateChannel                                              | 24296           | 24296  | 24296  | 24296  | 12      |
+
+
+| lib/seaport/contracts/conduit/ConduitController.sol:ConduitController contract |                 |        |        |        |         |
+|--------------------------------------------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                                                                | Deployment Size |        |        |        |         |
+| 2310569                                                                        | 11616           |        |        |        |         |
+| Function Name                                                                  | min             | avg    | median | max    | # calls |
+| createConduit                                                                  | 723377          | 723377 | 723377 | 723377 | 12      |
+| getConduitCodeHashes                                                           | 240             | 240    | 240    | 240    | 12      |
+| updateChannel                                                                  | 92481           | 92481  | 92481  | 92481  | 12      |
+
+
+| src/CreateOfferer.sol:CreateOfferer contract |                 |        |        |        |         |
+|----------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                              | Deployment Size |        |        |        |         |
+| 3487520                                      | 17140           |        |        |        |         |
+| Function Name                                | min             | avg    | median | max    | # calls |
+| calculateERC1155OrderHashAndId               | 8220            | 8220   | 8220   | 8220   | 2       |
+| calculateERC20OrderHashAndId                 | 8146            | 8146   | 8146   | 8146   | 4       |
+| calculateERC721OrderHashAndId                | 8145            | 8145   | 8145   | 8145   | 2       |
+| generateOrder                                | 6719            | 36867  | 40203  | 45536  | 7       |
+| getSeaportMetadata                           | 773             | 773    | 773    | 773    | 1       |
+| onERC1155Received                            | 894             | 894    | 894    | 894    | 2       |
+| previewOrder                                 | 1282            | 4609   | 5164   | 5397   | 7       |
+| ratifyOrder                                  | 11293           | 11854  | 12054  | 12216  | 6       |
+| transferFrom(address,address,uint256)        | 1341            | 301050 | 338182 | 371672 | 8       |
+| transferFrom(address,address,uint256)(bool)  | 20110           | 20110  | 20110  | 20110  | 1       |
+
+
+| src/DelegateToken.sol:DelegateToken contract    |                 |        |        |        |         |
+|-------------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                                 | Deployment Size |        |        |        |         |
+| 4704374                                         | 23683           |        |        |        |         |
+| Function Name                                   | min             | avg    | median | max    | # calls |
+| approve                                         | 1767            | 2507   | 1767   | 3989   | 3       |
+| balanceOf                                       | 453             | 553    | 553    | 654    | 2       |
+| baseURI                                         | 11552           | 11552  | 11552  | 11552  | 1       |
+| burnAuthorizedCallback                          | 465             | 1477   | 1477   | 2489   | 6       |
+| create                                          | 556             | 227413 | 297042 | 346879 | 34      |
+| delegateRegistry                                | 293             | 293    | 293    | 293    | 1       |
+| extend                                          | 624             | 1831   | 1631   | 3672   | 6       |
+| flashloan                                       | 45878           | 45878  | 45878  | 45878  | 1       |
+| getApproved                                     | 844             | 2100   | 2612   | 2844   | 3       |
+| getDelegateTokenId                              | 838             | 2722   | 2848   | 2848   | 16      |
+| getDelegateTokenInfo                            | 2772            | 6376   | 6265   | 8427   | 25      |
+| isApprovedForAll                                | 770             | 770    | 770    | 770    | 1       |
+| isApprovedOrOwner                               | 1687            | 2915   | 2645   | 4148   | 5       |
+| marketMetadata                                  | 269             | 269    | 269    | 269    | 1       |
+| mintAuthorizedCallback                          | 401             | 478    | 401    | 2425   | 26      |
+| onERC1155BatchReceived                          | 1196            | 1196   | 1196   | 1196   | 2       |
+| onERC1155Received                               | 963             | 963    | 963    | 963    | 5       |
+| onERC721Received                                | 802             | 833    | 833    | 864    | 4       |
+| ownerOf                                         | 1515            | 2337   | 1515   | 7976   | 15      |
+| principalToken                                  | 314             | 314    | 314    | 314    | 13      |
+| safeTransferFrom(address,address,uint256)       | 2710            | 33608  | 2845   | 154348 | 5       |
+| safeTransferFrom(address,address,uint256,bytes) | 154528          | 154528 | 154528 | 154528 | 1       |
+| setApprovalForAll                               | 4668            | 14618  | 14618  | 24568  | 2       |
+| supportsInterface                               | 493             | 538    | 535    | 578    | 6       |
+| symbol                                          | 597             | 597    | 597    | 597    | 1       |
+| tokenURI                                        | 132182          | 132182 | 132182 | 132182 | 1       |
+| transferFrom(address,address,uint256)           | 139221          | 146527 | 146527 | 153833 | 2       |
+| transferFrom(address,address,uint256)(bool)     | 158303          | 158303 | 158303 | 158303 | 1       |
+| withdraw                                        | 43090           | 43771  | 43269  | 44956  | 3       |
+
+
+| src/MarketMetadata.sol:MarketMetadata contract |                 |        |        |        |         |
+|------------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                                | Deployment Size |        |        |        |         |
+| 1832109                                        | 9650            |        |        |        |         |
+| Function Name                                  | min             | avg    | median | max    | # calls |
+| baseURI                                        | 7551            | 7551   | 7551   | 7551   | 1       |
+| delegateTokenURI                               | 117459          | 122766 | 122766 | 128073 | 2       |
+| principalTokenURI                              | 122042          | 124261 | 124261 | 126480 | 2       |
+| setBaseURI                                     | 14560           | 14560  | 14560  | 14560  | 1       |
+
+
+| src/PrincipalToken.sol:PrincipalToken contract |                 |        |        |        |         |
+|------------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                                | Deployment Size |        |        |        |         |
+| 1779504                                        | 9384            |        |        |        |         |
+| Function Name                                  | min             | avg    | median | max    | # calls |
+| burn                                           | 449             | 10262  | 5478   | 25180  | 10      |
+| isApprovedOrOwner                              | 303             | 2086   | 1058   | 5503   | 9       |
+| mint                                           | 427             | 46468  | 47867  | 49886  | 39      |
+| ownerOf                                        | 531             | 533    | 532    | 557    | 38      |
+| setApprovalForAll                              | 24612           | 24612  | 24612  | 24612  | 4       |
+| tokenURI                                       | 137558          | 137558 | 137558 | 137558 | 1       |
+
+
+| test/libtests/CreateOffererLib.t.sol:HelpersCalldataHarness contract |                 |       |        |        |         |
+|----------------------------------------------------------------------|-----------------|-------|--------|--------|---------|
+| Deployment Cost                                                      | Deployment Size |       |        |        |         |
+| 1460718                                                              | 7325            |       |        |        |         |
+| Function Name                                                        | min             | avg   | median | max    | # calls |
+| processSpentItems                                                    | 854             | 2028  | 1608   | 4872   | 12      |
+| transientState                                                       | 6095            | 12355 | 6095   | 42095  | 23      |
+| updateReceivers                                                      | 851             | 38393 | 44651  | 44651  | 14      |
+| updateTransientState                                                 | 1204            | 58497 | 51819  | 142468 | 6       |
+| verifyCreate                                                         | 672             | 9089  | 9865   | 10810  | 13      |
+
+
+| test/libtests/CreateOffererLib.t.sol:ModifierTester contract |                 |      |        |      |         |
+|--------------------------------------------------------------|-----------------|------|--------|------|---------|
+| Deployment Cost                                              | Deployment Size |      |        |      |         |
+| 448163                                                       | 2544            |      |        |      |         |
+| Function Name                                                | min             | avg  | median | max  | # calls |
+| onlySeaportForCaller                                         | 235             | 235  | 235    | 235  | 1       |
+| onlySeaportForParameter                                      | 384             | 384  | 384    | 384  | 1       |
+| parameterizedStage                                           | 1156            | 1840 | 1954   | 1954 | 7       |
+| reenterParametrizedStage                                     | 2035            | 2035 | 2035   | 2035 | 1       |
+| seaport                                                      | 235             | 235  | 235    | 235  | 1       |
+
+
+| test/libtests/DelegateTokenLib.t.sol:CalldataHarness contract        |                 |      |        |      |         |
+|----------------------------------------------------------------------|-----------------|------|--------|------|---------|
+| Deployment Cost                                                      | Deployment Size |      |        |      |         |
+| 383216                                                               | 1943            |      |        |      |         |
+| Function Name                                                        | min             | avg  | median | max  | # calls |
+| revertOnInvalidERC721ReceiverCallback(address,address,uint256)       | 1859            | 2695 | 1859   | 4368 | 3       |
+| revertOnInvalidERC721ReceiverCallback(address,address,uint256,bytes) | 4734            | 4734 | 4734   | 4734 | 3       |
+
+
+| test/libtests/DelegateTokenLib.t.sol:InvalidERC721Holder contract |                 |     |        |     |         |
+|-------------------------------------------------------------------|-----------------|-----|--------|-----|---------|
+| Deployment Cost                                                   | Deployment Size |     |        |     |         |
+| 100745                                                            | 532             |     |        |     |         |
+| Function Name                                                     | min             | avg | median | max | # calls |
+| onERC721Received                                                  | 762             | 762 | 762    | 762 | 2       |
+
+
+| test/libtests/DelegateTokenRegistryHelpers.t.sol:CalldataHarness contract |                 |        |        |        |         |
+|---------------------------------------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                                                           | Deployment Size |        |        |        |         |
+| 1100738                                                                   | 5527            |        |        |        |         |
+| Function Name                                                             | min             | avg    | median | max    | # calls |
+| decrementERC1155                                                          | 5989            | 6985   | 6985   | 7981   | 2       |
+| decrementERC20                                                            | 4592            | 6086   | 6086   | 7581   | 2       |
+| delegateERC721                                                            | 176185          | 176190 | 176190 | 176195 | 2       |
+| incrementERC1155                                                          | 6126            | 7131   | 7131   | 8136   | 2       |
+| incrementERC20                                                            | 5750            | 6755   | 6755   | 7760   | 2       |
+| revertERC1155FlashAmountUnavailable                                       | 3424            | 6158   | 7434   | 7434   | 11      |
+| revertERC20FlashAmountUnavailable                                         | 3362            | 5969   | 6372   | 7372   | 10      |
+| revertERC721FlashUnavailable                                              | 2004            | 6047   | 7491   | 7491   | 9       |
+| revokeERC721                                                              | 5131            | 5133   | 5133   | 5135   | 2       |
+| transferERC1155                                                           | 6070            | 8894   | 8070   | 13367  | 8       |
+| transferERC20                                                             | 5696            | 8428   | 7696   | 12624  | 8       |
+| transferERC721                                                            | 5019            | 25123  | 5237   | 160716 | 8       |
+
+
+| test/libtests/DelegateTokenStorageHelpers.t.sol:DummyPrincipal contract |                 |     |        |     |         |
+|-------------------------------------------------------------------------|-----------------|-----|--------|-----|---------|
+| Deployment Cost                                                         | Deployment Size |     |        |     |         |
+| 37485                                                                   | 215             |     |        |     |         |
+| Function Name                                                           | min             | avg | median | max | # calls |
+| burn                                                                    | 266             | 266 | 266    | 266 | 2       |
+| mint                                                                    | 244             | 244 | 244    | 244 | 2       |
+
+
+| test/mock/MockTokens.t.sol:MockERC1155 contract |                 |       |        |       |         |
+|-------------------------------------------------|-----------------|-------|--------|-------|---------|
+| Deployment Cost                                 | Deployment Size |       |        |       |         |
+| 1489326                                         | 7788            |       |        |       |         |
+| Function Name                                   | min             | avg   | median | max   | # calls |
+| balanceOf                                       | 637             | 637   | 637    | 637   | 8       |
+| mint                                            | 26234           | 26234 | 26234  | 26234 | 5       |
+| safeTransferFrom                                | 3340            | 20703 | 23366  | 23366 | 9       |
+| setApprovalForAll                               | 2121            | 19566 | 24551  | 24551 | 9       |
+
+
+| test/mock/MockTokens.t.sol:MockERC20 contract |                 |       |        |       |         |
+|-----------------------------------------------|-----------------|-------|--------|-------|---------|
+| Deployment Cost                               | Deployment Size |       |        |       |         |
+| 664588                                        | 3592            |       |        |       |         |
+| Function Name                                 | min             | avg   | median | max   | # calls |
+| allowance                                     | 753             | 1003  | 753    | 2753  | 8       |
+| approve                                       | 24599           | 24599 | 24599  | 24599 | 7       |
+| balanceOf                                     | 558             | 558   | 558    | 558   | 8       |
+| mint                                          | 46588           | 46588 | 46588  | 46588 | 5       |
+| transfer                                      | 18344           | 18344 | 18344  | 18344 | 1       |
+| transferFrom                                  | 20251           | 21500 | 22000  | 22000 | 7       |
+
+
+| test/mock/MockTokens.t.sol:MockERC721 contract |                 |       |        |       |         |
+|------------------------------------------------|-----------------|-------|--------|-------|---------|
+| Deployment Cost                                | Deployment Size |       |        |       |         |
+| 1315375                                        | 6925            |       |        |       |         |
+| Function Name                                  | min             | avg   | median | max   | # calls |
+| approve(address,uint256)                       | 23030           | 24696 | 25030  | 25030 | 6       |
+| approve(address,uint256)(bool)                 | 25030           | 25030 | 25030  | 25030 | 1       |
+| mint                                           | 47106           | 47106 | 47106  | 47106 | 10      |
+| mintNext                                       | 69288           | 69288 | 69288  | 69288 | 5       |
+| ownerOf                                        | 531             | 623   | 531    | 2556  | 22      |
+| setApprovalForAll                              | 2121            | 21100 | 24551  | 24551 | 13      |
+| transferFrom(address,address,uint256)          | 19466           | 22554 | 22876  | 23232 | 15      |
+| transferFrom(address,address,uint256)(bool)    | 19466           | 22112 | 22876  | 23232 | 4       |
+
+
+| test/mock/WETH.t.sol:WETH contract |                 |       |        |       |         |
+|------------------------------------|-----------------|-------|--------|-------|---------|
+| Deployment Cost                    | Deployment Size |       |        |       |         |
+| 849768                             | 4494            |       |        |       |         |
+| Function Name                      | min             | avg   | median | max   | # calls |
+| approve                            | 24600           | 24600 | 24600  | 24600 | 3       |
+| balanceOf                          | 558             | 558   | 558    | 558   | 3       |
+| mint                               | 47037           | 47037 | 47037  | 47037 | 3       |
+| transferFrom                       | 20251           | 20251 | 20251  | 20251 | 3       |
+
+
+| test/utils/DTHarness.t.sol:DTHarness contract |                 |      |        |      |         |
+|-----------------------------------------------|-----------------|------|--------|------|---------|
+| Deployment Cost                               | Deployment Size |      |        |      |         |
+| 4814246                                       | 24081           |      |        |      |         |
+| Function Name                                 | min             | avg  | median | max  | # calls |
+| exposedDelegateTokenInfo                      | 474             | 2082 | 2619   | 2619 | 4       |
+| exposedSlotUint256                            | 2457            | 2457 | 2457   | 2457 | 4       |
+
+
+| test/utils/FlashReentrancy.t.sol:FlashReentrancyTester contract |                 |        |        |        |         |
+|-----------------------------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                                                 | Deployment Size |        |        |        |         |
+| 460186                                                          | 2495            |        |        |        |         |
+| Function Name                                                   | min             | avg    | median | max    | # calls |
+| flashReentrancyTester                                           | 347161          | 347161 | 347161 | 347161 | 1       |
+| onFlashloan                                                     | 25668           | 25668  | 25668  | 25668  | 1       |
+
+
+
+ 
+Ran 13 test suites: [32m306[0m tests passed, [31m0[0m failed, [33m0[0m skipped (306 total tests)
