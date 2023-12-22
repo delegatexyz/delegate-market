@@ -36,11 +36,7 @@ contract DelegateTokenTest is Test, BaseLiquidDelegateTest {
     TrueIsApprovedOrOwner trueIsApprovedOrOwner;
 
     function setUp() public {
-        dtHarness = new DTHarness(
-            address(registry),
-            ComputeAddress.addressFrom(address(this), vm.getNonce(address(this)) + 1),
-            address(marketMetadata)
-        );
+        dtHarness = new DTHarness(address(registry), ComputeAddress.addressFrom(address(this), vm.getNonce(address(this)) + 1), address(marketMetadata));
         ptShadow = new PrincipalToken(address(dtHarness));
         falseIsApprovedOrOwner = new FalseIsApprovedOrOwner();
         trueIsApprovedOrOwner = new TrueIsApprovedOrOwner();

@@ -31,11 +31,7 @@ contract BaseLiquidDelegateTest is Test, ERC1155Holder {
         vm.startPrank(dtDeployer);
         registry = new DelegateRegistry();
         marketMetadata = new MarketMetadata(dtOwner, baseURI);
-        dt = new DelegateToken(
-            address(registry),
-            ComputeAddress.addressFrom(dtDeployer, vm.getNonce(dtDeployer) + 1),
-            address(marketMetadata)
-        );
+        dt = new DelegateToken(address(registry), ComputeAddress.addressFrom(dtDeployer, vm.getNonce(dtDeployer) + 1), address(marketMetadata));
         principal = new PrincipalToken(address(dt));
         mockERC721 = new MockERC721(0);
         mockERC20 = new MockERC20();

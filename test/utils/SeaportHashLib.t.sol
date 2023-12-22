@@ -36,12 +36,8 @@ library SeaportHashLib {
     /// @dev Taken from Seaport
     function hash(OrderParameters memory orderParams, uint256 counter) internal pure returns (bytes32) {
         // Designate new memory regions for offer and consideration item hashes.
-        bytes32[] memory offerHashes = new bytes32[](
-            orderParams.offer.length
-        );
-        bytes32[] memory considerationHashes = new bytes32[](
-            orderParams.totalOriginalConsiderationItems
-        );
+        bytes32[] memory offerHashes = new bytes32[](orderParams.offer.length);
+        bytes32[] memory considerationHashes = new bytes32[](orderParams.totalOriginalConsiderationItems);
 
         // Iterate over each offer on the order.
         for (uint256 i = 0; i < orderParams.offer.length; ++i) {
