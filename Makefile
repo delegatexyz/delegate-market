@@ -5,6 +5,7 @@ export SEPOLIA_RPC=https://ethereum-sepolia.publicnode.com
 export SEPOLIA_CHAINID=11155111
 export GOERLI_FORK_BLOCK=8907950
 export MAINNET_RPC=https://eth.rpc.blxrbdn.com
+export BASE_RPC=https://base.llamarpc.com
 
 
 test-fast:
@@ -16,7 +17,7 @@ test-fork:
 deploy-simulate:
 	# For live deployment, add --broadcast --verify --delay 30 --etherscan-api-key ${ETHERSCAN_API_KEY}
 	# Can also try --resume in place of --broadcast
-	forge script -vvv script/Deploy.s.sol --sig "deploy()" --rpc-url ${SEPOLIA_RPC} --private-key ${PK}
+	forge script -vvv script/Deploy.s.sol --sig "deploy()" --rpc-url ${BASE_RPC} --private-key ${PK}
 
 verify:
 	# To generate constructor argument, call $(cast abi-encode "constructor(address)" "0x70Ee311907291129a959b5Bf6AE1d4a3Ed869CDE")
