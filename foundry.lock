@@ -1,0 +1,26 @@
+{
+  "lib/delegate-registry": {
+    "branch": {
+      "name": "v2",
+      "rev": "6d1254de793ccc40134f9bec0b7cb3d9c3632bc1"
+    }
+  },
+  "lib/forge-std": {
+    "branch": {
+      "name": "master",
+      "rev": "1d9650e951204a0ddce9ff89c32f1997984cef4d"
+    }
+  },
+  "lib/openzeppelin-contracts": {
+    "branch": {
+      "name": "v5.0.0",
+      "rev": "fd81a96f01cc42ef1c9a5399364968d0e07e9e90"
+    }
+  },
+  "lib/seaport": {
+    "branch": {
+      "name": "1.5",
+      "rev": "ab3b5cb6e10580ea979d63983e409e679935c702"
+    }
+  }
+}
