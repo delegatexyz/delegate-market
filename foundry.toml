@@ -1,4 +1,5 @@
 [profile.default]
+allow_internal_expect_revert = true
 src = 'src'
 out = 'out'
 libs = ['lib']
