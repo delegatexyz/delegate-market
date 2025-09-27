@@ -111,7 +111,8 @@ contract CreateOffererUnitTests is Test, BaseSeaportTest, BaseLiquidDelegateTest
     }
 
     function testGenerateOrderRevertIncorrectContextLength(address fulfiller, uint256 minimumReceivedLength, uint256 maximumSpentLength, uint256 contextSize) public {
-        vm.assume(minimumReceivedLength > 0 && minimumReceivedLength < 100 && maximumSpentLength > 0 && maximumSpentLength < 100);
+        minimumReceivedLength = bound(minimumReceivedLength, 1, 99);
+        maximumSpentLength = bound(maximumSpentLength, 1, 99);
         vm.assume(contextSize != 160 && contextSize < 1000);
         bytes memory context = new bytes(contextSize);
         vm.startPrank(address(seaport));
@@ -123,7 +124,8 @@ contract CreateOffererUnitTests is Test, BaseSeaportTest, BaseLiquidDelegateTest
     }
 
     function testPreviewOrderRevertIncorrectContextLength(address fulfiller, uint256 minimumReceivedLength, uint256 maximumSpentLength, uint256 contextSize) public {
-        vm.assume(minimumReceivedLength > 0 && minimumReceivedLength < 100 && maximumSpentLength > 0 && maximumSpentLength < 100);
+        minimumReceivedLength = bound(minimumReceivedLength, 1, 99);
+        maximumSpentLength = bound(maximumSpentLength, 1, 99);
         vm.assume(contextSize != 160 && contextSize < 1000);
         bytes memory context = new bytes(contextSize);
         SpentItem[] memory minimumReceived = new SpentItem[](minimumReceivedLength);
