@@ -397,7 +397,8 @@ contract CreateOffererHelpersTest is Test, CreateOffererTestHelpers {
     }
 
     function testProcessSpentItemsRevertArrayLengths(uint256 n, uint256 m) public {
-        vm.assume(n < 100 && m < 100);
+        n = bound(n, 0, 99);
+        m = bound(m, 0, 99);
         vm.assume(n != 1 || m != 1);
         SpentItem[] memory minimumReceived = new SpentItem[](n);
         SpentItem[] memory maximumSpent = new SpentItem[](m);
